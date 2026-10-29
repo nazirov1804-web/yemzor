@@ -1531,27 +1531,35 @@ function LandingPage({
           </span>
           <h2>Yemzor’ni kompyuter yoki telefonga o‘rnating</h2>
           <p>
-            Windows uchun .exe, Android uchun .apk fayli tayyorlanadi.
-            O‘rnatilgan ilova Yemzor serveriga ulanib ishlaydi.
+            Windows va Android uchun ilovalarni yuklab oling. Ular Yemzor
+            serveriga xavfsiz ulanish orqali ishlaydi.
           </p>
         </div>
         <div className="landing-download-options">
-          <button className="landing-download-button" type="button" disabled>
+          <a
+            className="landing-download-button"
+            href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor-Setup.exe"
+            aria-label="Windows uchun Yemzor ilovasini yuklab olish"
+          >
             <FiMonitor aria-hidden="true" />
             <span>
               <strong>Windows uchun .exe</strong>
-              <small>Sayt serverga joylangach yuklab olinadi</small>
+              <small>Windows kompyuterlar uchun o‘rnatuvchi</small>
             </span>
             <FiDownload aria-hidden="true" />
-          </button>
-          <button className="landing-download-button" type="button" disabled>
+          </a>
+          <a
+            className="landing-download-button"
+            href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor.apk"
+            aria-label="Android uchun Yemzor ilovasini yuklab olish"
+          >
             <FiSmartphone aria-hidden="true" />
             <span>
               <strong>Android uchun .apk</strong>
-              <small>Sayt serverga joylangach yuklab olinadi</small>
+              <small>Android telefonlar uchun o‘rnatuvchi</small>
             </span>
             <FiDownload aria-hidden="true" />
-          </button>
+          </a>
         </div>
       </section>
 

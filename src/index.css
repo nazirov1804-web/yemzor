@@ -10013,7 +10013,9 @@ html[data-theme="dark"] .showcase-note {
   border-radius: 14px;
   color: #22362a;
   background: #fff;
+  font: inherit;
   text-align: left;
+  text-decoration: none;
   transition: border-color 160ms ease, background-color 160ms ease;
 }
 
@@ -10022,9 +10024,9 @@ html[data-theme="dark"] .showcase-note {
   background: #f9fcf9;
 }
 
-.landing-download-button:disabled {
-  opacity: 1;
-  cursor: not-allowed;
+.landing-download-button:focus-visible {
+  outline: 3px solid #206742;
+  outline-offset: 3px;
 }
 
 .landing-download-button > svg:first-child {

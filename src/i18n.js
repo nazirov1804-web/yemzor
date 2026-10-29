@@ -1113,6 +1113,15 @@ const entries = [
   ["Email tasdiqlash kodi noto‘g‘ri.", "Неверный код подтверждения электронной почты.", "Incorrect email verification code."],
   ["Tasdiqlash kodini emailga yuborib bo‘lmadi. Email manzilini tekshirib, qayta urinib ko‘ring.", "Не удалось отправить код подтверждения. Проверьте адрес электронной почты и попробуйте ещё раз.", "Could not send the verification code. Check the email address and try again."],
   ["Eng past narx asosiy narxdan kichik bo‘lishi kerak.", "Минимальная цена должна быть ниже базовой цены.", "The minimum price must be lower than the base price."],
+  ["KOMPYUTER VA TELEFONDA", "НА КОМПЬЮТЕРЕ И ТЕЛЕФОНЕ", "ON DESKTOP AND MOBILE"],
+  ["Yemzor’ni kompyuter yoki telefonga o‘rnating", "Установите Yemzor на компьютер или телефон", "Install Yemzor on your computer or phone"],
+  ["Windows va Android uchun ilovalarni yuklab oling. Ular Yemzor serveriga xavfsiz ulanish orqali ishlaydi.", "Скачайте приложения для Windows и Android. Они работают, безопасно подключаясь к серверу Yemzor.", "Download the Windows and Android apps. They connect securely to the Yemzor server."],
+  ["Windows uchun .exe", "Для Windows (.exe)", "For Windows (.exe)"],
+  ["Windows kompyuterlar uchun o‘rnatuvchi", "Установщик для компьютеров Windows", "Installer for Windows computers"],
+  ["Android uchun .apk", "Для Android (.apk)", "For Android (.apk)"],
+  ["Android telefonlar uchun o‘rnatuvchi", "Установщик для телефонов Android", "Installer for Android phones"],
+  ["Windows uchun Yemzor ilovasini yuklab olish", "Скачать приложение Yemzor для Windows", "Download the Yemzor app for Windows"],
+  ["Android uchun Yemzor ilovasini yuklab olish", "Скачать приложение Yemzor для Android", "Download the Yemzor app for Android"],
 ];
 
 const catalogs = Object.fromEntries(
