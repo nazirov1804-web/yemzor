@@ -1,0 +1,30 @@
+# Secrets and local data
+.env
+.env.*
+!.env.example
+database.json
+database.*.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies and generated output
+node_modules/
+dist/
+release/
+coverage/
+
+# Android/Gradle local build state
+android/.gradle/
+android/**/build/
+android/local.properties
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+
+# Local editor and OS state
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

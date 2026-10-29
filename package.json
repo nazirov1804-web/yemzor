@@ -1,0 +1,74 @@
+{
+  "name": "yemlar-yangi",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "server": "node --watch server/index.js",
+    "dev:all": "concurrently -k \"npm:server\" \"npm:dev -- --host 0.0.0.0\"",
+    "build": "vite build",
+    "desktop:run": "electron .",
+    "desktop:win": "npm run build && electron-builder --win nsis",
+    "android:init": "npm run build && cap add android",
+    "android:apk": "npm run build && node scripts/build-android.mjs",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "express-session": "^1.19.0",
+    "nodemailer": "^10.0.15",
+    "qrcode": "^1.5.4",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-icons": "^5.7.0",
+    "sonner": "^2.0.8"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/cli": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "electron": "^45.1.0",
+    "electron-builder": "^26.18.0",
+    "oxlint": "^1.81.0",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.0"
+  },
+  "description": "Yem mahsulotlari do‘koni uchun savdo, umumiy ombor, cheklar, hodimlar va oylik hisob tizimi.",
+  "main": "electron/main.cjs",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "build": {
+    "appId": "com.yemzor.desktop",
+    "productName": "Yemzor",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "public/yemzor.ico"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "public/yemzor.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

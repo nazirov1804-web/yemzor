@@ -1,0 +1,9 @@
+{
+  "appId": "com.yemzor.android",
+  "appName": "Yemzor",
+  "webDir": "dist",
+  "server": {
+    "url": "https://yemzor.duckdns.org/?app=android",
+    "cleartext": false
+  }
+}

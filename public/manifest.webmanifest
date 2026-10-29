@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "Yemzor — savdo va ombor boshqaruvi",
+  "short_name": "Yemzor",
+  "description": "Yem do‘koni savdosi, ombori va ishchilar hisobini boshqarish tizimi.",
+  "lang": "uz",
+  "start_url": "/?app=installed",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f5",
+  "theme_color": "#206742",
+  "icons": [
+    {
+      "src": "/yemzor-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/yemzor-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
