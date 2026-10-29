@@ -152,6 +152,8 @@ const entries = [
   ["Jonli ko‘rish", "Посмотреть вживую", "Live preview"],
   ["Yem mahsulotlari", "Кормовая продукция", "Feed products"],
   ["Imkoniyatlar", "Возможности", "Features"],
+  ["Mahsulotlar", "Товары", "Products"],
+  ["Birliklar", "Единицы", "Units"],
   ["Rollar", "Роли", "Roles"],
   ["Ish jarayoni", "Рабочий процесс", "Workflow"],
   ["Bog‘lanish", "Контакты", "Contact"],
