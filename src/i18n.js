@@ -1171,6 +1171,13 @@ const entries = [
   ["Millilitr", "Миллилитр", "Millilitre"],
   ["Dona", "Штука", "Piece"],
   ["Blok", "Блок", "Block"],
+  ["SAVDO VA CHEK", "ПРОДАЖИ И ЧЕКИ", "SALES AND RECEIPTS"],
+  ["Savdoni tasdiqlang, chekni chop eting", "Подтвердите продажу и распечатайте чек", "Confirm the sale and print the receipt"],
+  ["Savatni tekshirib, savdoni rad etish yoki chekni chop etish mumkin.", "Проверьте корзину, затем отмените продажу или распечатайте чек.", "Review the cart, then cancel the sale or print the receipt."],
+  ["Chek chiqarilgandagina savdo saqlanadi va ombor qoldig‘i yangilanadi.", "Продажа сохраняется, а остаток на складе обновляется только после печати чека.", "The sale is saved and inventory is updated only after the receipt is printed."],
+  ["Har bir savdo serverda tekshiriladi va tarixga yoziladi.", "Каждая продажа проверяется на сервере и сохраняется в истории.", "Every sale is validated on the server and recorded in the history."],
+  ["Do‘kondagi chek va savdo jarayoni", "Чек и процесс продажи в магазине", "Store receipt and sales process"],
+  ["Chek bilan tasdiqlangan savdo", "Продажа подтверждена чеком", "Sale confirmed with a receipt"],
 ];
 
 const catalogs = Object.fromEntries(
