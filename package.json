@@ -9,7 +9,7 @@
     "dev:all": "concurrently -k \"npm:server\" \"npm:dev -- --host 0.0.0.0\"",
     "build": "vite build",
     "desktop:run": "electron .",
-    "desktop:win": "npm run build && electron-builder --win nsis",
+    "desktop:win": "npm run build && electron-builder --win nsis --publish never",
     "android:init": "npm run build && cap add android",
     "android:apk": "npm run build && node scripts/build-android.mjs",
     "lint": "oxlint",
