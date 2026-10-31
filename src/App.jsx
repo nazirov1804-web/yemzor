@@ -1316,6 +1316,12 @@ function LandingPage({
           <h2>Barcha boshqaruv jarayoni bitta markazda birlashadi</h2>
         </div>
         <div className="role-flow-grid">
+          <span className="flow-dot flow-dot-top-left" aria-hidden="true" />
+          <span className="flow-dot flow-dot-top-center" aria-hidden="true" />
+          <span className="flow-dot flow-dot-top-right" aria-hidden="true" />
+          <span className="flow-dot flow-dot-bottom-left" aria-hidden="true" />
+          <span className="flow-dot flow-dot-bottom-center" aria-hidden="true" />
+          <span className="flow-dot flow-dot-bottom-right" aria-hidden="true" />
           <article className="flow-node flow-node-top-left">
             <span className="flow-icon"><FiBriefcase /></span>
             <strong>Boshliq</strong>
