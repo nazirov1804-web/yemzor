@@ -14,17 +14,19 @@ Demo uchun tasdiqlash kodi emailga yuborilishi uchun `.env.example` faylidan `.e
 
 ## Windows va Android ilovalari
 
-Native ilovalar `capacitor.config.json` va `electron/main.cjs` ichidagi `https://yemzor.duckdns.org` manziliga ulanadi. Ilova ochilganda landing emas, login oynasi ko‘rinadi. Domenni DuckDNS’da serveringizning ommaviy IP manziliga yo‘naltiring, VPS yoki doimiy ishlaydigan serverga frontend va API’ni joylang, HTTPS sertifikatini yoqing. Sayt va `/api` so‘rovlari shu domen orqali xizmat qilishi kerak; faqat DuckDNS domenini yaratish yetarli emas.
+Native ilovalar `capacitor.config.json` va `electron/main.cjs` ichidagi `https://yemzor.duckdns.org` manziliga ulanadi. Ilova ochilganda landing emas, login oynasi ko‘rinadi. Domenni DuckDNS’da serveringizning ommaviy IP manziliga yo‘naltiring, VPS yoki doimiy ishlaydigan serverga frontend va API’ni joylang, HTTPS sertifikatini yoqing. Login va oylik obunani tekshirish uchun internet kerak.
+
+Yuklab olingan Android va Windows ilovalaridagi tovarlar, kirimlar, cheklar, savdolar, davomat va boshqa ish ma’lumotlari shu qurilmaning IndexedDB xotirasida saqlanadi. Ular serverdagi eski ma’lumotlarni yuklamaydi va boshqa qurilma yoki brauzer bilan sinxronlanmaydi. Qurilma/browser ma’lumotlari o‘chirilsa, mahalliy yozuvlar yo‘qolishi mumkin; hozircha avtomatik zaxira va qurilmalararo ko‘chirish yo‘q. Login va parol xeshlari hamda obuna holati serverda qoladi. Oddiy brauzerdagi web ilova esa server ma’lumotlar bazasi bilan ishlashda davom etadi.
 
 - Windows o‘rnatuvchisi: Windows kompyuterda `npm run desktop:win`; natija `release/` ichidagi Yemzor Setup `.exe` fayli.
 - Android APK: Android Studio, JDK va Android SDK o‘rnatilgan kompyuterda `npm run android:apk`; natija `release/Yemzor.apk`. Android platformasi hali yaratilmagan bo‘lsa, avval `npm run android:init` bajaring. Hozirgi APK sinov (debug) build bo‘ladi, Play Store uchun imzolanmagan.
 
-Yemzor sayti serverga joylanmaguncha native ilovada login qilib, ma’lumotlar bilan ishlash imkoni bo‘lmaydi. Windows `.exe` faylini Linux muhitida yaratish uchun Windows yoki Wine kerak; Android build uchun Java va Android SDK talab qilinadi.
+Yemzor sayti serverga joylanmaguncha native ilovada login qilish imkoni bo‘lmaydi. Windows `.exe` faylini Linux muhitida yaratish uchun Windows yoki Wine kerak; Android build uchun Java va Android SDK talab qilinadi.
 
 ## Imkoniyatlar
 
 - Har bir do‘konning tovari, savdosi, hodimi, cheki va kirimlari `companyId` bilan alohida ajratiladi. Platforma egasi do‘kon yaratadi; boshliq va hodimlar faqat o‘z do‘konida ishlaydi.
-- Hodimga berilgan login takrorlanmaydi. Hodim savdo qiladi; ombor qoldig‘i va savdo tarixi do‘konning barcha akkauntlarida bir xil ko‘rinadi va ochiq panellarda 5 soniyada yangilanadi. Narx va zaxira serverda tekshiriladi.
+- Hodimga berilgan login takrorlanmaydi. Web ilovada ombor va savdo tarixi serverda saqlanib, akkauntlar orasida yangilanadi. Yuklangan ilovalarda esa ish yozuvlari faqat shu qurilmada qoladi.
 - Qopdagi qoldiq qopda, vaznli mahsulot qoldig‘i kilogrammda yuritiladi. Vaznli kirimda kg yoki tonna tanlanadi.
 - Har bir mahsulot uchun sotuv narxi va eng past narx belgilanadi. Sotuvdagi narx eng past narxdan qat’iy yuqori va asosiy sotuv narxidan oshmagan bo‘lishi serverda tekshiriladi.
 - Sana, hafta va oy tushumi; oylik kirim/sotuv qiymati; chek raqami bo‘yicha qidirish; chop etiladigan chek.
@@ -40,6 +42,6 @@ Yemzor sayti serverga joylanmaguncha native ilovada login qilib, ma’lumotlar b
 
 ## Ma’lumotlar va xavfsizlik
 
-`database.json` birinchi server ishga tushganda yaratiladi va `.gitignore` orqali Git’ga qo‘shilmaydi. Zaxira nusxalarini xavfsiz joyda saqlang; bu fayl yo‘qolsa, do‘kon ma’lumotlarini tiklab bo‘lmaydi. JSON baza bitta server nusxasi uchun mo‘ljallangan; bir nechta serverda bir vaqtda ishlatish yoki ommaviy onlayn xizmat sifatida joylashtirishdan oldin MongoDB kabi umumiy baza, doimiy sessiya ombori, HTTPS, zaxiralash va kuzatuv sozlanishi kerak.
+`database.json` birinchi server ishga tushganda yaratiladi va `.gitignore` orqali Git’ga qo‘shilmaydi. Web ilovaning yozuvlari va akkaunt/obuna ma’lumotlari shu server bazasida qoladi; native ilovalarning yangi ish yozuvlari u yerga yuborilmaydi. Zaxira nusxalarini xavfsiz joyda saqlang.
 
 Parollar bcrypt xeshi sifatida saqlanadi. Brauzer sessiyasi `HttpOnly`, `SameSite=Lax` cookie bilan boshqariladi; tizimni hammaga ochiq serverga joylashtirishdan oldin `SESSION_SECRET`, HTTPS va xavfsiz operatsion muhitni sozlang. Birinchi platforma egasi akkauntini yaratish sahifasi faqat egasi hali yo‘q bo‘lganda ko‘rinadi.

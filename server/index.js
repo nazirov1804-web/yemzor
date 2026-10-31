@@ -431,6 +431,14 @@ app.post('/api/auth/login', async (request, response) => {
   response.json({ user: safeUser(user) })
 })
 
+app.post('/api/auth/verify', requireAuth, requireCompanyOwner, async (request, response) => {
+  const currentPassword = request.body?.currentPassword
+  if (typeof currentPassword !== 'string' || !currentPassword) fail(400, 'Joriy parolni kiriting.')
+  const account = readDatabase().users.find((entry) => entry.id === request.user.id && entry.active)
+  if (!account || !(await bcrypt.compare(currentPassword, account.passwordHash))) fail(401, 'Joriy parol noto‘g‘ri.')
+  response.status(204).end()
+})
+
 app.patch('/api/account/credentials', requireAuth, requireOwnerOrPlatformAdmin, async (request, response) => {
   const currentPassword = request.body?.currentPassword
   if (typeof currentPassword !== 'string' || !currentPassword) fail(400, 'Joriy parolni kiriting.')
@@ -978,12 +986,7 @@ app.post('/api/sales', requireAuth, requireCompanyUser, requirePaidSubscription,
       if (price < product.minimumPrice || price > product.price) fail(400, `${product.name}: narx ${product.minimumPrice.toLocaleString('uz-UZ')} so‘mdan kam, ${product.price.toLocaleString('uz-UZ')} so‘mdan oshgan bo‘lishi mumkin emas.`)
       if (!products.has(productId)) products.set(productId, product)
       const costPrice = Number(product.costPrice || 0)
-      const quantityInBaseUnits = product.unit === 'weight' && displayedQuantityUnit === 'ton'
-        ? quantity * 1000
-        : product.unit === 'liter' && displayedQuantityUnit === 'ml'
-          ? quantity / 1000
-          : quantity
-      const purchaseCost = Math.round(quantityInBaseUnits * costPrice)
+      const purchaseCost = Math.round(quantity * costPrice)
       return {
         productId,
         name: product.name,
@@ -1061,6 +1064,7 @@ app.post('/api/sales', requireAuth, requireCompanyUser, requirePaidSubscription,
 })
 
 app.post('/api/employees', requireAuth, requireCompanyOwner, requirePaidSubscription, async (request, response) => {
+  const deviceApp = request.get('X-Yemzor-Device-App') === '1'
   const name = validateName(request.body?.name, 'Hodim ismi')
   const login = validateLogin(request.body?.login)
   validatePassword(request.body?.password)
@@ -1079,9 +1083,9 @@ app.post('/api/employees', requireAuth, requireCompanyOwner, requirePaidSubscrip
       passwordHash,
       role: 'employee',
       companyId: company.id,
-      monthlySalary,
-      restDay,
-      startDate,
+      monthlySalary: deviceApp ? 0 : monthlySalary,
+      restDay: deviceApp ? null : restDay,
+      ...(deviceApp ? {} : { startDate }),
       active: true,
       createdAt: new Date().toISOString(),
     }
@@ -1092,6 +1096,7 @@ app.post('/api/employees', requireAuth, requireCompanyOwner, requirePaidSubscrip
 })
 
 app.patch('/api/employees/:id', requireAuth, requireCompanyOwner, requirePaidSubscription, async (request, response) => {
+  const deviceApp = request.get('X-Yemzor-Device-App') === '1'
   const name = validateName(request.body?.name, 'Hodim ismi')
   const monthlySalary = positiveAmount(request.body?.monthlySalary, 'Oylik')
   const restDay = validateRestDay(request.body?.restDay)
@@ -1101,20 +1106,31 @@ app.patch('/api/employees/:id', requireAuth, requireCompanyOwner, requirePaidSub
     const company = requireCompany(request, database)
     const user = companyRecords(database, company.id, 'users').find((item) => item.id === request.params.id && item.role === 'employee')
     if (!user) fail(404, 'Hodim topilmadi.')
-    Object.assign(user, { name, monthlySalary, restDay, startDate })
+    Object.assign(user, {
+      name,
+      monthlySalary: deviceApp ? 0 : monthlySalary,
+      restDay: deviceApp ? null : restDay,
+      ...(deviceApp ? {} : { startDate }),
+    })
     return safeUser(user)
   })
   response.json({ employee })
 })
 
 app.delete('/api/employees/:id', requireAuth, requireCompanyOwner, requirePaidSubscription, async (request, response) => {
+  const deviceApp = request.get('X-Yemzor-Device-App') === '1'
   const removed = await updateDatabase((database) => {
     const company = requireCompany(request, database)
     const employee = companyRecords(database, company.id, 'users').find((user) => user.id === request.params.id && user.role === 'employee')
     if (!employee) fail(404, 'Hodim topilmadi.')
-    database.users = database.users.filter((user) => user.id !== employee.id)
-    database.movements = database.movements.filter((item) => item.employeeId !== employee.id)
-    database.attendance = database.attendance.filter((item) => item.employeeId !== employee.id)
+    if (deviceApp) {
+      employee.active = false
+      employee.updatedAt = new Date().toISOString()
+    } else {
+      database.users = database.users.filter((user) => user.id !== employee.id)
+      database.movements = database.movements.filter((item) => item.employeeId !== employee.id)
+      database.attendance = database.attendance.filter((item) => item.employeeId !== employee.id)
+    }
     return { id: employee.id, name: employee.name }
   })
   response.json({
@@ -1216,6 +1232,7 @@ app.get('/api/managers', requireAuth, requireOwnerOrManager, requirePaidSubscrip
 })
 
 app.post('/api/managers', requireAuth, requireCompanyOwner, requirePaidSubscription, async (request, response) => {
+  const deviceApp = request.get('X-Yemzor-Device-App') === '1'
   const name = validateName(request.body?.name, 'Menejer ismi')
   const login = validateLogin(request.body?.login)
   validatePassword(request.body?.password)
@@ -1231,7 +1248,7 @@ app.post('/api/managers', requireAuth, requireCompanyOwner, requirePaidSubscript
       passwordHash,
       role: 'manager',
       companyId: company.id,
-      monthlySalary,
+      monthlySalary: deviceApp ? 0 : monthlySalary,
       active: true,
       createdAt: new Date().toISOString(),
     }
@@ -1242,24 +1259,31 @@ app.post('/api/managers', requireAuth, requireCompanyOwner, requirePaidSubscript
 })
 
 app.patch('/api/managers/:id', requireAuth, requireCompanyOwner, requirePaidSubscription, async (request, response) => {
+  const deviceApp = request.get('X-Yemzor-Device-App') === '1'
   const name = validateName(request.body?.name, 'Menejer ismi')
   const monthlySalary = positiveAmount(request.body?.monthlySalary ?? 0, 'Menejer oylik maoshi')
   const manager = await updateDatabase((database) => {
     const company = requireCompany(request, database)
     const user = companyRecords(database, company.id, 'users').find((item) => item.id === request.params.id && item.role === 'manager')
     if (!user) fail(404, 'Menejer topilmadi.')
-    Object.assign(user, { name, monthlySalary })
+    Object.assign(user, { name, monthlySalary: deviceApp ? 0 : monthlySalary })
     return safeUser(user)
   })
   response.json({ manager })
 })
 
 app.delete('/api/managers/:id', requireAuth, requireCompanyOwner, requirePaidSubscription, async (request, response) => {
+  const deviceApp = request.get('X-Yemzor-Device-App') === '1'
   const removed = await updateDatabase((database) => {
     const company = requireCompany(request, database)
     const manager = companyRecords(database, company.id, 'users').find((user) => user.id === request.params.id && user.role === 'manager')
     if (!manager) fail(404, 'Menejer topilmadi.')
-    database.users = database.users.filter((user) => user.id !== manager.id)
+    if (deviceApp) {
+      manager.active = false
+      manager.updatedAt = new Date().toISOString()
+    } else {
+      database.users = database.users.filter((user) => user.id !== manager.id)
+    }
     return { id: manager.id, name: manager.name }
   })
   response.json({ manager: removed, message: 'Menejer akkaunti o‘chirildi.' })

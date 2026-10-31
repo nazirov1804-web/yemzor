@@ -1119,6 +1119,23 @@ const entries = [
   ["Yemzor’ni kompyuter yoki telefonga o‘rnating", "Установите Yemzor на компьютер или телефон", "Install Yemzor on your computer or phone"],
   ["Windows va Android uchun ilovalarni yuklab oling. Ular Yemzor serveriga xavfsiz ulanish orqali ishlaydi.", "Скачайте приложения для Windows и Android. Они работают, безопасно подключаясь к серверу Yemzor.", "Download the Windows and Android apps. They connect securely to the Yemzor server."],
   ["Windows uchun .exe", "Для Windows (.exe)", "For Windows (.exe)"],
+  ["O‘rnatuvchi fayl · .exe", "Файл установки · .exe", "Installer file · .exe"],
+  ["O‘rnatuvchi fayl · .apk", "Файл установки · .apk", "Installer file · .apk"],
+  ["Tugmani bosing — ilova fayli brauzerning Yuklab olinganlar bo‘limiga tushadi. Tovar va savdo ma’lumotlari qurilmada saqlanadi; login va oylik to‘lov tekshiruvi uchun internet kerak.", "Нажмите кнопку — установщик появится в загрузках браузера. Данные товаров и продаж хранятся на устройстве; для входа и проверки ежемесячной оплаты нужен интернет.", "Click a button to download the installer in your browser. Product and sales data stay on the device; internet is required to sign in and check the monthly subscription."],
+  ["YEMZOR MODELI", "МОДЕЛЬ YEMZOR", "THE YEMZOR MODEL"],
+  ["Barcha boshqaruv jarayoni bitta markazda birlashadi", "Все процессы управления объединены в одном центре", "Store operations come together in one place"],
+  ["Boshliq", "Руководитель", "Owner"],
+  ["Umumiy nazorat va qarorlar", "Общий контроль и решения", "Oversight and decisions"],
+  ["Ombor", "Склад", "Inventory"],
+  ["Kirim, qoldiq va tan narx", "Поступления, остатки и себестоимость", "Stock arrivals, inventory, and cost price"],
+  ["Savdo", "Продажи", "Sales"],
+  ["Chek, narx va tushum", "Чеки, цены и выручка", "Receipts, prices, and revenue"],
+  ["Hisobot", "Отчёты", "Reports"],
+  ["Kunlik, haftalik va oylik", "Дневные, недельные и месячные", "Daily, weekly, and monthly"],
+  ["Xodim", "Сотрудник", "Employee"],
+  ["Davomat va oylik", "Посещаемость и зарплата", "Attendance and payroll"],
+  ["To‘lov", "Оплата", "Payments"],
+  ["Avans, Abed va bonus", "Аванс, обед и премия", "Advances, lunch, and bonuses"],
   ["Windows kompyuterlar uchun o‘rnatuvchi", "Установщик для компьютеров Windows", "Installer for Windows computers"],
   ["Android uchun .apk", "Для Android (.apk)", "For Android (.apk)"],
   ["Android telefonlar uchun o‘rnatuvchi", "Установщик для телефонов Android", "Installer for Android phones"],
@@ -1267,10 +1284,10 @@ function localizeUnits(value, language) {
         : unit;
     })
     .replace(/\bkg\b/gi, language === "ru" ? "кг" : "kg")
-    .replace(/\blitr\b/gi, language === "ru" ? "л" : "L")
-    .replace(/\bdona\b/gi, language === "ru" ? "шт." : "pcs")
-    .replace(/\bblok\b/gi, language === "ru" ? "блок" : "block")
-    .replace(/\btonna\b/gi, language === "ru" ? "т" : "ton");
+    .replace(/\blitr\b/gi, language === "ru" ? "л" : language === "en" ? "litre" : "litr")
+    .replace(/\bdona\b/gi, language === "ru" ? "шт." : language === "en" ? "piece" : "dona")
+    .replace(/\bblok\b/gi, language === "ru" ? "блок" : "blok")
+    .replace(/\btonna\b/gi, language === "ru" ? "т" : language === "en" ? "ton" : "tonna");
 }
 
 function russianCount(value, one, few, many) {

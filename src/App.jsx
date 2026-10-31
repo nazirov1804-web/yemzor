@@ -81,6 +81,31 @@ const startOfWeek = (date) => {
 };
 const amountSum = (rows) =>
   rows.reduce((total, row) => total + (Number(row.total) || 0), 0);
+const saleLineCost = (item) => {
+  if (typeof item.cost === "number") return item.cost;
+  if (typeof item.costPrice !== "number") return 0;
+  const quantity = Number(item.quantity) || 0;
+  const baseQuantity =
+    item.unit === "weight" && item.quantityUnit === "ton"
+      ? quantity * 1000
+      : item.unit === "liter" && item.quantityUnit === "ml"
+        ? quantity / 1000
+        : quantity;
+  return Math.round(baseQuantity * item.costPrice);
+};
+const saleLineProfit = (item) => {
+  if (typeof item.profit === "number") return item.profit;
+  if (typeof item.cost !== "number" && typeof item.costPrice !== "number") return 0;
+  const revenue =
+    typeof item.lineTotal === "number"
+      ? item.lineTotal
+      : Math.round((Number(item.quantity) || 0) * (Number(item.price) || 0));
+  return revenue - saleLineCost(item);
+};
+const saleProfit = (sale) =>
+  typeof sale.profit === "number"
+    ? sale.profit
+    : (sale.items || []).reduce((total, item) => total + saleLineProfit(item), 0);
 const unitName = (unit) =>
   ({ bag: "qop", weight: "kg", kg: "kg", ton: "tonna", liter: "litr", l: "litr", ml: "ml", piece: "dona", pcs: "dona", block: "blok" })[unit] || unit;
 const quantityDigits = (unit) => (["weight", "kg", "ton", "liter", "l"].includes(unit) ? 3 : 0);
@@ -285,30 +310,6 @@ function App() {
       );
   }, []);
   useEffect(() => {
-    const preventCopy = (event) => event.preventDefault();
-    const preventTextSelection = (event) => {
-      if (
-        event.target instanceof Element &&
-        event.target.closest("input, textarea, [contenteditable='true']")
-      ) {
-        return;
-      }
-      event.preventDefault();
-    };
-    document.addEventListener("copy", preventCopy);
-    document.addEventListener("cut", preventCopy);
-    document.addEventListener("contextmenu", preventCopy);
-    document.addEventListener("dragstart", preventCopy);
-    document.addEventListener("selectstart", preventTextSelection);
-    return () => {
-      document.removeEventListener("copy", preventCopy);
-      document.removeEventListener("cut", preventCopy);
-      document.removeEventListener("contextmenu", preventCopy);
-      document.removeEventListener("dragstart", preventCopy);
-      document.removeEventListener("selectstart", preventTextSelection);
-    };
-  }, []);
-  useEffect(() => {
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem("yemzor:theme", theme);
   }, [theme]);
@@ -412,6 +413,23 @@ function App() {
   const refreshStore = useCallback(async () => {
     let storeData;
     try {
+      if (isInstalledApp) {
+        const latestStatus = await api("/api/status");
+        setStatus(latestStatus);
+        if (!latestStatus.user) {
+          setData(null);
+          const error = new Error("Sessiya tugadi. Qayta login qiling.");
+          error.status = 401;
+          throw error;
+        }
+        if (!latestStatus.subscription?.active) {
+          setData(null);
+          const error = new Error("Joriy oy uchun obuna to‘lovi tasdiqlanishi kerak.");
+          error.status = 423;
+          error.details = { subscription: latestStatus.subscription };
+          throw error;
+        }
+      }
       storeData = await api("/api/store");
     } catch (error) {
       if (error.status === 423) {
@@ -1575,27 +1593,36 @@ function LandingPage({
           </span>
           <h2>Yemzor’ni kompyuter yoki telefonga o‘rnating</h2>
           <p>
-            Windows va Android ilovalarini yuklab olish hozircha kutilmoqda.
-            Tayyor bo‘lgach, shu sahifadan yuklab olishingiz mumkin.
+            Tugmani bosing — ilova fayli brauzerning Yuklab olinganlar
+            bo‘limiga tushadi. Tovar va savdo ma’lumotlari qurilmada saqlanadi;
+            login va oylik to‘lov tekshiruvi uchun internet kerak.
           </p>
         </div>
         <div className="landing-download-options">
-          <button className="landing-download-button" type="button" disabled>
+          <a
+            className="landing-download-button"
+            href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor-Setup.exe"
+            aria-label="Windows uchun Yemzor ilovasini yuklab olish"
+          >
             <FiMonitor aria-hidden="true" />
             <span>
               <strong>Windows uchun .exe</strong>
-              <small>Yuklab olish kutilmoqda</small>
+              <small>O‘rnatuvchi fayl · .exe</small>
             </span>
             <FiDownload aria-hidden="true" />
-          </button>
-          <button className="landing-download-button" type="button" disabled>
+          </a>
+          <a
+            className="landing-download-button"
+            href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor.apk"
+            aria-label="Android uchun Yemzor ilovasini yuklab olish"
+          >
             <FiSmartphone aria-hidden="true" />
             <span>
               <strong>Android uchun .apk</strong>
-              <small>Yuklab olish kutilmoqda</small>
+              <small>O‘rnatuvchi fayl · .apk</small>
             </span>
             <FiDownload aria-hidden="true" />
-          </button>
+          </a>
         </div>
       </section>
 
@@ -3703,17 +3730,9 @@ function Overview({ user, data, onNavigate }) {
   const monthly = sales.filter(
     (sale) => monthKey(new Date(sale.createdAt)) === month,
   );
-  const getSaleProfit = (sale) => {
-    if (typeof sale.profit === "number") return sale.profit;
-    const purchaseTotal = (sale.items || []).reduce(
-      (sum, item) => sum + (Number(item.cost) || Math.round((Number(item.quantity) || 0) * (Number(item.costPrice) || 0))),
-      0,
-    );
-    return Math.max(0, Number(sale.total || 0) - purchaseTotal);
-  };
-  const todayProfit = todays.reduce((sum, sale) => sum + getSaleProfit(sale), 0);
-  const weeklyProfit = weekly.reduce((sum, sale) => sum + getSaleProfit(sale), 0);
-  const monthlyProfit = monthly.reduce((sum, sale) => sum + getSaleProfit(sale), 0);
+  const todayProfit = todays.reduce((sum, sale) => sum + saleProfit(sale), 0);
+  const weeklyProfit = weekly.reduce((sum, sale) => sum + saleProfit(sale), 0);
+  const monthlyProfit = monthly.reduce((sum, sale) => sum + saleProfit(sale), 0);
   const todayReceipts = receipts.filter(
     (receipt) => dayKey(new Date(receipt.createdAt)) === today,
   );
@@ -4775,8 +4794,10 @@ function HistoryPage({
       incoming: 0,
       incomingValue: 0,
       sold: 0,
+      soldCostQuantity: 0,
       soldValue: 0,
-      costValue: 0,
+      soldCostValue: 0,
+      soldCostMissing: false,
       profit: 0,
     };
     row.incoming += item.quantity;
@@ -4793,14 +4814,21 @@ function HistoryPage({
         incoming: 0,
         incomingValue: 0,
         sold: 0,
+        soldCostQuantity: 0,
         soldValue: 0,
-        costValue: 0,
+        soldCostValue: 0,
+        soldCostMissing: false,
         profit: 0,
       };
       row.sold += line.quantity;
       row.soldValue += line.lineTotal;
-      row.costValue += Number(line.cost) || 0;
-      row.profit += Number(line.profit) || Math.max(0, (Number(line.lineTotal) || 0) - (Number(line.cost) || 0));
+      if (typeof line.cost === "number" || typeof line.costPrice === "number") {
+        row.soldCostQuantity += line.quantity;
+        row.soldCostValue += saleLineCost(line);
+      } else {
+        row.soldCostMissing = true;
+      }
+      row.profit += saleLineProfit(line);
       report.set(key, row);
     }
   const reportRows = [...report.values()].sort((a, b) =>
@@ -4900,9 +4928,9 @@ function HistoryPage({
             tone="green"
           />
           <Metric
-            label="Tanlangan davr foydasi"
-            value={money(filteredSales.reduce((sum, sale) => sum + (Number(sale.profit) || 0), 0))}
-            detail="Tan narxdan foyda"
+            label="Jami foyda"
+            value={money(filteredSales.reduce((sum, sale) => sum + saleProfit(sale), 0))}
+            detail="Tanlangan davrdagi barcha tovarlar"
             icon={FiTrendingUp}
             tone="green"
           />
@@ -4937,17 +4965,22 @@ function HistoryPage({
                 <tr>
                   <th>TOVAR</th>
                   <th>KELDI</th>
-                  <th>TAN NARX</th>
+                  <th>TAN NARXI (BIRLIK / JAMI)</th>
                   <th>SOTILDI</th>
-                  <th>SOTUV TUSHUMI</th>
-                  <th>FOYDA</th>
+                  <th>SOTUV NARXI (BIRLIK / JAMI)</th>
+                  <th>JAMI FOYDA</th>
                 </tr>
               </thead>
               <tbody>
                 {reportRows.map((row) => {
-                  const purchaseCost = monthlySales.reduce((sum, sale) => sum + (sale.items || []).filter((item) => item.productId === row.id).reduce((lineTotal, item) => lineTotal + (Number(item.cost) || 0), 0), 0);
-                  const revenue = monthlySales.reduce((sum, sale) => sum + (sale.items || []).filter((item) => item.productId === row.id).reduce((lineTotal, item) => lineTotal + (Number(item.lineTotal) || 0), 0), 0);
-                  const profit = Number(row.profit) || revenue - purchaseCost;
+                  const unitCost =
+                    row.soldCostQuantity > 0
+                      ? row.soldCostValue / row.soldCostQuantity
+                      : row.incoming > 0
+                        ? row.incomingValue / row.incoming
+                        : 0;
+                  const costTotal =
+                    row.soldCostQuantity > 0 ? row.soldCostValue : row.incomingValue;
                   return (
                     <tr key={row.id || row.name}>
                       <td>{row.name}</td>
@@ -4955,13 +4988,31 @@ function HistoryPage({
                         {formatQuantity(row.incoming, row.unit)}{" "}
                         {unitName(row.unit)}
                       </td>
-                      <td>{money(row.incomingValue)}</td>
+                      <td>
+                        <strong>{money(unitCost)} / {unitName(row.unit)}</strong>
+                        <small>
+                          {row.soldCostMissing
+                            ? "Eski savdolarda tan narx yo‘q · "
+                            : row.soldCostQuantity > 0
+                              ? "Sotilganining jami: "
+                              : "Kirimning jami: "}
+                          {money(costTotal)}
+                        </small>
+                      </td>
                       <td>
                         {formatQuantity(row.sold, row.unit)}{" "}
                         {unitName(row.unit)}
                       </td>
-                      <td>{money(row.soldValue)}</td>
-                      <td>{money(profit)}</td>
+                      <td>
+                        <strong>
+                          {money(row.sold > 0 ? row.soldValue / row.sold : 0)} / {unitName(row.unit)}
+                        </strong>
+                        <small>
+                          {row.sold > 0 ? "Sotuv jami: " : "Sotuv hali yo‘q · jami: "}
+                          {money(row.soldValue)}
+                        </small>
+                      </td>
+                      <td><strong>{money(row.profit)}</strong></td>
                     </tr>
                   );
                 })}
