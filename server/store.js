@@ -77,6 +77,10 @@ export async function initializeDatabase() {
         product.active = true
         changed = true
       }
+      if (typeof product.costPrice === 'undefined') {
+        product.costPrice = product.price || 0
+        changed = true
+      }
       if (product.unit === 'liter' && !product.volumeUnit) {
         product.volumeUnit = 'l'
         changed = true

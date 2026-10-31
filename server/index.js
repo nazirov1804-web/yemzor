@@ -801,6 +801,7 @@ app.post('/api/products', requireAuth, requireOwnerOrManager, requirePaidSubscri
   if (!['bag', 'weight', 'liter', 'piece', 'block'].includes(unit)) fail(400, 'Tovar birligini qop, vazn, litr, dona yoki blokdan tanlang.')
   const quantity = Number(request.body?.quantity)
   const quantityUnit = request.body?.quantityUnit
+  const costPrice = positiveAmount(request.body?.costPrice, 'Tan narx')
   const price = positiveAmount(request.body?.price, 'Sotuv narxi')
   const minimumPrice = positiveAmount(request.body?.minimumPrice, 'Eng past narx')
   if (minimumPrice > price) fail(400, 'Eng past narx asosiy narxdan katta bo‘lishi mumkin emas.')
@@ -834,6 +835,7 @@ app.post('/api/products', requireAuth, requireOwnerOrManager, requirePaidSubscri
       quantity: normalizedQuantity,
       lowStockThreshold,
       lowStockUnit: thresholdUnit,
+      costPrice,
       price,
       minimumPrice,
       active: true,
@@ -849,8 +851,10 @@ app.post('/api/products', requireAuth, requireOwnerOrManager, requirePaidSubscri
       unit: unit === 'weight' ? 'kg' : unit,
       quantityUnit: unit === 'liter' ? quantityUnit : unit,
       quantity: normalizedQuantity,
-      price,
-      total: Math.round(normalizedQuantity * price),
+      price: costPrice,
+      total: Math.round(normalizedQuantity * costPrice),
+      costPrice,
+      margin: Math.round(normalizedQuantity * (price - costPrice)),
       createdAt: now,
     })
     return product
@@ -861,6 +865,7 @@ app.post('/api/products', requireAuth, requireOwnerOrManager, requirePaidSubscri
 app.post('/api/products/:id/stock', requireAuth, requireOwnerOrManager, requirePaidSubscription, async (request, response) => {
   const quantity = Number(request.body?.quantity)
   const unit = request.body?.unit
+  const incomingCostPrice = request.body?.costPrice === undefined ? undefined : positiveAmount(request.body.costPrice, 'Tan narx')
   if (!Number.isFinite(quantity) || quantity <= 0 || !['bag', 'kg', 'ton', 'l', 'ml', 'piece', 'block'].includes(unit)) fail(400, 'Kirim miqdori va birligini tekshiring.')
   if (['bag', 'piece', 'block'].includes(unit) && !Number.isSafeInteger(quantity)) fail(400, 'Qop, dona va blok miqdori butun son bo‘lishi kerak.')
   const result = await updateDatabase((database) => {
@@ -875,7 +880,15 @@ app.post('/api/products/:id/stock', requireAuth, requireOwnerOrManager, requireP
     if (!expectedUnits.includes(unit)) fail(400, 'Kirim birligi tovarning hisob birligiga mos kelmaydi.')
     const normalizedQuantity = unit === 'ton' ? quantity * 1000 : unit === 'ml' ? quantity / 1000 : quantity
     if (!Number.isFinite(normalizedQuantity)) fail(400, 'Kirim miqdori juda katta.')
+    const nextCostPrice = incomingCostPrice ?? product.costPrice ?? 0
+    if (nextCostPrice <= 0) fail(400, 'Kirimdagi tan narx musbat bo‘lishi kerak.')
     const now = new Date().toISOString()
+    const currentTotalCost = Number(product.costPrice || 0) * Number(product.quantity || 0)
+    const incomingTotalCost = nextCostPrice * normalizedQuantity
+    const nextQuantity = Number(product.quantity || 0) + normalizedQuantity
+    product.costPrice = nextQuantity > 0
+      ? (currentTotalCost + incomingTotalCost) / nextQuantity
+      : 0
     product.quantity += normalizedQuantity
     product.updatedAt = now
     database.receipts.push({
@@ -886,8 +899,9 @@ app.post('/api/products/:id/stock', requireAuth, requireOwnerOrManager, requireP
       unit: product.unit === 'weight' ? 'kg' : product.unit,
       quantityUnit: product.unit === 'liter' ? unit : product.unit,
       quantity: normalizedQuantity,
-      price: product.price,
-      total: Math.round(normalizedQuantity * product.price),
+      price: nextCostPrice,
+      total: Math.round(normalizedQuantity * nextCostPrice),
+      costPrice: nextCostPrice,
       createdAt: now,
     })
     return product
@@ -896,17 +910,18 @@ app.post('/api/products/:id/stock', requireAuth, requireOwnerOrManager, requireP
 })
 
 app.patch('/api/products/:id', requireAuth, requireOwnerOrManager, requirePaidSubscription, async (request, response) => {
-  const { name, price, minimumPrice } = request.body || {}
+  const { name, price, minimumPrice, costPrice } = request.body || {}
   const result = await updateDatabase((database) => {
     const company = requireCompany(request, database)
     const product = companyRecords(database, company.id, 'products').find((item) => item.id === request.params.id)
     if (!product || product.active === false) fail(404, 'Faol tovar topilmadi.')
     const nextName = name === undefined ? product.name : validateName(name, 'Tovar nomi')
+    const nextCostPrice = costPrice === undefined ? product.costPrice : positiveAmount(costPrice, 'Tan narx')
     const nextPrice = price === undefined ? product.price : positiveAmount(price, 'Sotuv narxi')
     const nextMinimum = minimumPrice === undefined ? product.minimumPrice : positiveAmount(minimumPrice, 'Eng past narx')
     if (nextMinimum > nextPrice) fail(400, 'Eng past narx asosiy narxdan katta bo‘lishi mumkin emas.')
     if (companyRecords(database, company.id, 'products').some((item) => item.active !== false && item.id !== product.id && item.name.toLocaleLowerCase('uz') === nextName.toLocaleLowerCase('uz'))) fail(409, 'Bunday nomdagi tovar mavjud.')
-    Object.assign(product, { name: nextName, price: nextPrice, minimumPrice: nextMinimum, updatedAt: new Date().toISOString() })
+    Object.assign(product, { name: nextName, costPrice: nextCostPrice, price: nextPrice, minimumPrice: nextMinimum, updatedAt: new Date().toISOString() })
     return product
   })
   response.json({ product: result })
@@ -962,6 +977,13 @@ app.post('/api/sales', requireAuth, requireCompanyUser, requirePaidSubscription,
       if (product.unit === 'liter' && !['l', 'ml'].includes(displayedQuantityUnit)) fail(400, `${product.name}: litr yoki millilitrni tanlang.`)
       if (price < product.minimumPrice || price > product.price) fail(400, `${product.name}: narx ${product.minimumPrice.toLocaleString('uz-UZ')} so‘mdan kam, ${product.price.toLocaleString('uz-UZ')} so‘mdan oshgan bo‘lishi mumkin emas.`)
       if (!products.has(productId)) products.set(productId, product)
+      const costPrice = Number(product.costPrice || 0)
+      const quantityInBaseUnits = product.unit === 'weight' && displayedQuantityUnit === 'ton'
+        ? quantity * 1000
+        : product.unit === 'liter' && displayedQuantityUnit === 'ml'
+          ? quantity / 1000
+          : quantity
+      const purchaseCost = Math.round(quantityInBaseUnits * costPrice)
       return {
         productId,
         name: product.name,
@@ -969,6 +991,9 @@ app.post('/api/sales', requireAuth, requireCompanyUser, requirePaidSubscription,
         quantityUnit: product.unit === 'liter' ? displayedQuantityUnit : product.unit,
         quantity,
         price,
+        costPrice,
+        cost: purchaseCost,
+        profit: Math.round(quantity * price) - purchaseCost,
         lineTotal: Math.round(quantity * price),
       }
     })
@@ -1015,6 +1040,7 @@ app.post('/api/sales', requireAuth, requireCompanyUser, requirePaidSubscription,
       }
     }
     const seller = database.users.find((user) => user.id === sellerId)
+    const totalCost = lines.reduce((total, line) => total + line.cost, 0)
     const result = {
       id: randomUUID(),
       companyId: company.id,
@@ -1024,6 +1050,8 @@ app.post('/api/sales', requireAuth, requireCompanyUser, requirePaidSubscription,
       companyName: company.name,
       items: lines,
       total: lines.reduce((total, line) => total + line.lineTotal, 0),
+      purchaseTotal: totalCost,
+      profit: lines.reduce((total, line) => total + line.profit, 0),
       createdAt,
     }
     database.sales.push(result)

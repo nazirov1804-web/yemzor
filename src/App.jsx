@@ -1290,6 +1290,50 @@ function LandingPage({
         </div>
       </section>
 
+      <section className="landing-role-flow" aria-label="Yemzor ishlash modeli">
+        <div className="landing-role-flow-head">
+          <span className="landing-kicker">
+            <i /> YEMZOR MODELI
+          </span>
+          <h2>Barcha boshqaruv jarayoni bitta markazda birlashadi</h2>
+        </div>
+        <div className="role-flow-grid">
+          <article className="flow-node flow-node-top-left">
+            <span className="flow-icon"><FiBriefcase /></span>
+            <strong>Boshliq</strong>
+            <small>Umumiy nazorat va qarorlar</small>
+          </article>
+          <article className="flow-node flow-node-top-center">
+            <span className="flow-icon"><FiBox /></span>
+            <strong>Ombor</strong>
+            <small>Kirim, qoldiq va tan narx</small>
+          </article>
+          <article className="flow-node flow-node-top-right">
+            <span className="flow-icon"><FiTrendingUp /></span>
+            <strong>Savdo</strong>
+            <small>Chek, narx va tushum</small>
+          </article>
+          <div className="flow-center">
+            <span>Yemzor</span>
+          </div>
+          <article className="flow-node flow-node-bottom-left">
+            <span className="flow-icon"><FiShoppingCart /></span>
+            <strong>Hisobot</strong>
+            <small>Kunlik, haftalik va oylik</small>
+          </article>
+          <article className="flow-node flow-node-bottom-center">
+            <span className="flow-icon"><FiUsers /></span>
+            <strong>Xodim</strong>
+            <small>Davomat va oylik</small>
+          </article>
+          <article className="flow-node flow-node-bottom-right">
+            <span className="flow-icon"><FiDollarSign /></span>
+            <strong>To‘lov</strong>
+            <small>Avans, Abed va bonus</small>
+          </article>
+        </div>
+      </section>
+
       <section className="landing-tools landing-process" id="jarayon">
         <span className="landing-kicker">
           <i /> ODDIY VA TARTIBLI ISH JARAYONI
@@ -1499,7 +1543,7 @@ function LandingPage({
           <p>Har bir tovar uchun mos birlikni tanlang; suyuqliklarda litr yoki millilitr ishlating.</p>
         </div>
         <div className="unit-pills" aria-label="Qo‘llab-quvvatlanadigan birliklar">
-          <span>Qop</span><span>Kg / tonna</span><span>Litr</span><span>Millilitr</span><span>Dona</span><span>Blok</span>
+          <span>Qop</span><span>Kg / tonna</span><span>litr</span><span>millilitr</span><span>dona</span><span>blok</span>
         </div>
       </section>
 
@@ -3659,6 +3703,17 @@ function Overview({ user, data, onNavigate }) {
   const monthly = sales.filter(
     (sale) => monthKey(new Date(sale.createdAt)) === month,
   );
+  const getSaleProfit = (sale) => {
+    if (typeof sale.profit === "number") return sale.profit;
+    const purchaseTotal = (sale.items || []).reduce(
+      (sum, item) => sum + (Number(item.cost) || Math.round((Number(item.quantity) || 0) * (Number(item.costPrice) || 0))),
+      0,
+    );
+    return Math.max(0, Number(sale.total || 0) - purchaseTotal);
+  };
+  const todayProfit = todays.reduce((sum, sale) => sum + getSaleProfit(sale), 0);
+  const weeklyProfit = weekly.reduce((sum, sale) => sum + getSaleProfit(sale), 0);
+  const monthlyProfit = monthly.reduce((sum, sale) => sum + getSaleProfit(sale), 0);
   const todayReceipts = receipts.filter(
     (receipt) => dayKey(new Date(receipt.createdAt)) === today,
   );
@@ -3735,6 +3790,13 @@ function Overview({ user, data, onNavigate }) {
           tone="green"
         />
         <Metric
+          label="Bugungi foyda"
+          value={money(todayProfit)}
+          detail="Tan narx va sotuv narxi farqi"
+          icon={FiTrendingUp}
+          tone="green"
+        />
+        <Metric
           label="Haftalik tushum"
           value={money(amountSum(weekly))}
           detail="Dushanbadan bugungacha"
@@ -3742,10 +3804,24 @@ function Overview({ user, data, onNavigate }) {
           tone="blue"
         />
         <Metric
+          label="Haftalik foyda"
+          value={money(weeklyProfit)}
+          detail="Haftalik umumiy foyda"
+          icon={FiTrendingUp}
+          tone="blue"
+        />
+        <Metric
           label="Oylik tushum"
           value={money(amountSum(monthly))}
           detail={localizedMonth(month)}
           icon={FiDollarSign}
+          tone="amber"
+        />
+        <Metric
+          label="Oylik foyda"
+          value={money(monthlyProfit)}
+          detail="Bu oy umumiy foyda"
+          icon={FiTrendingUp}
           tone="amber"
         />
         <Metric
@@ -3907,6 +3983,7 @@ function ProductTable({ products, owner, onStock, onEdit, onArchive, readOnly })
           <tr>
             <th>TOVAR</th>
             <th>OMBORDA</th>
+            <th>TAN NARX</th>
             <th>SOTUV NARXI</th>
             <th>MIN. NARX</th>
             {owner && !readOnly && <th>AMALLAR</th>}
@@ -3925,8 +4002,8 @@ function ProductTable({ products, owner, onStock, onEdit, onArchive, readOnly })
                     <small>
                       {product.unit === "bag" ? "Qop hisobida"
                         : product.unit === "weight" ? "Vazn, kg hisobida"
-                          : product.unit === "liter" ? "Litr hisobida"
-                            : product.unit === "piece" ? "Dona hisobida" : "Blok hisobida"}
+                          : product.unit === "liter" ? "litr hisobida"
+                            : product.unit === "piece" ? "dona hisobida" : "blok hisobida"}
                     </small>
                   </div>
                 </div>
@@ -3936,6 +4013,10 @@ function ProductTable({ products, owner, onStock, onEdit, onArchive, readOnly })
                 {product.quantity <= 0 && (
                   <span className="stock-empty">Tugagan</span>
                 )}
+              </td>
+              <td>
+                {money(product.costPrice ?? 0)}{" "}
+                <small>/ {unitName(product.unit)}</small>
               </td>
               <td>
                 {money(product.price)}{" "}
@@ -4321,8 +4402,8 @@ function SalesPage({ user, companyName, products, employees, onSale }) {
                               )
                             }
                           >
-                            <option value="l">Litr</option>
-                            <option value="ml">Millilitr</option>
+                            <option value="l">litr</option>
+                            <option value="ml">millilitr</option>
                           </select>
                         )}
                       </label>
@@ -4526,6 +4607,8 @@ function Receipt({ sale, autoPrint = false }) {
         unit: item.unit,
         quantityUnit: item.quantityUnit,
         price: item.price,
+        costPrice: item.costPrice ?? item.price,
+        profit: item.profit ?? Math.max(0, (Number(item.lineTotal) || 0) - (Number(item.cost) || 0)),
         total: item.lineTotal,
       })),
     };
@@ -4557,6 +4640,7 @@ function Receipt({ sale, autoPrint = false }) {
   }, [autoPrint, sale.id]);
 
   const currentQr = qrResult?.saleId === sale.id ? qrResult : null;
+  const totalProfit = (sale.items || []).reduce((sum, item) => sum + (Number(item.profit) || Math.max(0, (Number(item.lineTotal) || 0) - (Number(item.cost) || 0))), 0);
 
   return (
     <div className="receipt">
@@ -4572,8 +4656,9 @@ function Receipt({ sale, autoPrint = false }) {
             <span>
               {item.name}
               <small>
-                {saleQuantityLabel(item, item.quantity)} × {money(item.price)} /{" "}
-                {unitName(item.unit)}
+                {saleQuantityLabel(item, item.quantity)} × {money(item.price)} / {unitName(item.unit)}
+                {item.costPrice != null && ` · Tan narx: ${money(item.costPrice)}`}
+                {Number(item.profit || 0) !== 0 && ` · Foyda: ${money(item.profit)}`}
               </small>
             </span>
             <b>{money(item.lineTotal)}</b>
@@ -4584,6 +4669,12 @@ function Receipt({ sale, autoPrint = false }) {
         <span>Jami</span>
         <strong>{money(sale.total)}</strong>
       </div>
+      {totalProfit !== 0 && (
+        <div className="total-line total-line-profit">
+          <span>Umumiy foyda</span>
+          <strong>{money(totalProfit)}</strong>
+        </div>
+      )}
       <div className="receipt-qr">
         <div className="receipt-qr-frame">
           {currentQr?.dataUrl ? (
@@ -4685,6 +4776,8 @@ function HistoryPage({
       incomingValue: 0,
       sold: 0,
       soldValue: 0,
+      costValue: 0,
+      profit: 0,
     };
     row.incoming += item.quantity;
     row.incomingValue += item.total;
@@ -4701,9 +4794,13 @@ function HistoryPage({
         incomingValue: 0,
         sold: 0,
         soldValue: 0,
+        costValue: 0,
+        profit: 0,
       };
       row.sold += line.quantity;
       row.soldValue += line.lineTotal;
+      row.costValue += Number(line.cost) || 0;
+      row.profit += Number(line.profit) || Math.max(0, (Number(line.lineTotal) || 0) - (Number(line.cost) || 0));
       report.set(key, row);
     }
   const reportRows = [...report.values()].sort((a, b) =>
@@ -4803,6 +4900,13 @@ function HistoryPage({
             tone="green"
           />
           <Metric
+            label="Tanlangan davr foydasi"
+            value={money(filteredSales.reduce((sum, sale) => sum + (Number(sale.profit) || 0), 0))}
+            detail="Tan narxdan foyda"
+            icon={FiTrendingUp}
+            tone="green"
+          />
+          <Metric
             label="Tanlangan davr kirimi"
             value={movementQuantity(periodReceipts)}
             detail={money(amountSum(periodReceipts))}
@@ -4833,27 +4937,34 @@ function HistoryPage({
                 <tr>
                   <th>TOVAR</th>
                   <th>KELDI</th>
-                  <th>KIRIM QIYMATI</th>
+                  <th>TAN NARX</th>
                   <th>SOTILDI</th>
                   <th>SOTUV TUSHUMI</th>
+                  <th>FOYDA</th>
                 </tr>
               </thead>
               <tbody>
-                {reportRows.map((row) => (
-                  <tr key={row.id || row.name}>
-                    <td>{row.name}</td>
-                    <td>
-                      {formatQuantity(row.incoming, row.unit)}{" "}
-                      {unitName(row.unit)}
-                    </td>
-                    <td>{money(row.incomingValue)}</td>
-                    <td>
-                      {formatQuantity(row.sold, row.unit)}{" "}
-                      {unitName(row.unit)}
-                    </td>
-                    <td>{money(row.soldValue)}</td>
-                  </tr>
-                ))}
+                {reportRows.map((row) => {
+                  const purchaseCost = monthlySales.reduce((sum, sale) => sum + (sale.items || []).filter((item) => item.productId === row.id).reduce((lineTotal, item) => lineTotal + (Number(item.cost) || 0), 0), 0);
+                  const revenue = monthlySales.reduce((sum, sale) => sum + (sale.items || []).filter((item) => item.productId === row.id).reduce((lineTotal, item) => lineTotal + (Number(item.lineTotal) || 0), 0), 0);
+                  const profit = Number(row.profit) || revenue - purchaseCost;
+                  return (
+                    <tr key={row.id || row.name}>
+                      <td>{row.name}</td>
+                      <td>
+                        {formatQuantity(row.incoming, row.unit)}{" "}
+                        {unitName(row.unit)}
+                      </td>
+                      <td>{money(row.incomingValue)}</td>
+                      <td>
+                        {formatQuantity(row.sold, row.unit)}{" "}
+                        {unitName(row.unit)}
+                      </td>
+                      <td>{money(row.soldValue)}</td>
+                      <td>{money(profit)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -6057,6 +6168,7 @@ function ProductForm({ product, onSubmit }) {
           product
             ? {
                 name: form.get("name"),
+                costPrice: readNumber(form.get("costPrice")),
                 price: readNumber(form.get("price")),
                 minimumPrice: readNumber(form.get("minimumPrice")),
               }
@@ -6071,6 +6183,7 @@ function ProductForm({ product, onSubmit }) {
                 thresholdUnit: ["weight", "liter"].includes(unit)
                   ? form.get("thresholdUnit")
                   : unit,
+                costPrice: readNumber(form.get("costPrice")),
                 price: readNumber(form.get("price")),
                 minimumPrice: readNumber(form.get("minimumPrice")),
               },
@@ -6096,9 +6209,9 @@ function ProductForm({ product, onSubmit }) {
           >
             <option value="bag">Qop</option>
             <option value="weight">Vazn (kg / tonna)</option>
-            <option value="liter">Litr</option>
-            <option value="piece">Dona</option>
-            <option value="block">Blok</option>
+            <option value="liter">litr</option>
+            <option value="piece">dona</option>
+            <option value="block">blok</option>
           </select>
         </Field>
       )}
@@ -6124,8 +6237,8 @@ function ProductForm({ product, onSubmit }) {
                   </>
                 ) : (
                   <>
-                    <option value="l">Litr</option>
-                    <option value="ml">Millilitr</option>
+                    <option value="l">litr</option>
+                    <option value="ml">millilitr</option>
                   </>
                 )}
               </select>
@@ -6155,8 +6268,8 @@ function ProductForm({ product, onSubmit }) {
                   </>
                 ) : (
                   <>
-                    <option value="l">Litr</option>
-                    <option value="ml">Millilitr</option>
+                    <option value="l">litr</option>
+                    <option value="ml">millilitr</option>
                   </>
                 )}
               </select>
@@ -6164,6 +6277,13 @@ function ProductForm({ product, onSubmit }) {
           )}
         </div>
       )}
+      <Field label={`Tan narx (1 ${unitName(product?.unit || unit)})`}>
+        <MoneyField
+          name="costPrice"
+          defaultValue={product?.costPrice ?? product?.price}
+          required
+        />
+      </Field>
       <Field
         label={`Sotuv narxi (1 ${unitName(product?.unit || unit)})`}
       >
@@ -6194,7 +6314,11 @@ function StockForm({ product, onSubmit }) {
   return (
     <AccessForm
       onSubmit={(form) =>
-        onSubmit({ quantity: Number(form.get("quantity")), unit })
+        onSubmit({
+          quantity: Number(form.get("quantity")),
+          unit,
+          costPrice: readNumber(form.get("costPrice")),
+        })
       }
       submitLabel="Kirimni saqlash"
     >
@@ -6208,7 +6332,7 @@ function StockForm({ product, onSubmit }) {
           placeholder="0"
         />
       </Field>
-      {["weight", "liter"].includes(product.unit) && (
+      {product.unit === "liter" || product.unit === "weight" ? (
         <Field label="Kirim birligi">
           <select
             value={unit}
@@ -6221,13 +6345,16 @@ function StockForm({ product, onSubmit }) {
               </>
             ) : (
               <>
-                <option value="l">Litr</option>
-                <option value="ml">Millilitr</option>
+                <option value="l">litr</option>
+                <option value="ml">millilitr</option>
               </>
             )}
           </select>
         </Field>
-      )}
+      ) : null}
+      <Field label={`Tan narx (1 ${unitName(product.unit)})`}>
+        <MoneyField name="costPrice" defaultValue={product.costPrice} required />
+      </Field>
       {["bag", "piece", "block"].includes(product.unit) && (
         <p className="security-note">
           Ushbu tovar butun birliklarda hisoblanadi.
@@ -6539,17 +6666,18 @@ function NotificationCenter({
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [open]);
-  function toggle() {
-    if (!open) {
-      const updated = [
-        ...new Set([
-          ...seenIds,
-          ...notifications.map((notification) => notification.id),
-        ]),
-      ];
-      setSeenIds(updated);
-      window.localStorage.setItem(storageKey, JSON.stringify(updated));
+  function markSeen(ids) {
+    const updated = [...new Set([...seenIds, ...ids])];
+    setSeenIds(updated);
+    window.localStorage.setItem(storageKey, JSON.stringify(updated));
+  }
+  function closeDialog() {
+    if (notifications.length) {
+      markSeen(notifications.map((notification) => notification.id));
     }
+    setOpen(false);
+  }
+  function toggle() {
     setOpen((current) => !current);
   }
   return (
@@ -6573,7 +6701,7 @@ function NotificationCenter({
           <div
             className="notification-overlay"
             onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setOpen(false);
+              if (event.target === event.currentTarget) closeDialog();
             }}
           >
             <section
@@ -6599,7 +6727,7 @@ function NotificationCenter({
                   className="icon-button"
                   type="button"
                   aria-label="Yopish"
-                  onClick={() => setOpen(false)}
+                  onClick={closeDialog}
                 >
                   <FiX />
                 </button>
@@ -6655,7 +6783,7 @@ function NotificationCenter({
                 <button
                   className="button button-secondary button-small"
                   type="button"
-                  onClick={() => setOpen(false)}
+                  onClick={closeDialog}
                 >
                   Yopish
                 </button>
