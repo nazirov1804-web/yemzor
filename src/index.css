@@ -1555,12 +1555,10 @@ td strong {
 
 .demo-send-code {
   min-height: 38px;
-  margin-top: -11px !important;
   padding: 0 10px;
   font-size: 10px;
   white-space: nowrap;
-  position: relative;
-  bottom: 14px;
+  align-self: end;
 }
 
 .field-hint {
@@ -10271,6 +10269,38 @@ html[data-theme="dark"] .flow-center {
 }
 
 @media (max-width: 480px) {
+  .demo-email-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .demo-send-code {
+    width: 100%;
+    min-height: 44px;
+    margin: 0 !important;
+    padding-inline: 12px;
+    font-size: 12px;
+    white-space: normal;
+  }
+
+  .legal-page-header {
+    align-items: center;
+    gap: 8px;
+    padding-inline: 12px;
+  }
+
+  .legal-back-button {
+    flex-shrink: 0;
+    gap: 6px;
+    padding: 9px 10px;
+    white-space: nowrap;
+  }
+
+  .legal-page-header .brand {
+    min-width: 0;
+  }
+
   .landing-role-flow {
     width: min(calc(100% - 24px), 420px);
     padding: 24px 16px;

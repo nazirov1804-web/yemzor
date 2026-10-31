@@ -1894,7 +1894,7 @@ function DemoRegistrationPage({
       <section className="access-main">
         <form className="access-card" onSubmit={submit}>
           <button type="button" className="back-link" onClick={onBack}>
-            ← Bosh sahifaga
+            ← Qaytish
           </button>
           <span className="eyebrow">YANGI DEMO HISOBI</span>
           <h2>48 soat bepul sinash</h2>
@@ -2082,7 +2082,7 @@ function AccessPage({
         <form className="access-card" onSubmit={submit}>
           {showBack && (
             <button type="button" className="back-link" onClick={onBack}>
-              ← Bosh sahifaga
+              ← Qaytish
             </button>
           )}
           <span className="eyebrow">
@@ -2332,7 +2332,7 @@ function DemoExpiredGate({ onLogout, onRestart, theme, onToggleTheme }) {
             className="button button-secondary button-wide"
             onClick={onLogout}
           >
-            <FiLogOut /> Bosh sahifaga qaytish
+            <FiLogOut /> Chiqish
           </button>
         </div>
         <small className="subscription-note">
@@ -4294,7 +4294,7 @@ function SalesPage({ user, companyName, products, employees, onSale }) {
           </label>
           <div className="catalog-meta">
             <span>SOTUV UCHUN MAVJUD</span>
-            <span>{available.length} ta</span>
+            <span>{translateText(`${available.length} ta`, currentLanguage())}</span>
           </div>
           <div className="catalog-list">
             {available.length ? (
@@ -4336,7 +4336,7 @@ function SalesPage({ user, companyName, products, employees, onSale }) {
           <div className="panel-head">
             <div>
               <h2>Savdo savati</h2>
-              <p>{cart.length} ta mahsulot</p>
+              <p>{translateText(`${cart.length} ta mahsulot`, currentLanguage())}</p>
             </div>
             <span className="cart-symbol">
               <FiShoppingCart />

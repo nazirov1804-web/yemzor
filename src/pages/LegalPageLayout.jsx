@@ -14,7 +14,7 @@ export default function LegalPageLayout({
     <main className="legal-page">
       <header className="legal-page-header">
         <button className="legal-back-button" type="button" onClick={onBack}>
-          <FiArrowLeft /> Bosh sahifaga qaytish
+          <FiArrowLeft /> Qaytish
         </button>
         <a href="#" className="brand">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
