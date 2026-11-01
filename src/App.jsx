@@ -1362,39 +1362,33 @@ function LandingPage({
             <path id="flow-path-bottom-left" className="flow-path flow-path-bottom-left" d="M500 200L150 315" />
             <path id="flow-path-bottom-center" className="flow-path flow-path-bottom-center" d="M500 200L500 315" />
             <path id="flow-path-bottom-right" className="flow-path flow-path-bottom-right" d="M500 200L850 315" />
-            <path id="flow-route-employee-sales" className="flow-route flow-route-employee-sales" d="M0 95C-35 95 -35 315 0 315" />
-            <path id="flow-route-sales-owner" className="flow-route flow-route-sales-owner" d="M150 392C240 430 410 430 500 392" />
-            <path id="flow-route-owner-payment" className="flow-route flow-route-owner-payment" d="M500 392C610 430 750 430 850 392" />
-            <path id="flow-route-payment-report" className="flow-route flow-route-payment-report" d="M1000 315C1035 315 1035 95 1000 95" />
-            <path id="flow-route-report-inventory" className="flow-route flow-route-report-inventory" d="M850 18C760 -20 600 -20 500 18" />
-            <path id="flow-route-inventory-employee" className="flow-route flow-route-inventory-employee" d="M500 18C400 -20 240 -20 150 18" />
             {[
-              "employee-sales",
-              "sales-owner",
-              "owner-payment",
-              "payment-report",
-              "report-inventory",
-              "inventory-employee",
+              "top-left",
+              "top-center",
+              "top-right",
+              "bottom-left",
+              "bottom-center",
+              "bottom-right",
             ].map((position) => (
               <circle
                 key={position}
-                className={`flow-dot flow-dot-route-${position}`}
+                className={`flow-dot flow-dot-${position}`}
                 r="5"
               >
                 <animateMotion
-                  dur="3s"
+                  dur="2.8s"
                   begin="0s"
                   repeatCount="indefinite"
                   calcMode="linear"
                 >
-                  <mpath href={`#flow-route-${position}`} />
+                  <mpath href={`#flow-path-${position}`} />
                 </animateMotion>
                 <animate
                   attributeName="opacity"
-                  dur="3s"
+                  dur="2.8s"
                   begin="0s"
                   values="0;1;1;0;0"
-                  keyTimes="0;0.08;0.86;0.98;1"
+                  keyTimes="0;0.08;0.82;0.95;1"
                   repeatCount="indefinite"
                 />
               </circle>

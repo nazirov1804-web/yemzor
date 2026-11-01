@@ -2339,7 +2339,7 @@ html[data-theme="dark"] .receipt-qr-copy span {
   position: relative;
   min-height: 46px;
   padding: 0 10px;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 9px;
   color: #77857b;
   background: transparent;
@@ -10099,11 +10099,9 @@ html[data-theme="dark"] .landing-download-button small {
   margin: clamp(42px, 7vw, 82px) auto;
   padding: clamp(24px, 5vw, 56px);
   overflow: hidden;
-  border: 1px solid #e0e8e4;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 50% 50%, #f0f5ff 0, transparent 34%),
-    #f8fafc;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
 }
 
 .landing-role-flow-head {
@@ -10125,7 +10123,7 @@ html[data-theme="dark"] .landing-download-button small {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(154px, auto));
-  gap: 68px 84px;
+  gap: 120px 84px;
   align-items: center;
   max-width: 1120px;
   margin: 0 auto;
@@ -10151,52 +10149,11 @@ html[data-theme="dark"] .landing-download-button small {
   transition: stroke 180ms ease, stroke-width 180ms ease, filter 180ms ease;
 }
 
-.flow-route {
-  fill: none;
-  stroke: #77aaff;
-  stroke-width: 2;
-  stroke-dasharray: 3 8;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-  pointer-events: stroke;
-  transition: stroke 180ms ease, stroke-width 180ms ease, filter 180ms ease;
-}
-
-.flow-route:hover,
-.flow-node-top-left:hover ~ .flow-connectors .flow-route-inventory-employee,
-.flow-node-top-left:hover ~ .flow-connectors .flow-route-employee-sales,
-.flow-node-top-center:hover ~ .flow-connectors .flow-route-report-inventory,
-.flow-node-top-center:hover ~ .flow-connectors .flow-route-inventory-employee,
-.flow-node-top-right:hover ~ .flow-connectors .flow-route-payment-report,
-.flow-node-top-right:hover ~ .flow-connectors .flow-route-report-inventory,
-.flow-node-bottom-left:hover ~ .flow-connectors .flow-route-employee-sales,
-.flow-node-bottom-left:hover ~ .flow-connectors .flow-route-sales-owner,
-.flow-node-bottom-center:hover ~ .flow-connectors .flow-route-sales-owner,
-.flow-node-bottom-center:hover ~ .flow-connectors .flow-route-owner-payment,
-.flow-node-bottom-right:hover ~ .flow-connectors .flow-route-owner-payment,
-.flow-node-bottom-right:hover ~ .flow-connectors .flow-route-payment-report {
-  stroke: #347ef1;
-  stroke-width: 3;
-  filter: drop-shadow(0 0 4px rgb(75 143 245 / 46%));
-}
-
 .flow-dot {
   fill: #4b8ff5;
   stroke: rgb(75 143 245 / 24%);
   stroke-width: 7;
   pointer-events: none;
-}
-
-.flow-dot-route-employee-sales,
-.flow-dot-route-sales-owner,
-.flow-dot-route-owner-payment,
-.flow-dot-route-payment-report,
-.flow-dot-route-report-inventory,
-.flow-dot-route-inventory-employee {
-  fill: #347ef1;
-  stroke: rgb(75 143 245 / 28%);
-  stroke-width: 8;
-  filter: drop-shadow(0 0 3px rgb(75 143 245 / 42%));
 }
 
 .flow-node {
@@ -10293,23 +10250,6 @@ html[data-theme="dark"] .landing-download-button small {
   filter: drop-shadow(0 0 5px rgb(75 143 245 / 64%));
 }
 
-.flow-node-top-left:hover ~ .flow-connectors .flow-dot-route-inventory-employee,
-.flow-node-top-left:hover ~ .flow-connectors .flow-dot-route-employee-sales,
-.flow-node-top-center:hover ~ .flow-connectors .flow-dot-route-report-inventory,
-.flow-node-top-center:hover ~ .flow-connectors .flow-dot-route-inventory-employee,
-.flow-node-top-right:hover ~ .flow-connectors .flow-dot-route-payment-report,
-.flow-node-top-right:hover ~ .flow-connectors .flow-dot-route-report-inventory,
-.flow-node-bottom-left:hover ~ .flow-connectors .flow-dot-route-employee-sales,
-.flow-node-bottom-left:hover ~ .flow-connectors .flow-dot-route-sales-owner,
-.flow-node-bottom-center:hover ~ .flow-connectors .flow-dot-route-sales-owner,
-.flow-node-bottom-center:hover ~ .flow-connectors .flow-dot-route-owner-payment,
-.flow-node-bottom-right:hover ~ .flow-connectors .flow-dot-route-owner-payment,
-.flow-node-bottom-right:hover ~ .flow-connectors .flow-dot-route-payment-report {
-  fill: #84b5ff;
-  stroke: rgb(75 143 245 / 48%);
-  filter: drop-shadow(0 0 5px rgb(75 143 245 / 64%));
-}
-
 .flow-center {
   position: absolute;
   z-index: 2;
@@ -10328,13 +10268,6 @@ html[data-theme="dark"] .landing-download-button small {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.5px;
-}
-
-html[data-theme="dark"] .landing-role-flow {
-  border-color: #35473d;
-  background:
-    radial-gradient(circle at 50% 50%, #233047 0, transparent 37%),
-    #18211c;
 }
 
 html[data-theme="dark"] .landing-role-flow-head h2,
