@@ -69,6 +69,7 @@ const landingSectionNavigation = [
   ["#birliklar", "Birliklar"],
   ["#boglanish", "Bog‘lanish"],
 ];
+const installedBuildStorageKey = "yemzor:installed-build-id:v2";
 const dateWeekday = (date) => new Date(`${date}T00:00:00.000Z`).getUTCDay();
 const isRestDay = (employee, date) =>
   Number.isInteger(employee?.restDay) && dateWeekday(date) === employee.restDay;
@@ -319,19 +320,9 @@ function App() {
         const latest = await response.json();
         if (active && latest.buildId) {
           setLatestBuildId(latest.buildId);
-          const previousBuildId = window.localStorage.getItem(
-            "yemzor:installed-build-id",
-          );
-          if (
-            latest.buildId !== import.meta.env.VITE_APP_BUILD_ID ||
-            (previousBuildId && previousBuildId !== latest.buildId)
-          ) {
+          const previousBuildId = window.localStorage.getItem(installedBuildStorageKey);
+          if (!previousBuildId || previousBuildId !== latest.buildId) {
             setAppUpdateAvailable(true);
-          } else if (!previousBuildId) {
-            window.localStorage.setItem(
-              "yemzor:installed-build-id",
-              import.meta.env.VITE_APP_BUILD_ID || latest.buildId,
-            );
           }
         }
       } catch (error) {
@@ -711,14 +702,11 @@ function App() {
             type="button"
             className="button button-primary button-small"
             onClick={() => {
-              window.localStorage.setItem(
-                "yemzor:installed-build-id",
-                latestBuildId,
-              );
+              window.localStorage.setItem(installedBuildStorageKey, latestBuildId);
               window.location.reload();
             }}
           >
-            {translateText("Hozir yangilash", currentLanguage())}
+            {translateText("Ilovani yangilash", currentLanguage())}
           </button>
           <button
             type="button"
