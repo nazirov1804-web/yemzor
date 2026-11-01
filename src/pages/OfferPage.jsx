@@ -4,8 +4,8 @@ const sections = [
   {
     title: "Umumiy qoidalar",
     paragraphs: [
-      "Ushbu ommaviy oferta Yemzor savdo va ombor boshqaruvi xizmatidan foydalanish shartlarini belgilaydi. Sayt yoki tizimdan foydalanishni boshlagan shaxs ushbu shartlarni o‘qib chiqqanini va ularga roziligini bildiradi.",
-      "Yemzor do‘konlar uchun mahsulot kirimi, ombor qoldig‘i, savdo, chek, xodimlar va tegishli hisobotlarni yuritishga mo‘ljallangan dasturiy xizmatdir.",
+      "Ushbu ommaviy oferta Yemzor.uz savdo va ombor boshqaruvi xizmatidan foydalanish shartlarini belgilaydi. Sayt yoki tizimdan foydalanishni boshlagan shaxs ushbu shartlarni o‘qib chiqqanini va ularga roziligini bildiradi.",
+      "Yemzor.uz do‘konlar uchun mahsulot kirimi, ombor qoldig‘i, savdo, chek, xodimlar va tegishli hisobotlarni yuritishga mo‘ljallangan dasturiy xizmatdir.",
     ],
   },
   {
@@ -24,14 +24,14 @@ const sections = [
     paragraphs: [
       "Mahsulotlar, narxlar, kirimlar, savdolar, cheklar, xodimlar va ish haqi bo‘yicha kiritilgan ma’lumotlar foydalanuvchining mas’uliyatida bo‘ladi. Tizim ko‘rsatgan hisoblar kiritilgan ma’lumotlarga asoslanadi; muhim moliyaviy yozuvlarni muntazam tekshirib borish tavsiya etiladi.",
       "Foydalanuvchi o‘zining muhim ma’lumotlari uchun zaxira nusxasini saqlashi va akkauntga kirish huquqlarini ehtiyotkorlik bilan taqsimlashi lozim.",
-      "Yemzor kundalik savdo va ombor ishlarini yuritishga yordam beradi, ammo buxgalteriya, soliq yoki yuridik maslahat o‘rnini bosmaydi. Rasmiy hisob-kitoblar va qonunchilik bo‘yicha majburiyatlarni foydalanuvchi mustaqil tekshiradi.",
+      "Yemzor.uz kundalik savdo va ombor ishlarini yuritishga yordam beradi, ammo buxgalteriya, soliq yoki yuridik maslahat o‘rnini bosmaydi. Rasmiy hisob-kitoblar va qonunchilik bo‘yicha majburiyatlarni foydalanuvchi mustaqil tekshiradi.",
     ],
   },
   {
     title: "Demo, to‘lov va xizmatdan foydalanish",
     paragraphs: [
       "Demo rejimi xizmat imkoniyatlarini sinab ko‘rish uchun taqdim etiladi. Demo muddati, obuna va to‘lov shartlari foydalanuvchiga akkaunt yoki xizmat ichida ko‘rsatiladi.",
-      "Xizmatning ayrim imkoniyatlari obuna holati yoki tanlangan foydalanish shartlariga bog‘liq bo‘lishi mumkin. To‘lovga oid savollar yuzasidan Yemzor aloqa kanallariga murojaat qilish mumkin.",
+      "Xizmatning ayrim imkoniyatlari obuna holati yoki tanlangan foydalanish shartlariga bog‘liq bo‘lishi mumkin. To‘lovga oid savollar yuzasidan Yemzor.uz aloqa kanallariga murojaat qilish mumkin.",
       "Sayt orqali bank kartasiga to‘lov qilganda, foydalanuvchi chek rasmini yuborib tasdiqlashni so‘rashi mumkin. To‘lov avtomatik yechilmaydi: platforma egasi chekni tekshiradi va obunani qo‘lda tasdiqlaydi yoki rad etadi.",
     ],
   },
@@ -49,14 +49,14 @@ const sections = [
   {
     title: "Xizmatdan foydalanishni cheklash",
     paragraphs: [
-      "Xavfsizlik, texnik xizmat yoki qonuniy talablar sabab xizmat yoki ayrim funksiyalar vaqtincha cheklanishi mumkin. Yemzor xizmatning uzluksiz va xatosiz ishlashini kafolatlamaydi, ammo yuzaga kelgan muammolarni bartaraf etish uchun oqilona choralar ko‘radi.",
+      "Xavfsizlik, texnik xizmat yoki qonuniy talablar sabab xizmat yoki ayrim funksiyalar vaqtincha cheklanishi mumkin. Yemzor.uz xizmatning uzluksiz va xatosiz ishlashini kafolatlamaydi, ammo yuzaga kelgan muammolarni bartaraf etish uchun oqilona choralar ko‘radi.",
       "Ushbu oferta shartlariga o‘zgartirishlar kiritilsa, yangilangan matn ushbu sahifada e’lon qilinadi.",
     ],
   },
   {
     title: "Murojaat va aloqa",
     paragraphs: [
-      "Oferta yoki xizmatdan foydalanish bo‘yicha savollar uchun landing sahifasidagi aloqa ma’lumotlari orqali Yemzor bilan bog‘laning.",
+      "Oferta yoki xizmatdan foydalanish bo‘yicha savollar uchun landing sahifasidagi aloqa ma’lumotlari orqali Yemzor.uz bilan bog‘laning.",
     ],
   },
 ];
@@ -65,7 +65,7 @@ export default function OfferPage({ onBack, theme, onToggleTheme }) {
   return (
     <LegalPageLayout
       title="Ommaviy oferta"
-      subtitle="Yemzor xizmatidan foydalanish shartlari va foydalanuvchi majburiyatlari."
+      subtitle="Yemzor.uz xizmatidan foydalanish shartlari va foydalanuvchi majburiyatlari."
       updatedAt="1-noyabr, 2026"
       sections={sections}
       onBack={onBack}

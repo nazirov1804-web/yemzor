@@ -188,7 +188,7 @@ const receiptDateTime = (value) =>
 const productUpdates = [
   {
     id: "release-2026-10-store-tools",
-    title: "Yemzor boshqaruviga yangi imkoniyatlar",
+    title: "Yemzor.uz boshqaruviga yangi imkoniyatlar",
     message:
       "Dam olish kuni bonusi va tushlik to‘lovlari sozlanadi, mahsulot tarixini saqlagan holda arxivlanadi, har bir oy hisoboti alohida ko‘riladi va hisobni tozalash do‘konning operatsion ma’lumotlarini yangidan boshlashga imkon beradi.",
     date: "2026-10-29",
@@ -216,7 +216,7 @@ const productUpdates = [
   },
   {
     id: "release-2026-10-landing",
-    title: "Yemzor landing sahifasi yangilandi",
+    title: "Yemzor.uz landing sahifasi yangilandi",
     message:
       "Do‘kon ish jarayoni, xodim rollari, tez-tez so‘raladigan savollar va huquqiy sahifalar aniqroq ko‘rinishda.",
     date: "2026-10-05",
@@ -258,10 +258,10 @@ function getBillingReminder(company, subscription, now, supportContacts) {
     id: `billing-${subscription.period}-${dueDate}-${dayKey(now)}`,
     title:
       daysLeft < 0
-        ? "Yemzor oylik obunangiz tugadi"
+        ? "Yemzor.uz oylik obunangiz tugadi"
         : daysLeft === 0
-          ? "Yemzor oylik obunangiz bugun tugaydi"
-          : `Yemzor oylik obunangiz tugashiga ${daysLeft} kun qoldi`,
+          ? "Yemzor.uz oylik obunangiz bugun tugaydi"
+          : `Yemzor.uz oylik obunangiz tugashiga ${daysLeft} kun qoldi`,
     message:
       daysLeft < 0
         ? `Obuna muddati tugagan. Davom ettirish uchun ${money(subscription.requiredAmount)} to‘lovni amalga oshiring.${helpContacts ? ` Yordam: ${helpContacts}.` : ""}`
@@ -358,7 +358,7 @@ function App() {
       const registration = await navigator.serviceWorker?.getRegistration();
       await registration?.update();
     } catch (error) {
-      console.error("Yemzor ilova yangilanishini tekshirib bo‘lmadi.", error);
+      console.error("Yemzor.uz ilova yangilanishini tekshirib bo‘lmadi.", error);
     }
     if (latestBuildId && latestAppVersion) {
       window.localStorage.setItem(
@@ -410,7 +410,7 @@ function App() {
         }
       } catch (error) {
         if (active && navigator.onLine) {
-          console.error("Yemzor yangilanishini tekshirib bo‘lmadi.", error);
+          console.error("Yemzor.uz yangilanishini tekshirib bo‘lmadi.", error);
         }
       }
     };
@@ -857,7 +857,7 @@ function App() {
     ) : (
       <main className="boot-screen">
         <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-        <strong>Yemzor</strong>
+        <strong>Yemzor.uz</strong>
         <span>Do‘kon ma’lumotlari yuklanmadi. Qayta urining.</span>
         <button
           className="button button-secondary"
@@ -1293,7 +1293,7 @@ function LandingPage({
           <a href="#" className="brand">
             <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
             <span>
-              <strong>Yemzor</strong>
+              <strong>Yemzor.uz</strong>
               <small>SAVDO VA OMBOR BOSHQARUVI</small>
             </span>
           </a>
@@ -1365,7 +1365,7 @@ function LandingPage({
               <div className="landing-drawer-brand">
                 <img src="/yemzor-logo.png" alt="" />
                 <span>
-                  <strong>Yemzor</strong>
+                  <strong>Yemzor.uz</strong>
                   <small>SAVDO VA OMBOR BOSHQARUVI</small>
                 </span>
                 <button
@@ -1413,7 +1413,7 @@ function LandingPage({
               </span>
               <h1>Ombor, savdo va xodimlar hisobi — bitta joyda.</h1>
               <p>
-                Yemzor hayvonlar uchun ozuqa savdosini tartibli yuritishga
+                Yemzor.uz hayvonlar uchun ozuqa savdosini tartibli yuritishga
                 yordam beradi: kirim va qoldiqni kuzating, savdoni chek bilan
                 qayd eting, jamoa va oylik hisobini boshqaring.
               </p>
@@ -1441,12 +1441,12 @@ function LandingPage({
             </div>
             <div
               className="landing-preview"
-              aria-label="Yemzor savdo boshqaruv paneli namunasi"
+              aria-label="Yemzor.uz savdo boshqaruv paneli namunasi"
             >
               <div className="preview-window">
                 <div className="preview-topbar">
                   <span className="preview-brand">
-                    <img src="/yemzor-logo.png" alt="" /> Yemzor
+                    <img src="/yemzor-logo.png" alt="" /> Yemzor.uz
                   </span>
                   <span className="preview-online">
                     <i /> Jonli ko‘rinish
@@ -1803,7 +1803,7 @@ function LandingPage({
           <span className="landing-kicker">
             <i /> KO‘P SO‘RALADIGAN SAVOLLAR
           </span>
-          <h2>Yemzor haqida qisqacha</h2>
+          <h2>Yemzor.uz haqida qisqacha</h2>
           <p>Do‘konning kundalik hisobiga oid muhim savollarga javoblar.</p>
         </div>
         <div className="landing-faq-list">
@@ -1824,7 +1824,7 @@ function LandingPage({
           <span className="landing-kicker">
             <i /> KOMPYUTER VA TELEFONDA
           </span>
-          <h2>Yemzor’ni kompyuter yoki telefonga o‘rnating</h2>
+          <h2>Yemzor.uz’ni kompyuter yoki telefonga o‘rnating</h2>
           <p>
             Tugmani bosing — ilova fayli brauzerning Yuklab olinganlar
             bo‘limiga tushadi. Tovar va savdo ma’lumotlari qurilmada saqlanadi;
@@ -1835,7 +1835,7 @@ function LandingPage({
           <a
             className="landing-download-button"
             href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor-Setup.exe"
-            aria-label="Windows uchun Yemzor ilovasini yuklab olish"
+            aria-label="Windows uchun Yemzor.uz ilovasini yuklab olish"
           >
             <FiMonitor aria-hidden="true" />
             <span>
@@ -1847,7 +1847,7 @@ function LandingPage({
           <a
             className="landing-download-button"
             href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor.apk"
-            aria-label="Android uchun Yemzor ilovasini yuklab olish"
+            aria-label="Android uchun Yemzor.uz ilovasini yuklab olish"
           >
             <FiSmartphone aria-hidden="true" />
             <span>
@@ -1868,7 +1868,7 @@ function LandingPage({
             <i /> ALOQA
           </span>
           <h2>Savolingiz bormi?</h2>
-          <p>Demo olishdan oldin Yemzor haqida bizdan so‘rashingiz mumkin.</p>
+          <p>Demo olishdan oldin Yemzor.uz haqida bizdan so‘rashingiz mumkin.</p>
         </div>
         <div className="contact-cards">
           <a
@@ -1906,7 +1906,7 @@ function LandingPage({
 
       <section className="landing-cta landing-cta-bottom" id="demo">
         <div className="cta-copy">
-          <h2>Yemzor bilan ishni boshlang</h2>
+          <h2>Yemzor.uz bilan ishni boshlang</h2>
           <p>
             Demo akkaunt ochib, do‘kon boshqaruvi imkoniyatlarini sinab ko‘ring.
           </p>
@@ -1947,11 +1947,11 @@ function LandingPage({
         <a href="#" className="brand">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>Yemzor</strong>
+            <strong>Yemzor.uz</strong>
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
           </span>
         </a>
-        <span>© {now.getFullYear()} Yemzor. Barcha huquqlar himoyalangan.</span>
+        <span>© {now.getFullYear()} Yemzor.uz. Barcha huquqlar himoyalangan.</span>
       </footer>
 
       {selectedFeature && (
@@ -2120,7 +2120,7 @@ function DemoRegistrationPage({
         <a className="brand brand-light" href="#">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>Yemzor</strong>
+            <strong>Yemzor.uz</strong>
             <small>48 SOATLIK DEMO</small>
           </span>
         </a>
@@ -2297,7 +2297,7 @@ function AccessPage({
         <a className="brand brand-light" href="#">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>Yemzor</strong>
+            <strong>Yemzor.uz</strong>
             <small>YEM SAVDOSI NAZORATI</small>
           </span>
         </a>
@@ -2477,7 +2477,7 @@ function SubscriptionGate({
       <a className="brand" href="#">
         <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
         <span>
-          <strong>Yemzor</strong>
+          <strong>Yemzor.uz</strong>
           <small>OBUNA HOLATI</small>
         </span>
       </a>
@@ -2527,7 +2527,7 @@ function SubscriptionGate({
           </button>
         </div>
         <div className="subscription-support">
-          <strong>Yemzor bilan bog‘lanish</strong>
+          <strong>Yemzor.uz bilan bog‘lanish</strong>
           {supportContacts?.phone && (
             <a href={`tel:${supportContacts.phone.replace(/[^\d+]/g, "")}`}>
               {supportContacts.phone}
@@ -2561,7 +2561,7 @@ function DemoExpiredGate({ onLogout, onRestart, theme, onToggleTheme }) {
       <a className="brand" href="#">
         <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
         <span>
-          <strong>Yemzor</strong>
+          <strong>Yemzor.uz</strong>
           <small>DEMO HOLATI</small>
         </span>
       </a>
@@ -4141,7 +4141,7 @@ function Shell({
         >
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>Yemzor</strong>
+            <strong>Yemzor.uz</strong>
             <small>{platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI"}</small>
           </span>
         </a>
@@ -4232,7 +4232,7 @@ function Shell({
             >
               <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
               <span>
-                <strong>Yemzor</strong>
+                <strong>Yemzor.uz</strong>
                 <small>
                   {platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI"}
                 </small>
@@ -4240,7 +4240,7 @@ function Shell({
             </a>
           </div>
           <div className="topbar-context">
-            <span>{platform ? "Yemzor" : company?.name}</span>
+            <span>{platform ? "Yemzor.uz" : company?.name}</span>
             <FiChevronRight />
             <strong>
               {platform
@@ -5250,9 +5250,9 @@ function Receipt({ sale, autoPrint = false }) {
   useEffect(() => {
     let active = true;
     const receiptDetails = {
-      type: "Yemzor receipt",
+      type: "Yemzor.uz receipt",
       id: sale.id,
-      brand: sale.companyName || "Yemzor",
+      brand: sale.companyName || "Yemzor.uz",
       number: sale.receiptNumber,
       date: sale.createdAt,
       seller: sale.sellerName,
@@ -5302,7 +5302,7 @@ function Receipt({ sale, autoPrint = false }) {
     <div className="receipt">
       <div className="receipt-brand">
         <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-        <strong>{sale.companyName || "Yemzor"}</strong>
+        <strong>{sale.companyName || "Yemzor.uz"}</strong>
       </div>
       <p className="receipt-number">CHEK № {sale.receiptNumber}</p>
       <p className="receipt-date">{receiptDateTime(sale.createdAt)}</p>
@@ -7519,7 +7519,7 @@ function NotificationCenter({
                 )}
               </section>
               <footer>
-                <span>Yemzor · Yangiliklar va to‘lov eslatmalari</span>
+                <span>Yemzor.uz · Yangiliklar va to‘lov eslatmalari</span>
                 <button
                   className="button button-secondary button-small"
                   type="button"
@@ -7678,7 +7678,7 @@ function BootScreen({ progress, error, networkOffline, onRetry }) {
       <header className="boot-brand">
         <img src="/yemzor-logo.png" alt="" />
         <div>
-          <strong>Yemzor</strong>
+          <strong>Yemzor.uz</strong>
           <span>OMBOR TIZIMI BOSHQARUVI</span>
         </div>
       </header>

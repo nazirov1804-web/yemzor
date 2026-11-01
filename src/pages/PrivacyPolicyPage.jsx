@@ -4,7 +4,7 @@ const sections = [
   {
     title: "Qanday ma’lumotlar saqlanadi",
     paragraphs: [
-      "Yemzor xizmatidan foydalanish davomida akkaunt egasi va xodimlarning ism-sharifi, login ma’lumotlari hamda foydalanuvchi kiritgan do‘kon ma’lumotlari qayta ishlanishi mumkin.",
+      "Yemzor.uz xizmatidan foydalanish davomida akkaunt egasi va xodimlarning ism-sharifi, login ma’lumotlari hamda foydalanuvchi kiritgan do‘kon ma’lumotlari qayta ishlanishi mumkin.",
       "Do‘kon ma’lumotlariga mahsulotlar, narxlar, kirimlar, savdolar, cheklar, davomat va ish haqi yozuvlari kiradi.",
     ],
   },
@@ -52,13 +52,13 @@ const sections = [
     title: "Foydalanuvchi huquqlari va ma’lumotlar",
     paragraphs: [
       "Akkaunt egasi o‘z akkaunti va do‘kon ma’lumotlarini boshqarishi, xato ma’lumotlarni tuzatishi yoki xizmat bo‘yicha savol bilan murojaat qilishi mumkin.",
-      "Akkauntni o‘chirish yoki ma’lumotlarni saqlash muddatiga oid so‘rovlar Yemzor bilan aloqa kanallari orqali yuboriladi. Qonuniy talablar yoki xavfsizlik zarurati bo‘lgan holatlarda ayrim yozuvlar saqlanishi mumkin.",
+      "Akkauntni o‘chirish yoki ma’lumotlarni saqlash muddatiga oid so‘rovlar Yemzor.uz bilan aloqa kanallari orqali yuboriladi. Qonuniy talablar yoki xavfsizlik zarurati bo‘lgan holatlarda ayrim yozuvlar saqlanishi mumkin.",
     ],
   },
   {
     title: "Xodimlar va boshqa shaxslarning ma’lumotlari",
     paragraphs: [
-      "Akkaunt egasi tizimga kiritayotgan xodimlar va boshqa shaxslarga ularning ma’lumotlari Yemzor xizmatida ishlanishi haqida tegishli ma’lumot berishi hamda zarur huquqiy asosga ega bo‘lishi uchun mas’uldir.",
+      "Akkaunt egasi tizimga kiritayotgan xodimlar va boshqa shaxslarga ularning ma’lumotlari Yemzor.uz xizmatida ishlanishi haqida tegishli ma’lumot berishi hamda zarur huquqiy asosga ega bo‘lishi uchun mas’uldir.",
     ],
   },
   {
@@ -85,7 +85,7 @@ export default function PrivacyPolicyPage({ onBack, theme, onToggleTheme }) {
   return (
     <LegalPageLayout
       title="Maxfiylik siyosati"
-      subtitle="Yemzor xizmatida ma’lumotlar qanday yig‘ilishi, ishlatilishi va himoyalanishi haqida."
+      subtitle="Yemzor.uz xizmatida ma’lumotlar qanday yig‘ilishi, ishlatilishi va himoyalanishi haqida."
       updatedAt="1-noyabr, 2026"
       sections={sections}
       onBack={onBack}

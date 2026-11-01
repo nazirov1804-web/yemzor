@@ -249,23 +249,23 @@ async function sendVerificationEmail(email, code) {
     const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || user,
       to: email,
-      subject: `${code} — Yemzor tasdiqlash kodi`,
-      text: `Yemzor demo akkauntingiz uchun tasdiqlash kodi (verification code):\n\n${code}\n\nKod 10 daqiqa amal qiladi va bir marta ishlatiladi. Agar siz demo ro‘yxatdan o‘tishni boshlamagan bo‘lsangiz, bu xatni e’tiborsiz qoldiring.\n\nYemzor jamoasi`,
+      subject: `${code} — Yemzor.uz tasdiqlash kodi`,
+      text: `Yemzor.uz demo akkauntingiz uchun tasdiqlash kodi (verification code):\n\n${code}\n\nKod 10 daqiqa amal qiladi va bir marta ishlatiladi. Agar siz demo ro‘yxatdan o‘tishni boshlamagan bo‘lsangiz, bu xatni e’tiborsiz qoldiring.\n\nYemzor.uz jamoasi`,
       html: `<!doctype html>
 <html lang="uz">
-  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Yemzor tasdiqlash kodi</title></head>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Yemzor.uz tasdiqlash kodi</title></head>
   <body style="margin:0;padding:32px 12px;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#26372c;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4ebe5;border-radius:18px;overflow:hidden;">
       <tr><td style="padding:25px 30px;background:#174b30;">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
-          <td style="padding-right:11px;vertical-align:middle;"><img src="cid:yemzor-logo" width="44" height="44" alt="Yemzor logosi" style="display:block;width:44px;height:44px;object-fit:contain;background:transparent;"></td>
-          <td style="vertical-align:middle;color:#fff;"><strong style="display:block;font-size:19px;line-height:1.3;">Yemzor</strong><span style="display:block;margin-top:3px;color:#c5ddcd;font-size:10px;font-weight:bold;letter-spacing:1px;">SAVDO VA OMBOR BOSHQARUVI</span></td>
+          <td style="padding-right:11px;vertical-align:middle;"><img src="cid:yemzor-logo" width="44" height="44" alt="Yemzor.uz logosi" style="display:block;width:44px;height:44px;object-fit:contain;background:transparent;"></td>
+          <td style="vertical-align:middle;color:#fff;"><strong style="display:block;font-size:19px;line-height:1.3;">Yemzor.uz</strong><span style="display:block;margin-top:3px;color:#c5ddcd;font-size:10px;font-weight:bold;letter-spacing:1px;">SAVDO VA OMBOR BOSHQARUVI</span></td>
         </tr></table>
       </td></tr>
       <tr><td style="padding:32px 30px 12px;">
         <p style="margin:0 0 9px;color:#46815a;font-size:11px;font-weight:bold;letter-spacing:1.2px;">EMAILNI TASDIQLASH</p>
         <h1 style="margin:0;color:#24382b;font-size:25px;line-height:1.3;">Demo akkauntingizni tasdiqlang</h1>
-        <p style="margin:12px 0 0;color:#68776d;font-size:14px;line-height:1.65;">Yemzor demo akkauntini ochishni so‘radingiz. Email manzilingizni tasdiqlash uchun quyidagi kodni kiriting:</p>
+        <p style="margin:12px 0 0;color:#68776d;font-size:14px;line-height:1.65;">Yemzor.uz demo akkauntini ochishni so‘radingiz. Email manzilingizni tasdiqlash uchun quyidagi kodni kiriting:</p>
       </td></tr>
       <tr><td style="padding:20px 30px 22px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5fb;border-radius:12px;">
@@ -277,10 +277,10 @@ async function sendVerificationEmail(email, code) {
         </table>
       </td></tr>
       <tr><td style="padding:0 30px 30px;">
-        <p style="margin:0;color:#68776d;font-size:13px;line-height:1.65;"><strong>Kod 10 daqiqa amal qiladi.</strong> Uni hech kimga bermang — Yemzor xodimlari sizdan tasdiqlash kodini so‘ramaydi.</p>
+        <p style="margin:0;color:#68776d;font-size:13px;line-height:1.65;"><strong>Kod 10 daqiqa amal qiladi.</strong> Uni hech kimga bermang — Yemzor.uz xodimlari sizdan tasdiqlash kodini so‘ramaydi.</p>
         <p style="margin:18px 0 0;color:#87938a;font-size:12px;line-height:1.6;">Agar siz demo akkaunt ochishni so‘ramagan bo‘lsangiz, ushbu xatni e’tiborsiz qoldiring.</p>
       </td></tr>
-      <tr><td style="padding:17px 30px;border-top:1px solid #e9eeea;color:#87938a;font-size:11px;">© Yemzor · Do‘kon savdosi va ombor boshqaruvi</td></tr>
+      <tr><td style="padding:17px 30px;border-top:1px solid #e9eeea;color:#87938a;font-size:11px;">© Yemzor.uz · Do‘kon savdosi va ombor boshqaruvi</td></tr>
     </table>
   </body>
 </html>`,
@@ -288,13 +288,13 @@ async function sendVerificationEmail(email, code) {
     })
     const accepted = info.accepted.some((address) => String(address).toLocaleLowerCase('en-US') === email)
     if (!accepted) {
-      console.error(`[Yemzor email] SMTP recipient not accepted. responseCode=${info.responseCode || 'unknown'}`)
+      console.error(`[Yemzor.uz email] SMTP recipient not accepted. responseCode=${info.responseCode || 'unknown'}`)
       fail(502, 'Email server bu manzilni qabul qilmadi. Emailni tekshirib, qayta urinib ko‘ring.')
     }
     return true
   } catch (error) {
     if (error.statusCode) throw error
-    console.error(`[Yemzor email] Verification mail failed. code=${error.code || 'unknown'} responseCode=${error.responseCode || 'none'} command=${error.command || 'unknown'}`)
+    console.error(`[Yemzor.uz email] Verification mail failed. code=${error.code || 'unknown'} responseCode=${error.responseCode || 'none'} command=${error.command || 'unknown'}`)
     fail(502, 'Tasdiqlash kodini emailga yuborib bo‘lmadi. Email manzilini tekshirib, qayta urinib ko‘ring.')
   }
 }
@@ -1516,7 +1516,7 @@ initializeDatabase()
       })
     }, 60_000)
     cleanupInterval.unref()
-    app.listen(port, () => console.log(`Yemzor API http://localhost:${port} — database.json`))
+    app.listen(port, () => console.log(`Yemzor.uz API http://localhost:${port} — database.json`))
   })
   .catch((error) => {
     console.error('database.json faylini yuklab bo‘lmadi:', error)

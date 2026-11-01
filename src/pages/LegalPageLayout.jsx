@@ -19,7 +19,7 @@ export default function LegalPageLayout({
         <a href="#" className="brand">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>Yemzor</strong>
+            <strong>Yemzor.uz</strong>
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
           </span>
         </a>
@@ -61,7 +61,7 @@ export default function LegalPageLayout({
         </div>
       </article>
       <footer className="legal-page-footer">
-        <span>© Yemzor</span>
+        <span>© Yemzor.uz</span>
         <span>Do‘kon savdosi va ombor boshqaruvi</span>
       </footer>
     </main>

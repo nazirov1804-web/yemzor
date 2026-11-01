@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Yemzor — savdo va ombor boshqaruvi",
-  "short_name": "Yemzor",
+  "name": "Yemzor.uz — savdo va ombor boshqaruvi",
+  "short_name": "Yemzor.uz",
   "description": "Yem do‘koni savdosi, ombori va ishchilar hisobini boshqarish tizimi.",
   "lang": "uz",
   "start_url": "/?app=installed",

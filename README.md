@@ -1,4 +1,4 @@
-# Yemzor
+# Yemzor.uz
 
 Yem mahsulotlari do‘koni uchun savdo, umumiy ombor, cheklar, hodimlar va oylik hisob tizimi.
 
@@ -18,10 +18,10 @@ Native ilovalar `capacitor.config.json` va `electron/main.cjs` ichidagi `https:/
 
 Yuklab olingan Android va Windows ilovalaridagi tovarlar, kirimlar, cheklar, savdolar, davomat va boshqa ish ma’lumotlari shu qurilmaning IndexedDB xotirasida saqlanadi. Ular serverdagi eski ma’lumotlarni yuklamaydi va boshqa qurilma yoki brauzer bilan sinxronlanmaydi. Qurilma/browser ma’lumotlari o‘chirilsa, mahalliy yozuvlar yo‘qolishi mumkin; hozircha avtomatik zaxira va qurilmalararo ko‘chirish yo‘q. Login va parol xeshlari hamda obuna holati serverda qoladi. Oddiy brauzerdagi web ilova esa server ma’lumotlar bazasi bilan ishlashda davom etadi.
 
-- Windows o‘rnatuvchisi: Windows kompyuterda `npm run desktop:win`; natija `release/` ichidagi Yemzor Setup `.exe` fayli.
+- Windows o‘rnatuvchisi: Windows kompyuterda `npm run desktop:win`; natija `release/Yemzor-Setup.exe`.
 - Android APK: Android Studio, JDK va Android SDK o‘rnatilgan kompyuterda `npm run android:apk`; natija `release/Yemzor.apk`. Android platformasi hali yaratilmagan bo‘lsa, avval `npm run android:init` bajaring. Hozirgi APK sinov (debug) build bo‘ladi, Play Store uchun imzolanmagan.
 
-Yemzor sayti serverga joylanmaguncha native ilovada login qilish imkoni bo‘lmaydi. Windows `.exe` faylini Linux muhitida yaratish uchun Windows yoki Wine kerak; Android build uchun Java va Android SDK talab qilinadi.
+Yemzor.uz sayti serverga joylanmaguncha native ilovada login qilish imkoni bo‘lmaydi. Windows `.exe` faylini Linux muhitida yaratish uchun Windows yoki Wine kerak; Android build uchun Java va Android SDK talab qilinadi.
 
 ## Imkoniyatlar
 
