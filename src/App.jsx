@@ -1289,15 +1289,13 @@ function LandingPage({
       <header
         className={`landing-header ${selectedFeature ? "landing-header-modal-open" : ""}`}
       >
-        <div className="landing-brand-glass">
-          <a href="#" className="brand">
-            <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-            <span>
-              <strong>Yemzor.uz</strong>
-              <small>SAVDO VA OMBOR BOSHQARUVI</small>
-            </span>
-          </a>
-        </div>
+        <a href="#" className="brand">
+          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          <span>
+            <strong>Yemzor.uz</strong>
+            <small>SAVDO VA OMBOR BOSHQARUVI</small>
+          </span>
+        </a>
         <button
           className="landing-menu-trigger"
           type="button"

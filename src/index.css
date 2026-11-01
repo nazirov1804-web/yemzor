@@ -10866,7 +10866,6 @@ html[data-theme="dark"] .mobile-tabbar {
 }
 
 @media (min-width: 1024px) {
-  .landing-brand-glass,
   .landing-header > .landing-nav,
   .landing-header-actions {
     background: rgb(248 252 249 / 96%) !important;
@@ -11525,12 +11524,17 @@ html[data-theme="dark"] .boot-progress-track {
     box-shadow: none !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
+    padding-block: 10px !important;
   }
 
   .landing-header > .landing-nav a:hover,
   .landing-header > .landing-nav a:focus-visible,
   .landing-header > .landing-nav a.active {
     color: var(--green);
+  }
+
+  .landing-header > .landing-nav a.active {
+    box-shadow: inset 0 -2px 0 var(--green) !important;
   }
 
   .landing-header > .landing-nav a:focus-visible {
