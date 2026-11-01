@@ -50,7 +50,7 @@ export async function api(path, options = {}) {
       body: options.body ? JSON.stringify(options.body) : undefined,
     })
   } catch {
-    throw new Error('Serverga ulanib bo‘lmadi. `npm run dev:all` bilan ilovani qayta ishga tushiring.')
+    throw new Error('Tarmoq bilan aloqa uzildi. Internetni tekshirib, qaytadan urinib ko‘ring.')
   }
   if (response.status === 204) {
     if (path === "/api/auth/logout") {

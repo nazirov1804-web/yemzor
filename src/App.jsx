@@ -283,9 +283,16 @@ function App() {
       window.navigator.standalone === true ||
       new URLSearchParams(window.location.search).has("app"),
   );
+  const [appUpdateAvailable, setAppUpdateAvailable] = useState(false);
+  const [appUpdateDismissed, setAppUpdateDismissed] = useState(false);
+  const [latestBuildId, setLatestBuildId] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [bootProgress, setBootProgress] = useState(5);
   const [bootError, setBootError] = useState("");
+  const [networkOffline, setNetworkOffline] = useState(
+    () => !window.navigator.onLine,
+  );
   const [data, setData] = useState(null);
   const [pageSelection, setPageSelection] = useState(null);
   const [accessView, setAccessView] = useState(() =>
@@ -299,6 +306,64 @@ function App() {
     telegram: "naziroff1",
   });
   const user = status?.user;
+  useEffect(() => {
+    if (!isInstalledApp || import.meta.env.DEV) return undefined;
+    let active = true;
+    const checkForUpdate = async () => {
+      if (document.visibilityState !== "visible" || !navigator.onLine) return;
+      try {
+        const response = await fetch(`/version.json?check=${Date.now()}`, {
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error(`Version check failed: ${response.status}`);
+        const latest = await response.json();
+        if (active && latest.buildId) {
+          setLatestBuildId(latest.buildId);
+          const previousBuildId = window.localStorage.getItem(
+            "yemzor:installed-build-id",
+          );
+          if (
+            latest.buildId !== import.meta.env.VITE_APP_BUILD_ID ||
+            (previousBuildId && previousBuildId !== latest.buildId)
+          ) {
+            setAppUpdateAvailable(true);
+          } else if (!previousBuildId) {
+            window.localStorage.setItem(
+              "yemzor:installed-build-id",
+              import.meta.env.VITE_APP_BUILD_ID || latest.buildId,
+            );
+          }
+        }
+      } catch (error) {
+        if (active && navigator.onLine) {
+          console.error("Yemzor yangilanishini tekshirib bo‘lmadi.", error);
+        }
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void checkForUpdate();
+    };
+    void checkForUpdate();
+    const interval = window.setInterval(checkForUpdate, 60_000);
+    window.addEventListener("online", checkForUpdate);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener("online", checkForUpdate);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isInstalledApp]);
+  useEffect(() => {
+    const handleOnline = () => setNetworkOffline(false);
+    const handleOffline = () => setNetworkOffline(true);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
   useEffect(() => {
     const handleLanguageChange = () =>
       refreshLanguage((current) => current + 1);
@@ -379,26 +444,47 @@ function App() {
 
   useEffect(() => {
     let active = true;
+    let finishTimer;
+    const bootStartedAt = Date.now();
+    setBootProgress(5);
     Promise.all([api("/api/status"), api("/api/public/settings")])
       .then(async ([result, contact]) => {
+        if (!active) return;
+        setBootProgress(42);
+        await new Promise((resolve) => window.setTimeout(resolve, 180));
+        if (!active) return;
         let storeData = null;
-        if (
+        const shouldLoadStore =
           result.subscription?.active &&
           result.user &&
-          ["company_owner", "manager", "employee"].includes(result.user.role)
-        ) {
+          ["company_owner", "manager", "employee"].includes(result.user.role);
+        if (shouldLoadStore) {
+          setBootProgress(62);
           try {
             storeData = await api("/api/store");
           } catch (error) {
             toast.error(error.message);
             storeData = emptyStoreData(result.company);
           }
+          await new Promise((resolve) => window.setTimeout(resolve, 180));
+        } else {
+          setBootProgress(62);
+          await new Promise((resolve) => window.setTimeout(resolve, 240));
         }
         if (!active) return;
+        setBootProgress(80);
         setPublicSettings(contact);
         setStatus(result);
         setData(storeData);
-        setLoading(false);
+        setBootProgress(94);
+        const remainingTime = Math.max(0, 2800 - (Date.now() - bootStartedAt));
+        finishTimer = window.setTimeout(() => {
+          if (!active) return;
+          setBootProgress(100);
+          finishTimer = window.setTimeout(() => {
+            if (active) setLoading(false);
+          }, 180);
+        }, remainingTime);
       })
       .catch((error) => {
         if (!active) return;
@@ -407,6 +493,7 @@ function App() {
       });
     return () => {
       active = false;
+      window.clearTimeout(finishTimer);
     };
   }, [emptyStoreData]);
 
@@ -484,25 +571,20 @@ function App() {
 
   const content =
     loading || !status ? (
-      <div className="boot-screen">
-        <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-        <strong>Yemzor</strong>
-        <span>{bootError || "Tizim yuklanmoqda..."}</span>
-        {bootError && (
-          <button
-            className="button button-secondary"
-            onClick={() => {
-              setLoading(true);
-              refreshStatus().catch((error) => {
-                setBootError(error.message);
-                setLoading(false);
-              });
-            }}
-          >
-            Qayta urinish
-          </button>
-        )}
-      </div>
+      <BootScreen
+        progress={bootProgress}
+        error={bootError}
+        networkOffline={networkOffline}
+        onRetry={() => {
+          setLoading(true);
+          setBootError("");
+          setBootProgress(5);
+          refreshStatus().catch((error) => {
+            setBootError(error.message);
+            setLoading(false);
+          });
+        }}
+      />
     ) : !user ? (
       accessView === "landing" ? (
         <>
@@ -622,6 +704,32 @@ function App() {
     );
   return (
     <>
+      {appUpdateAvailable && !appUpdateDismissed && (
+        <div className="app-update-banner" role="status">
+          <span>{translateText("Yangi versiya tayyor", currentLanguage())}</span>
+          <button
+            type="button"
+            className="button button-primary button-small"
+            onClick={() => {
+              window.localStorage.setItem(
+                "yemzor:installed-build-id",
+                latestBuildId,
+              );
+              window.location.reload();
+            }}
+          >
+            {translateText("Hozir yangilash", currentLanguage())}
+          </button>
+          <button
+            type="button"
+            className="app-update-dismiss"
+            aria-label={translateText("Yopish", currentLanguage())}
+            onClick={() => setAppUpdateDismissed(true)}
+          >
+            <FiX aria-hidden="true" />
+          </button>
+        </div>
+      )}
       {content}
       <Toaster position="top-center" richColors closeButton theme={theme} />
     </>
@@ -642,7 +750,6 @@ function LandingPage({
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [mobileDrawerMounted, setMobileDrawerMounted] = useState(false);
   const [activeSection, setActiveSection] = useState("");
-  const [flowCenterActive, setFlowCenterActive] = useState(false);
   const heroBannerRef = useRef(null);
   useEffect(() => {
     let frame = 0;
@@ -1308,104 +1415,6 @@ function LandingPage({
               </ul>
             </article>
           ))}
-        </div>
-      </section>
-
-      <section className="landing-role-flow" aria-label="Yemzor ishlash modeli">
-        <div className="landing-role-flow-head">
-          <span className="landing-kicker">
-            <i /> YEMZOR MODELI
-          </span>
-          <h2>Barcha boshqaruv jarayoni bitta markazda birlashadi</h2>
-        </div>
-        <div className={`role-flow-grid ${flowCenterActive ? "flow-center-active" : ""}`}>
-          <article className="flow-node flow-node-top-left">
-            <span className="flow-icon"><FiUsers /></span>
-            <strong>Xodim</strong>
-            <small>Davomat va oylik</small>
-          </article>
-          <article className="flow-node flow-node-top-center">
-            <span className="flow-icon"><FiBox /></span>
-            <strong>Ombor</strong>
-            <small>Kirim, qoldiq va tan narx</small>
-          </article>
-          <article className="flow-node flow-node-top-right">
-            <span className="flow-icon"><FiShoppingCart /></span>
-            <strong>Hisobot</strong>
-            <small>Kunlik, haftalik va oylik</small>
-          </article>
-          <div
-            className="flow-center"
-            role="group"
-            tabIndex={0}
-            aria-label="Yemzor boshqaruv markazi"
-            onPointerEnter={() => setFlowCenterActive(true)}
-            onPointerLeave={() => setFlowCenterActive(false)}
-            onFocus={() => setFlowCenterActive(true)}
-            onBlur={() => setFlowCenterActive(false)}
-          >
-            <span>Yemzor</span>
-          </div>
-          <article className="flow-node flow-node-bottom-left">
-            <span className="flow-icon"><FiTrendingUp /></span>
-            <strong>Savdo</strong>
-            <small>Chek, narx va tushum</small>
-          </article>
-          <article className="flow-node flow-node-bottom-center">
-            <span className="flow-icon"><FiBriefcase /></span>
-            <strong>Boshliq</strong>
-            <small>Umumiy nazorat va qarorlar</small>
-          </article>
-          <article className="flow-node flow-node-bottom-right">
-            <span className="flow-icon"><FiDollarSign /></span>
-            <strong>To‘lov</strong>
-            <small>Avans, Abed va bonus</small>
-          </article>
-          <svg
-            className="flow-connectors"
-            viewBox="0 0 1000 400"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path id="flow-path-top-left" className="flow-path flow-path-top-left" d="M500 200L138 59" />
-            <path id="flow-path-top-center" className="flow-path flow-path-top-center" d="M500 200L500 59" />
-            <path id="flow-path-top-right" className="flow-path flow-path-top-right" d="M500 200L862 59" />
-            <path id="flow-path-bottom-left" className="flow-path flow-path-bottom-left" d="M500 200L138 341" />
-            <path id="flow-path-bottom-center" className="flow-path flow-path-bottom-center" d="M500 200L500 341" />
-            <path id="flow-path-bottom-right" className="flow-path flow-path-bottom-right" d="M500 200L862 341" />
-            {[
-              "top-left",
-              "top-center",
-              "top-right",
-              "bottom-left",
-              "bottom-center",
-              "bottom-right",
-            ].map((position) => (
-              <circle
-                key={position}
-                className={`flow-dot flow-dot-${position}`}
-                r="5"
-              >
-                <animateMotion
-                  dur={flowCenterActive ? "1.1s" : "2.8s"}
-                  begin="0s"
-                  repeatCount="indefinite"
-                  calcMode="linear"
-                >
-                  <mpath href={`#flow-path-${position}`} />
-                </animateMotion>
-                <animate
-                  attributeName="opacity"
-                  dur={flowCenterActive ? "1.1s" : "2.8s"}
-                  begin="0s"
-                  values="0;1;1;0;0"
-                  keyTimes="0;0.08;0.82;0.95;1"
-                  repeatCount="indefinite"
-                />
-              </circle>
-            ))}
-          </svg>
         </div>
       </section>
 
@@ -3486,6 +3495,9 @@ function Shell({
   const mobileTabbarRef = useRef(null);
   const mobileDockIndicatorRef = useRef(null);
   const previousDockPositionRef = useRef(null);
+  const dockInteractionAnimationRef = useRef(null);
+  const dockDragRef = useRef(null);
+  const suppressTabClickRef = useRef(false);
   const now = useClock();
   const remainingMinutes = company?.isDemo
     ? Math.max(
@@ -3518,6 +3530,7 @@ function Shell({
         !window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ) {
         animation?.cancel();
+        dockInteractionAnimationRef.current?.cancel();
         const direction = nextX > previousX ? 1 : -1;
         animation = indicator.animate(
           [
@@ -3536,6 +3549,7 @@ function Shell({
           ],
           { duration: 620, easing: "cubic-bezier(.2, .8, .2, 1)" },
         );
+        dockInteractionAnimationRef.current = animation;
       }
 
       previousDockPositionRef.current = nextX;
@@ -3546,9 +3560,90 @@ function Shell({
     window.addEventListener("resize", handleResize);
     return () => {
       animation?.cancel();
+      dockInteractionAnimationRef.current?.cancel();
       window.removeEventListener("resize", handleResize);
     };
   }, [activePage]);
+  const handleDockPointerDown = (event) => {
+    const button = event.target.closest(".mobile-tabbar-item");
+    if (!button) return;
+    dockDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      didDrag: false,
+      targetId: button.dataset.pageId,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dockInteractionAnimationRef.current?.cancel();
+    const indicator = mobileDockIndicatorRef.current;
+    if (indicator && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      dockInteractionAnimationRef.current = indicator.animate(
+        [
+          { transform: indicator.style.transform, offset: 0 },
+          { transform: `${indicator.style.transform} scaleX(1.16) scaleY(.82)`, offset: 0.32 },
+          { transform: `${indicator.style.transform} scaleX(.9) scaleY(1.12)`, offset: 0.68 },
+          { transform: `${indicator.style.transform} scale(1)`, offset: 1 },
+        ],
+        { duration: 560, easing: "cubic-bezier(.2, .8, .2, 1)" },
+      );
+    }
+  };
+  const restoreDockIndicator = () => {
+    const tabbar = mobileTabbarRef.current;
+    const indicator = mobileDockIndicatorRef.current;
+    const activeButton = tabbar?.querySelector(".mobile-tabbar-item.active");
+    if (!tabbar || !indicator || !activeButton) return;
+    const tabbarBounds = tabbar.getBoundingClientRect();
+    const buttonBounds = activeButton.getBoundingClientRect();
+    const activeX = buttonBounds.left + buttonBounds.width / 2 - tabbarBounds.left - 23;
+    indicator.style.transform = `translate3d(${activeX}px, 0, 0)`;
+  };
+  const handleDockPointerMove = (event) => {
+    const drag = dockDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (!drag.didDrag && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 8) {
+      return;
+    }
+    drag.didDrag = true;
+    const target = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest(".mobile-tabbar-item");
+    if (!target) {
+      drag.targetId = null;
+      restoreDockIndicator();
+      return;
+    }
+    drag.targetId = target.dataset.pageId;
+    const tabbar = mobileTabbarRef.current;
+    const indicator = mobileDockIndicatorRef.current;
+    if (!tabbar || !indicator) return;
+    dockInteractionAnimationRef.current?.cancel();
+    const tabbarBounds = tabbar.getBoundingClientRect();
+    const buttonBounds = target.getBoundingClientRect();
+    const nextX = buttonBounds.left + buttonBounds.width / 2 - tabbarBounds.left - 23;
+    indicator.style.transform = `translate3d(${nextX}px, 0, 0)`;
+  };
+  const handleDockPointerUp = (event) => {
+    const drag = dockDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    dockDragRef.current = null;
+    if (!drag.didDrag) return;
+    suppressTabClickRef.current = true;
+    if (drag.targetId) {
+      setActivePage(drag.targetId);
+      setMobileMenuOpen(false);
+    }
+    window.requestAnimationFrame(() => {
+      suppressTabClickRef.current = false;
+    });
+  };
+  const handleDockClickCapture = (event) => {
+    if (!suppressTabClickRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    suppressTabClickRef.current = false;
+  };
   return (
     <div className="app-shell">
       {mobileMenuOpen && (
@@ -3708,6 +3803,14 @@ function Shell({
           ref={mobileTabbarRef}
           className="mobile-tabbar"
           aria-label="Tezkor menyu"
+          onPointerDown={handleDockPointerDown}
+          onPointerMove={handleDockPointerMove}
+          onPointerUp={handleDockPointerUp}
+          onPointerCancel={() => {
+            dockDragRef.current = null;
+            restoreDockIndicator();
+          }}
+          onClickCapture={handleDockClickCapture}
         >
           <span
             ref={mobileDockIndicatorRef}
@@ -3718,6 +3821,7 @@ function Shell({
             <button
               key={id}
               type="button"
+              data-page-id={id}
               className={`mobile-tabbar-item ${activePage === id ? "active" : ""}`}
               aria-label={label}
               aria-current={activePage === id ? "page" : undefined}
@@ -4803,11 +4907,24 @@ function HistoryPage({
   const [selectedDate, setSelectedDate] = useState(() => dayKey(now));
   const [selectedMonth, setSelectedMonth] = useState(() => monthKey(now));
   const [lookup, setLookup] = useState("");
-  const monthChoices = [...new Set([
-    monthKey(now),
+  const currentMonth = monthKey(now);
+  const activityMonths = [
     ...sales.map((sale) => monthKey(new Date(sale.createdAt))),
     ...receipts.map((entry) => monthKey(new Date(entry.createdAt))),
-  ])].sort((a, b) => b.localeCompare(a));
+  ].sort();
+  const firstMonth = activityMonths[0] || currentMonth;
+  const lastMonth = activityMonths.at(-1) || currentMonth;
+  const monthChoices = [];
+  const monthCursor = new Date(`${firstMonth}-01T00:00:00`);
+  const monthLimit = new Date(`${(lastMonth > currentMonth ? lastMonth : currentMonth)}-01T00:00:00`);
+  while (monthCursor <= monthLimit) {
+    monthChoices.push(monthKey(monthCursor));
+    monthCursor.setMonth(monthCursor.getMonth() + 1);
+  }
+  monthChoices.reverse();
+  useEffect(() => {
+    setSelectedMonth(currentMonth);
+  }, [currentMonth]);
   const monthsByYear = monthChoices.reduce((groups, month) => {
     const year = month.slice(0, 4);
     groups[year] ||= [];
@@ -6956,6 +7073,158 @@ function Empty({ title, text }) {
       <strong>{title}</strong>
       <p>{text}</p>
     </div>
+  );
+}
+
+function BootScreen({ progress, error, networkOffline, onRetry }) {
+  const [visualStage, setVisualStage] = useState(1);
+  const [lowFrameRate, setLowFrameRate] = useState(false);
+  const [slowNetwork, setSlowNetwork] = useState(() => {
+    const connection = window.navigator.connection;
+    return Boolean(
+      connection?.saveData ||
+        /^(slow-2g|2g)$/.test(connection?.effectiveType || "") ||
+        (typeof connection?.downlink === "number" && connection.downlink < 1.2),
+    );
+  });
+  const stageThresholds = [5, 15, 25, 35, 45, 55, 65, 75, 85];
+  const targetStage = error
+    ? Math.min(
+        4,
+        Math.max(1, stageThresholds.filter((threshold) => progress >= threshold).length),
+      )
+    : Math.max(
+        1,
+        stageThresholds.filter((threshold) => progress >= threshold).length,
+      );
+  const loadingMessage =
+    progress >= 100
+      ? "Tizim tayyor!"
+      : progress >= 70
+        ? "Ma’lumotlar birlashtirilmoqda..."
+        : progress >= 45
+          ? "Tizim sozlanmoqda..."
+          : progress >= 20
+            ? "Ombor tayyorlanmoqda..."
+            : "Yuklanmoqda...";
+  const message = error
+    ? networkOffline
+      ? "Tarmoq bilan aloqa uzildi. Internetni tekshirib, qaytadan urinib ko‘ring."
+      : translateText(error, currentLanguage())
+    : translateText(loadingMessage, currentLanguage());
+  useEffect(() => {
+    let frames = 0;
+    let frameId;
+    const startedAt = performance.now();
+    const measureFrameRate = (now) => {
+      frames += 1;
+      if (now - startedAt >= 700) {
+        setLowFrameRate(frames < 32);
+        return;
+      }
+      frameId = window.requestAnimationFrame(measureFrameRate);
+    };
+    frameId = window.requestAnimationFrame(measureFrameRate);
+    return () => window.cancelAnimationFrame(frameId);
+  }, []);
+  useEffect(() => {
+    const connection = window.navigator.connection;
+    if (!connection?.addEventListener) return undefined;
+    const updateNetworkQuality = () => {
+      setSlowNetwork(
+        Boolean(
+          connection.saveData ||
+            /^(slow-2g|2g)$/.test(connection.effectiveType || "") ||
+            (typeof connection.downlink === "number" &&
+              connection.downlink < 1.2),
+        ),
+      );
+    };
+    connection.addEventListener("change", updateNetworkQuality);
+    return () => connection.removeEventListener("change", updateNetworkQuality);
+  }, []);
+  useEffect(() => {
+    if (visualStage >= targetStage) return undefined;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisualStage(targetStage);
+      return undefined;
+    }
+    const timer = window.setTimeout(
+      () => setVisualStage((current) => Math.min(targetStage, current + 1)),
+      lowFrameRate ? 280 : slowNetwork ? 340 : 220,
+    );
+    return () => window.clearTimeout(timer);
+  }, [lowFrameRate, slowNetwork, targetStage, visualStage]);
+
+  return (
+    <main
+      className={`boot-screen boot-loader${lowFrameRate ? " boot-loader-low-fps" : ""}${slowNetwork ? " boot-loader-slow-network" : ""}`}
+    >
+      <header className="boot-brand">
+        <img src="/yemzor-logo.png" alt="" />
+        <div>
+          <strong>Yemzor</strong>
+          <span>OMBOR TIZIMI BOSHQARUVI</span>
+        </div>
+      </header>
+      <div
+        className={`boot-building boot-building-stage-${visualStage}`}
+        role="img"
+        aria-label="Ombor binosi bosqichma-bosqich qurilmoqda"
+      >
+        {Array.from({ length: 9 }, (_, index) => index + 1).map((imageStage) => (
+          <img
+            key={imageStage}
+            className={`boot-building-stage${visualStage === imageStage ? " is-visible" : ""}`}
+            src={`/loading/warehouse-stage-${imageStage}.png`}
+            alt=""
+            decoding="async"
+            fetchPriority={imageStage === 1 ? "high" : "auto"}
+          />
+        ))}
+      </div>
+      <section className="boot-progress">
+        <p aria-live="polite">
+          {error
+            ? message
+            : networkOffline
+              ? translateText(
+                  "Tarmoq bilan aloqa uzildi. Internetni tekshirib, qaytadan urinib ko‘ring.",
+                  currentLanguage(),
+                )
+              : message}
+        </p>
+        <div className="boot-progress-row">
+          <div
+            className="boot-progress-track"
+            role="progressbar"
+            aria-label={translateText("Yuklanish jarayoni", currentLanguage())}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+          >
+            <span style={{ width: `${progress}%` }} />
+          </div>
+          <strong>{progress}%</strong>
+        </div>
+        <small>
+          {error
+            ? translateText("Internetni tekshirib qayta urinib ko‘ring.", currentLanguage())
+            : slowNetwork
+              ? translateText("Tarmoq tezligi past — ma’lumotlar yuklanmoqda...", currentLanguage())
+              : translateText("Omboringiz raqamli boshqaruv sari ilk qadam", currentLanguage())}
+        </small>
+        {error && (
+          <button
+            className="button button-primary"
+            type="button"
+            onClick={onRetry}
+          >
+            {translateText("Qayta urinish", currentLanguage())}
+          </button>
+        )}
+      </section>
+    </main>
   );
 }
 
