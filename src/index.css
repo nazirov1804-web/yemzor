@@ -10818,9 +10818,9 @@ html[data-theme="dark"] .mobile-tabbar {
   }
 
   .mobile-dock-indicator {
-    background: rgb(22 130 84 / 82%) !important;
-    backdrop-filter: blur(8px) saturate(150%) !important;
-    -webkit-backdrop-filter: blur(8px) saturate(150%) !important;
+    background: linear-gradient(145deg, #54c793, #168254 58%, #116a46) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   html[data-theme="dark"] .mobile-tabbar-item:not(.active) {

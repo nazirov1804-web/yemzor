@@ -3657,6 +3657,27 @@ function Shell({
       )
     : 0;
   const demoTimeLeft = `${Math.floor(remainingMinutes / 60)} soat ${remainingMinutes % 60} daqiqa qoldi`;
+  const getDockPositionForButton = (button) => {
+    const tabbar = mobileTabbarRef.current;
+    const indicator = mobileDockIndicatorRef.current;
+    if (!tabbar || !indicator || !button) return null;
+    const buttonBounds = button.getBoundingClientRect();
+    const tabbarOrigin = tabbar.getBoundingClientRect().left + tabbar.clientLeft;
+    const maxPosition = Math.max(
+      0,
+      tabbar.clientWidth - indicator.offsetWidth,
+    );
+    return Math.max(
+      0,
+      Math.min(
+        maxPosition,
+        buttonBounds.left +
+          buttonBounds.width / 2 -
+          tabbarOrigin -
+          indicator.offsetWidth / 2,
+      ),
+    );
+  };
   const animateDockPosition = (fromX, toX) => {
     const indicator = mobileDockIndicatorRef.current;
     if (!indicator) return;
@@ -3688,22 +3709,21 @@ function Shell({
   };
   const getActiveDockPosition = () => {
     const tabbar = mobileTabbarRef.current;
-    const indicator = mobileDockIndicatorRef.current;
     const activeButton = tabbar?.querySelector(".mobile-tabbar-item.active");
-    if (!tabbar || !indicator || !activeButton) return null;
-    const tabbarBounds = tabbar.getBoundingClientRect();
-    const buttonBounds = activeButton.getBoundingClientRect();
-    return buttonBounds.left + buttonBounds.width / 2 - tabbarBounds.left - 23;
+    if (!tabbar || !activeButton) return null;
+    return getDockPositionForButton(activeButton);
   };
   const getRenderedDockPosition = () => {
     const tabbar = mobileTabbarRef.current;
     const indicator = mobileDockIndicatorRef.current;
     if (!tabbar || !indicator) return getActiveDockPosition();
+    const indicatorBounds = indicator.getBoundingClientRect();
+    const tabbarOrigin = tabbar.getBoundingClientRect().left + tabbar.clientLeft;
     return (
-      indicator.getBoundingClientRect().left +
-      indicator.getBoundingClientRect().width / 2 -
-      tabbar.getBoundingClientRect().left -
-      23
+      indicatorBounds.left +
+      indicatorBounds.width / 2 -
+      tabbarOrigin -
+      indicator.offsetWidth / 2
     );
   };
   const findDockTarget = (clientX, clientY) => {
@@ -3751,10 +3771,8 @@ function Shell({
     if (!tabbar || !indicator || !activeButton) return undefined;
 
     const updatePosition = (animate) => {
-      const tabbarBounds = tabbar.getBoundingClientRect();
-      const buttonBounds = activeButton.getBoundingClientRect();
-      const nextX =
-        buttonBounds.left + buttonBounds.width / 2 - tabbarBounds.left - 23;
+      const nextX = getDockPositionForButton(activeButton);
+      if (nextX === null) return;
       const previousX = previousDockPositionRef.current;
       if (
         animate &&
@@ -3815,11 +3833,15 @@ function Shell({
     dockInteractionAnimationRef.current = null;
     indicator.classList.add("is-dragging");
     const tabbarBounds = tabbar.getBoundingClientRect();
-    const minX = 7;
-    const maxX = tabbarBounds.width - 53;
+    const tabbarOrigin = tabbarBounds.left + tabbar.clientLeft;
+    const minX = 0;
+    const maxX = Math.max(0, tabbar.clientWidth - indicator.offsetWidth);
     drag.targetX = Math.max(
       minX,
-      Math.min(maxX, event.clientX - tabbarBounds.left - 23),
+      Math.min(
+        maxX,
+        event.clientX - tabbarOrigin - indicator.offsetWidth / 2,
+      ),
     );
     const target = findDockTarget(event.clientX, event.clientY);
     drag.targetId = target?.dataset.pageId || null;
