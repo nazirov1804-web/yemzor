@@ -3648,6 +3648,58 @@ function Shell({
   const dockDragRef = useRef(null);
   const suppressTabClickRef = useRef(false);
   const now = useClock();
+  useEffect(() => {
+    const tabbar = mobileTabbarRef.current;
+    const viewport = window.visualViewport;
+    if (!tabbar || !viewport) return undefined;
+    let baselineHeight = 0;
+    let blurTimer;
+    const isEditable = (element) =>
+      element instanceof HTMLElement &&
+      (element.matches("input, textarea, select") ||
+        element.isContentEditable);
+    const visibleViewportHeight = () =>
+      viewport.height + viewport.offsetTop;
+    const updateKeyboardOffset = () => {
+      if (!baselineHeight) return;
+      const keyboardHeight = Math.max(
+        0,
+        baselineHeight - visibleViewportHeight(),
+      );
+      tabbar.style.setProperty("--keyboard-offset", `${keyboardHeight}px`);
+    };
+    const handleFocusIn = (event) => {
+      if (!isEditable(event.target)) return;
+      window.clearTimeout(blurTimer);
+      if (!baselineHeight) {
+        baselineHeight = Math.max(
+          window.innerHeight,
+          visibleViewportHeight(),
+        );
+      }
+      updateKeyboardOffset();
+    };
+    const handleFocusOut = () => {
+      blurTimer = window.setTimeout(() => {
+        if (isEditable(document.activeElement)) return;
+        baselineHeight = 0;
+        tabbar.style.setProperty("--keyboard-offset", "0px");
+      }, 120);
+    };
+    const handleResize = () => updateKeyboardOffset();
+    document.addEventListener("focusin", handleFocusIn);
+    document.addEventListener("focusout", handleFocusOut);
+    viewport.addEventListener("resize", handleResize);
+    viewport.addEventListener("scroll", handleResize);
+    return () => {
+      window.clearTimeout(blurTimer);
+      document.removeEventListener("focusin", handleFocusIn);
+      document.removeEventListener("focusout", handleFocusOut);
+      viewport.removeEventListener("resize", handleResize);
+      viewport.removeEventListener("scroll", handleResize);
+      tabbar.style.removeProperty("--keyboard-offset");
+    };
+  }, []);
   const remainingMinutes = company?.isDemo
     ? Math.max(
         0,
