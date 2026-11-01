@@ -11468,20 +11468,19 @@ html[data-theme="dark"] .boot-progress-track {
 
 @media (min-width: 1024px) {
   .landing-header {
-    border: 0;
-    border-bottom: 1px solid rgb(224 233 226 / 72%);
-    background: rgb(255 255 255 / 92%) !important;
+    border: 0 !important;
+    background: transparent !important;
     background-image: none !important;
-    box-shadow: 0 8px 24px rgb(32 55 39 / 4%) !important;
-    backdrop-filter: blur(16px) saturate(150%) !important;
-    -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 
   .landing-brand-glass,
   .landing-header > .landing-nav,
   .landing-header-actions {
     padding: 0 !important;
-    border-color: transparent !important;
+    border: 0 !important;
     border-radius: 0 !important;
     background: transparent !important;
     background-image: none !important;
@@ -11494,8 +11493,27 @@ html[data-theme="dark"] .boot-progress-track {
     gap: 30px !important;
   }
 
-  html[data-theme="dark"] .landing-header {
-    border-bottom-color: rgb(226 255 234 / 16%);
-    background: rgb(20 31 23 / 94%) !important;
+  .landing-header > .landing-nav a,
+  .landing-header > .landing-nav a:hover,
+  .landing-header > .landing-nav a:focus-visible,
+  .landing-header > .landing-nav a.active {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .landing-header > .landing-nav a:hover,
+  .landing-header > .landing-nav a:focus-visible,
+  .landing-header > .landing-nav a.active {
+    color: var(--green);
+  }
+
+  .landing-header > .landing-nav a:focus-visible {
+    outline: 2px solid var(--focus-border);
+    outline-offset: 4px;
   }
 }
