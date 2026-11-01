@@ -1721,6 +1721,18 @@ td strong {
   min-width: 150px;
 }
 
+.report-toolbar > .segmented {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 100%;
+}
+
+.report-toolbar > .segmented button {
+  flex: 1 1 0;
+  min-width: max-content;
+  white-space: nowrap;
+}
+
 .report-summary {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -6002,17 +6014,26 @@ button {
   }
 
   .report-toolbar {
-    align-items: flex-start;
+    align-items: stretch;
     flex-direction: column;
   }
 
-  .segmented {
+  .report-toolbar > .segmented {
+    width: 100%;
     max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
   }
 
-  .segmented button {
-    padding-inline: 7px;
-    font-size: 9px;
+  .report-toolbar > .segmented button {
+    flex: 1 0 auto;
+    min-width: max-content;
+    padding-inline: clamp(7px, 2.2vw, 14px);
+    font-size: clamp(9px, 2.4vw, 12px);
+  }
+
+  .report-toolbar > input {
+    width: 100%;
   }
 
   .report-title {
