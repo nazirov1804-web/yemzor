@@ -11469,11 +11469,11 @@ html[data-theme="dark"] .boot-progress-track {
 @media (min-width: 1024px) {
   .landing-header {
     border: 0 !important;
-    background: transparent !important;
+    background: rgb(248 252 249 / 96%) !important;
     background-image: none !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 8px 24px rgb(32 55 39 / 8%) !important;
+    backdrop-filter: blur(40px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(40px) saturate(160%) !important;
   }
 
   .landing-brand-glass,
@@ -11515,5 +11515,10 @@ html[data-theme="dark"] .boot-progress-track {
   .landing-header > .landing-nav a:focus-visible {
     outline: 2px solid var(--focus-border);
     outline-offset: 4px;
+  }
+
+  html[data-theme="dark"] .landing-header {
+    background: rgb(17 28 21 / 96%) !important;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 24%) !important;
   }
 }
