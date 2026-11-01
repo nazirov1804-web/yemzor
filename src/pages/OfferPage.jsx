@@ -24,6 +24,7 @@ const sections = [
     paragraphs: [
       "Mahsulotlar, narxlar, kirimlar, savdolar, cheklar, xodimlar va ish haqi bo‘yicha kiritilgan ma’lumotlar foydalanuvchining mas’uliyatida bo‘ladi. Tizim ko‘rsatgan hisoblar kiritilgan ma’lumotlarga asoslanadi; muhim moliyaviy yozuvlarni muntazam tekshirib borish tavsiya etiladi.",
       "Foydalanuvchi o‘zining muhim ma’lumotlari uchun zaxira nusxasini saqlashi va akkauntga kirish huquqlarini ehtiyotkorlik bilan taqsimlashi lozim.",
+      "Yemzor kundalik savdo va ombor ishlarini yuritishga yordam beradi, ammo buxgalteriya, soliq yoki yuridik maslahat o‘rnini bosmaydi. Rasmiy hisob-kitoblar va qonunchilik bo‘yicha majburiyatlarni foydalanuvchi mustaqil tekshiradi.",
     ],
   },
   {
@@ -31,6 +32,17 @@ const sections = [
     paragraphs: [
       "Demo rejimi xizmat imkoniyatlarini sinab ko‘rish uchun taqdim etiladi. Demo muddati, obuna va to‘lov shartlari foydalanuvchiga akkaunt yoki xizmat ichida ko‘rsatiladi.",
       "Xizmatning ayrim imkoniyatlari obuna holati yoki tanlangan foydalanish shartlariga bog‘liq bo‘lishi mumkin. To‘lovga oid savollar yuzasidan Yemzor aloqa kanallariga murojaat qilish mumkin.",
+    ],
+  },
+  {
+    title: "Ruxsat etilgan foydalanish",
+    paragraphs: [
+      "Foydalanuvchi xizmatdan qonuniy va o‘z vakolati doirasida foydalanishi, boshqa shaxslarning akkauntlari yoki ma’lumotlariga ruxsatsiz kirmasligi kerak.",
+    ],
+    items: [
+      "Tizim ishiga xalaqit beruvchi harakatlar, xavfsizlik cheklovlarini chetlab o‘tish yoki zararli kod joylashtirish taqiqlanadi.",
+      "Login ma’lumotlari va xodimlarga berilgan ruxsatlarni akkaunt egasi nazorat qiladi.",
+      "Qoidabuzarlik yoki xavfsizlikka tahdid aniqlansa, xizmatga kirish tekshiruv davomida vaqtincha cheklanishi mumkin.",
     ],
   },
   {
@@ -53,7 +65,7 @@ export default function OfferPage({ onBack, theme, onToggleTheme }) {
     <LegalPageLayout
       title="Ommaviy oferta"
       subtitle="Yemzor xizmatidan foydalanish shartlari va foydalanuvchi majburiyatlari."
-      updatedAt="5-oktabr, 2026"
+      updatedAt="1-noyabr, 2026"
       sections={sections}
       onBack={onBack}
       theme={theme}

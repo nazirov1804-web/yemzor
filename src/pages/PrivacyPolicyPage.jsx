@@ -20,10 +20,18 @@ const sections = [
     ],
   },
   {
+    title: "Sessiya va qurilmada saqlanadigan sozlamalar",
+    paragraphs: [
+      "Tizimga kirishni saqlash uchun brauzerda sessiya cookie-si ishlatiladi. U reklama kuzatuvi uchun emas, foydalanuvchini tizimda tanib turish va akkaunt xavfsizligini ta’minlash uchun kerak.",
+      "Til, mavzu, oxirgi ochilgan sahifa va ilova versiyasiga oid ayrim sozlamalar qurilmaning local storage xotirasida saqlanishi mumkin. Brauzer sozlamalaridan ushbu ma’lumotlarni o‘chirish mumkin; bunda ayrim qulaylik sozlamalari qayta tanlanadi.",
+    ],
+  },
+  {
     title: "Ma’lumotlarni saqlash va himoya qilish",
     paragraphs: [
       "Ma’lumotlarni ruxsatsiz kirish, o‘zgartirish yoki yo‘qotishdan himoya qilish uchun tegishli texnik va tashkiliy choralar qo‘llanadi. Biroq internet orqali uzatish yoki elektron saqlashning hech bir usuli mutlaq xavfsizlikni kafolatlamaydi.",
       "Foydalanuvchi o‘z parolini maxfiy saqlashi va shubhali kirish holatlarini darhol xabar qilishi kerak.",
+      "Akkaunt va do‘kon ma’lumotlari xizmatni taqdim etish davomida saqlanadi. Akkaunt yopilgandan keyin ayrim yozuvlar qonuniy majburiyatlar, nizolarni ko‘rib chiqish yoki xavfsizlik maqsadlari uchun zarur muddat davomida saqlanishi mumkin.",
     ],
   },
   {
@@ -38,6 +46,18 @@ const sections = [
     paragraphs: [
       "Akkaunt egasi o‘z akkaunti va do‘kon ma’lumotlarini boshqarishi, xato ma’lumotlarni tuzatishi yoki xizmat bo‘yicha savol bilan murojaat qilishi mumkin.",
       "Akkauntni o‘chirish yoki ma’lumotlarni saqlash muddatiga oid so‘rovlar Yemzor bilan aloqa kanallari orqali yuboriladi. Qonuniy talablar yoki xavfsizlik zarurati bo‘lgan holatlarda ayrim yozuvlar saqlanishi mumkin.",
+    ],
+  },
+  {
+    title: "Xodimlar va boshqa shaxslarning ma’lumotlari",
+    paragraphs: [
+      "Akkaunt egasi tizimga kiritayotgan xodimlar va boshqa shaxslarga ularning ma’lumotlari Yemzor xizmatida ishlanishi haqida tegishli ma’lumot berishi hamda zarur huquqiy asosga ega bo‘lishi uchun mas’uldir.",
+    ],
+  },
+  {
+    title: "Biometrik ma’lumotlar va kamera",
+    paragraphs: [
+      "Hozirgi xizmat versiyasi yuzni tanish yoki biometrik autentifikatsiya funksiyasini taklif qilmaydi va kamera orqali yuz tasvirini yig‘maydi. Bu funksiyalar joriy etilsa, ma’lumotlarni qayta ishlash tartibi ushbu siyosatda yangilanadi.",
     ],
   },
   {
@@ -59,7 +79,7 @@ export default function PrivacyPolicyPage({ onBack, theme, onToggleTheme }) {
     <LegalPageLayout
       title="Maxfiylik siyosati"
       subtitle="Yemzor xizmatida ma’lumotlar qanday yig‘ilishi, ishlatilishi va himoyalanishi haqida."
-      updatedAt="5-oktabr, 2026"
+      updatedAt="1-noyabr, 2026"
       sections={sections}
       onBack={onBack}
       theme={theme}
