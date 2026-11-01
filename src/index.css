@@ -11075,7 +11075,6 @@ html[data-theme="dark"] .mobile-tabbar {
   margin: 4px 0 0;
 }
 
-.platform-payment-settings,
 .platform-payment-request {
   display: grid;
   gap: 12px;
@@ -11433,5 +11432,70 @@ html[data-theme="dark"] .boot-progress-track {
   .boot-building-stage,
   .boot-progress-track span {
     transition: none;
+  }
+}
+
+.payment-instructions {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--muted);
+  background: var(--glass-surface);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+@media (max-width: 480px) {
+  .demo-email-row {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: end;
+    gap: 7px;
+  }
+
+  .demo-email-row > .field {
+    min-width: 0;
+  }
+
+  .demo-email-row .demo-send-code {
+    width: auto;
+    min-height: 38px;
+    padding-inline: 7px;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-header {
+    border: 0;
+    border-bottom: 1px solid rgb(224 233 226 / 72%);
+    background: rgb(255 255 255 / 92%) !important;
+    background-image: none !important;
+    box-shadow: 0 8px 24px rgb(32 55 39 / 4%) !important;
+    backdrop-filter: blur(16px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
+  }
+
+  .landing-brand-glass,
+  .landing-header > .landing-nav,
+  .landing-header-actions {
+    padding: 0 !important;
+    border-color: transparent !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .landing-header > .landing-nav {
+    gap: 30px !important;
+  }
+
+  html[data-theme="dark"] .landing-header {
+    border-bottom-color: rgb(226 255 234 / 16%);
+    background: rgb(20 31 23 / 94%) !important;
   }
 }

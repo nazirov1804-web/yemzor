@@ -279,6 +279,41 @@ function useClock() {
   return now;
 }
 
+function useSecondClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  return now;
+}
+
+function formatCountdown(remainingMs, language) {
+  const seconds = Math.max(0, Math.floor(remainingMs / 1000));
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const restSeconds = seconds % 60;
+  const suffixes =
+    language === "ru"
+      ? ["д", "ч", "м", "с"]
+      : language === "en"
+        ? ["d", "h", "m", "s"]
+        : ["k", "s", "daq", "son"];
+  return [days, hours, minutes, restSeconds]
+    .map((value, index) => `${value}${suffixes[index]}`)
+    .join(" ");
+}
+
+function CountdownLabel({ target, language }) {
+  const now = useSecondClock();
+  return (
+    <span className="today-label subscription-countdown" aria-live="off">
+      {formatCountdown(Math.max(0, target - now.getTime()), language)}
+    </span>
+  );
+}
+
 function App() {
   const [, refreshLanguage] = useState(0);
   const [theme, setTheme] = useState(
@@ -2054,10 +2089,6 @@ function DemoRegistrationPage({
       setError("Demo ochishdan oldin oferta va maxfiylik siyosatiga rozilik bildiring.");
       return;
     }
-    if (form.get("password") !== form.get("confirmPassword")) {
-      setError("Parollar bir xil emas.");
-      return;
-    }
     setSaving(true);
     setError("");
     try {
@@ -2111,10 +2142,6 @@ function DemoRegistrationPage({
           </button>
           <span className="eyebrow">YANGI DEMO HISOBI</span>
           <h2>48 soat bepul sinash</h2>
-          <p className="muted">
-            Emailga tasdiqlash kodi yuboriladi. Kodni kiritib, demo do‘koni
-            ochiladi.
-          </p>
           <Field label="Ism-familiya">
             <input
               name="name"
@@ -2167,16 +2194,6 @@ function DemoRegistrationPage({
               minLength="10"
               maxLength="200"
               placeholder="Kamida 10 ta belgi"
-            />
-          </Field>
-          <Field label="Parolni takrorlang">
-            <PasswordInput
-              name="confirmPassword"
-              autoComplete="new-password"
-              required
-              minLength="10"
-              maxLength="200"
-              placeholder="Parolni qayta kiriting"
             />
           </Field>
           <label className="demo-consent">
@@ -2592,6 +2609,8 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
   const [platformSettings, setPlatformSettings] = useState({
     phone: "",
     telegram: "naziroff1",
+    paymentCardNumber: "",
+    paymentCardHolder: "",
   });
   const [query, setQuery] = useState("");
   const todayMonth = monthKey(useClock());
@@ -2656,6 +2675,23 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
     toast.success("Aloqa ma’lumotlari saqlandi");
     setModal("");
   }
+  async function savePaymentCard(event) {
+    event.preventDefault();
+    try {
+      const settings = await api("/api/platform/payment-settings", {
+        method: "POST",
+        body: {
+          paymentCardNumber: platformSettings.paymentCardNumber,
+          paymentCardHolder: platformSettings.paymentCardHolder,
+        },
+      });
+      setPlatformSettings((current) => ({ ...current, ...settings }));
+      toast.success(translateText("Karta rekvizitlari saqlandi.", currentLanguage()));
+      setModal("");
+    } catch (error) {
+      toast.error(error.message);
+    }
+  }
   async function clearContactPhone() {
     try {
       await saveContact({ phone: "", telegram: platformSettings.telegram });
@@ -2696,6 +2732,12 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
         description="Brendlarni yarating, oylik tarif va tushgan to‘lovlarni boshqaring."
         action={
           <div className="heading-actions">
+            <button
+              className="button button-secondary"
+              onClick={() => setModal("card")}
+            >
+              {translateText("Karta", currentLanguage())}
+            </button>
             <button
               className="button button-secondary"
               onClick={() => setModal("username")}
@@ -2883,6 +2925,51 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
                 : "Aloqa ma’lumotlarini saqlash"
             }
           />
+        </Modal>
+      )}
+      {modal === "card" && (
+        <Modal
+          title={translateText("Karta rekvizitlari", currentLanguage())}
+          subtitle={translateText(
+            "To‘lov sahifasida ko‘rsatiladigan karta ma’lumotlarini kiriting.",
+            currentLanguage(),
+          )}
+          onClose={() => setModal("")}
+        >
+          <form className="modal-form" onSubmit={savePaymentCard}>
+            <Field label={translateText("Karta raqami", currentLanguage())}>
+              <input
+                value={platformSettings.paymentCardNumber}
+                onChange={(event) =>
+                  setPlatformSettings((current) => ({
+                    ...current,
+                    paymentCardNumber: event.target.value,
+                  }))
+                }
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="8600 0000 0000 0000"
+              />
+            </Field>
+            <Field label={translateText("Karta egasi", currentLanguage())}>
+              <input
+                value={platformSettings.paymentCardHolder}
+                onChange={(event) =>
+                  setPlatformSettings((current) => ({
+                    ...current,
+                    paymentCardHolder: event.target.value,
+                  }))
+                }
+                autoComplete="name"
+                placeholder={translateText("Ism Familiya", currentLanguage())}
+              />
+            </Field>
+            <div className="modal-actions">
+              <button type="submit" className="button button-primary">
+                {translateText("Rekvizitlarni saqlash", currentLanguage())}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
       {modal === "ownerPassword" && (
@@ -3724,15 +3811,14 @@ function Shell({
       tabbar.style.removeProperty("--keyboard-offset");
     };
   }, []);
-  const remainingMinutes = company?.isDemo
-    ? Math.max(
-        0,
-        Math.ceil(
-          (new Date(company.demoExpiresAt).getTime() - now.getTime()) / 60_000,
-        ),
-      )
-    : 0;
-  const demoTimeLeft = `${Math.floor(remainingMinutes / 60)} soat ${remainingMinutes % 60} daqiqa qoldi`;
+  const countdownTarget = company?.isDemo
+    ? new Date(company.demoExpiresAt).getTime()
+    : subscription?.active && /^\d{4}-\d{2}$/.test(subscription.period || "")
+      ? (() => {
+          const [year, month] = subscription.period.split("-").map(Number);
+          return new Date(year, month, 1).getTime();
+        })()
+      : null;
   const getDockPositionForButton = (button) => {
     const tabbar = mobileTabbarRef.current;
     const indicator = mobileDockIndicatorRef.current;
@@ -4130,14 +4216,16 @@ function Shell({
             </strong>
           </div>
           <div className="topbar-right">
-            <span className="today-label">
-              {new Intl.DateTimeFormat(currentLocale(), {
-                dateStyle: "medium",
-              }).format(now)}
-            </span>
-            {company?.isDemo && (
-              <span className="status-pill status-pending demo-countdown">
-                Demo · {demoTimeLeft}
+            {countdownTarget !== null ? (
+              <CountdownLabel
+                target={countdownTarget}
+                language={currentLanguage()}
+              />
+            ) : (
+              <span className="today-label">
+                {new Intl.DateTimeFormat(currentLocale(), {
+                  dateStyle: "medium",
+                }).format(now)}
               </span>
             )}
             {!platform && user.role === "company_owner" && (
@@ -7775,6 +7863,9 @@ function SubscriptionPaymentGate({
                 </p>
               ) : (
                 <>
+                  <p className="payment-instructions">
+                    {t("Iltimos, to‘lov chekini screenshot qiling yoki rasmga oling va shu yerga yuboring. Yuborish uchun “To‘lov qildim” tugmasini bosib, rasmni yuklang.")}
+                  </p>
                   <span className="eyebrow">{t("KARTA RAQAMI")}</span>
                   <div className="payment-copy-row">
                     <strong>{formatCardNumber(details.paymentCardNumber)}</strong>
@@ -7879,8 +7970,6 @@ function PlatformPaymentReviewPanel() {
   const [paymentRequests, setPaymentRequests] = useState([]);
   const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
-  const [paymentCardNumber, setPaymentCardNumber] = useState("");
-  const [paymentCardHolder, setPaymentCardHolder] = useState("");
   const [rejectionReasons, setRejectionReasons] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -7909,18 +7998,13 @@ function PlatformPaymentReviewPanel() {
     setLoading(true);
     setError("");
     try {
-      const [requests, settings] = await Promise.all([
-        api("/api/platform/payment-requests"),
-        api("/api/platform/settings"),
-      ]);
+      const requests = await api("/api/platform/payment-requests");
       setPaymentRequests(requests.paymentRequests);
       setPendingPaymentCount(
         requests.paymentRequests.filter(
           (paymentRequest) => paymentRequest.status === "pending",
         ).length,
       );
-      setPaymentCardNumber(settings.paymentCardNumber || "");
-      setPaymentCardHolder(settings.paymentCardHolder || "");
     } catch (cause) {
       setError(t(cause.message));
     } finally {
@@ -7943,25 +8027,6 @@ function PlatformPaymentReviewPanel() {
       toast.success(
         action === "approve" ? t("To‘lov tasdiqlandi.") : t("To‘lov rad etildi."),
       );
-    } catch (cause) {
-      setError(t(cause.message));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const savePaymentSettings = async (event) => {
-    event.preventDefault();
-    setSaving(true);
-    setError("");
-    try {
-      const settings = await api("/api/platform/payment-settings", {
-        method: "POST",
-        body: { paymentCardNumber, paymentCardHolder },
-      });
-      setPaymentCardNumber(settings.paymentCardNumber || "");
-      setPaymentCardHolder(settings.paymentCardHolder || "");
-      toast.success(t("Karta rekvizitlari saqlandi."));
     } catch (cause) {
       setError(t(cause.message));
     } finally {
@@ -8010,33 +8075,6 @@ function PlatformPaymentReviewPanel() {
                 <FiX />
               </button>
             </header>
-            <form className="platform-payment-settings" onSubmit={savePaymentSettings}>
-              <h3>{t("To‘lov rekvizitlari")}</h3>
-              <Field label={t("Karta raqami")}>
-                <input
-                  value={paymentCardNumber}
-                  onChange={(event) => setPaymentCardNumber(event.target.value)}
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder="8600 0000 0000 0000"
-                />
-              </Field>
-              <Field label={t("Karta egasi")}>
-                <input
-                  value={paymentCardHolder}
-                  onChange={(event) => setPaymentCardHolder(event.target.value)}
-                  autoComplete="name"
-                  placeholder={t("Ism Familiya")}
-                />
-              </Field>
-              <button
-                type="submit"
-                className="button button-primary"
-                disabled={saving}
-              >
-                {t("Rekvizitlarni saqlash")}
-              </button>
-            </form>
             {error && (
               <p className="form-error" role="alert">
                 {error}
@@ -8097,7 +8135,11 @@ function PlatformPaymentReviewPanel() {
                     <div className="platform-payment-actions">
                       <button
                         type="button"
-                        className="button button-primary"
+                        className={`button ${
+                          paymentRequest.status === "approved"
+                            ? "button-primary"
+                            : "button-secondary"
+                        }`}
                         disabled={saving}
                         onClick={() => void review(paymentRequest, "approve")}
                       >
@@ -8105,7 +8147,11 @@ function PlatformPaymentReviewPanel() {
                       </button>
                       <button
                         type="button"
-                        className="button button-secondary"
+                        className={`button ${
+                          paymentRequest.status === "rejected"
+                            ? "button-danger"
+                            : "button-secondary"
+                        }`}
                         disabled={saving}
                         onClick={() => void review(paymentRequest, "reject")}
                       >
