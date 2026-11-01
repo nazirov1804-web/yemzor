@@ -2604,6 +2604,7 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState("");
   const [paymentCompany, setPaymentCompany] = useState(null);
+  const [passwordCompany, setPasswordCompany] = useState(null);
   const [feeCompany, setFeeCompany] = useState(null);
   const [deleteCompany, setDeleteCompany] = useState(null);
   const [platformSettings, setPlatformSettings] = useState({
@@ -2655,6 +2656,15 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
     toast.success("Oylik to‘lov qayd etildi");
     setPaymentCompany(null);
     await load();
+  }
+  async function resetCompanyOwnerPassword(form) {
+    const result = await api(
+      `/api/platform/companies/${passwordCompany.id}/owner-password`,
+      { method: "PATCH", body: { password: form.password } },
+    );
+    toast.success(`${passwordCompany.name} do‘koni paroli almashtirildi.`);
+    setPasswordCompany(null);
+    return result;
   }
   async function setCompanyFee(form) {
     await api(`/api/platform/companies/${feeCompany.id}/fee`, {
@@ -2858,6 +2868,12 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
                     </span>
                     <div className="company-payment-actions">
                       <button
+                        className="button button-secondary button-small"
+                        onClick={() => setPasswordCompany(company)}
+                      >
+                        <FiShield /> Parolni almashtirish
+                      </button>
+                      <button
                         className="button button-tertiary button-small"
                         onClick={() => setFeeCompany(company)}
                       >
@@ -2898,6 +2914,15 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
           onClose={() => setModal("")}
         >
           <CompanyForm month={todayMonth} onSubmit={createCompany} />
+        </Modal>
+      )}
+      {passwordCompany && (
+        <Modal
+          title={`${passwordCompany.name} — boshliq paroli`}
+          subtitle="Yangi parolni belgilang. Eski parol talab qilinmaydi."
+          onClose={() => setPasswordCompany(null)}
+        >
+          <PlatformOwnerPasswordForm onSubmit={resetCompanyOwnerPassword} />
         </Modal>
       )}
       {(modal === "contact" || modal === "username") && (
@@ -6829,6 +6854,45 @@ function OwnerPasswordForm({ user, onSubmit }) {
       </Field>
       <p className="security-note">
         Bu parol faqat owner/administrator uchun ishlatiladi.
+      </p>
+    </AccessForm>
+  );
+}
+
+function PlatformOwnerPasswordForm({ onSubmit }) {
+  return (
+    <AccessForm
+      onSubmit={(form) => {
+        const password = String(form.get("password") || "");
+        const confirmPassword = String(form.get("confirmPassword") || "");
+        if (password.length < 10)
+          throw new Error(
+            "Yangi parol kamida 10 ta belgidan iborat bo‘lishi kerak.",
+          );
+        if (password !== confirmPassword)
+          throw new Error("Yangi parollar bir xil emas.");
+        return onSubmit({ password });
+      }}
+      submitLabel="Parolni almashtirish"
+    >
+      <Field label="Yangi boshliq paroli">
+        <PasswordInput
+          name="password"
+          autoComplete="new-password"
+          required
+          minLength="10"
+        />
+      </Field>
+      <Field label="Yangi parolni takrorlang">
+        <PasswordInput
+          name="confirmPassword"
+          autoComplete="new-password"
+          required
+          minLength="10"
+        />
+      </Field>
+      <p className="security-note">
+        Yangi parolni do‘kon boshlig‘iga xavfsiz tarzda yetkazing.
       </p>
     </AccessForm>
   );

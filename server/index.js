@@ -681,6 +681,25 @@ app.post('/api/platform/companies', requireAuth, requirePlatformAdmin, async (re
   response.status(201).json({ company: result })
 })
 
+app.patch('/api/platform/companies/:companyId/owner-password', requireAuth, requirePlatformAdmin, async (request, response) => {
+  validatePassword(request.body?.password)
+  const passwordHash = await bcrypt.hash(request.body.password, 12)
+  const owner = await updateDatabase((database) => {
+    const company = database.companies.find((item) => item.id === request.params.companyId && !item.isDemo)
+    if (!company) fail(404, 'Do‘kon topilmadi.')
+    const account = database.users.find(
+      (user) =>
+        user.id === company.ownerId &&
+        user.companyId === company.id &&
+        user.role === 'company_owner',
+    )
+    if (!account) fail(404, 'Do‘kon boshlig‘i akkaunti topilmadi.')
+    account.passwordHash = passwordHash
+    return { companyId: company.id, login: account.login }
+  })
+  response.json({ owner })
+})
+
 app.patch('/api/platform/companies/:companyId/fee', requireAuth, requirePlatformAdmin, async (request, response) => {
   const monthlyFee = positiveAmount(request.body?.monthlyFee, 'Oylik obuna narxi')
   const period = typeof request.body?.period === 'string' ? request.body.period : ''
