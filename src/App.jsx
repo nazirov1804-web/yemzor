@@ -15,6 +15,7 @@ import {
   FiCheck,
   FiChevronRight,
   FiClock,
+  FiCreditCard,
   FiDollarSign,
   FiDownload,
   FiLogOut,
@@ -2746,7 +2747,7 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
               className="button button-secondary"
               onClick={() => setModal("card")}
             >
-              {translateText("Karta", currentLanguage())}
+              <FiCreditCard /> {translateText("Karta", currentLanguage())}
             </button>
             <button
               className="button button-secondary"
