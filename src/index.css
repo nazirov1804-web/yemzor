@@ -4091,6 +4091,13 @@ html[data-theme="dark"] .receipt-qr-copy span {
   font-size: 7px;
 }
 
+.landing-footer-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
 .landing-header .button,
 .landing-actions .button {
   min-height: 43px;
@@ -10915,6 +10922,26 @@ html[data-theme="dark"] .mobile-tabbar {
   line-height: 1.6;
 }
 
+.subscription-payment-due {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: var(--glass-surface);
+}
+
+.subscription-payment-due span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.subscription-payment-due strong {
+  font-size: 17px;
+}
+
 .subscription-payment-actions,
 .payment-copy-row,
 .platform-payment-actions {
@@ -10977,9 +11004,17 @@ html[data-theme="dark"] .mobile-tabbar {
   gap: 12px;
 }
 
+.subscription-payment-footer > button {
+  min-height: 44px;
+  padding-inline: 14px;
+}
+
 .platform-payment-trigger {
   position: fixed;
   z-index: 120;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   right: max(18px, env(safe-area-inset-right));
   bottom: max(18px, env(safe-area-inset-bottom));
   min-height: 46px;
@@ -10989,6 +11024,20 @@ html[data-theme="dark"] .mobile-tabbar {
   color: #fff;
   background: var(--green);
   box-shadow: 0 8px 24px rgb(20 70 40 / 25%);
+}
+
+.platform-payment-count {
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: #fff;
+  background: #d82c39;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .platform-payment-overlay {
@@ -11052,12 +11101,45 @@ html[data-theme="dark"] .mobile-tabbar {
   font-size: 12px;
 }
 
-.platform-payment-request > img {
+.platform-payment-receipt-image {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  background: #f5f7f5;
+  cursor: zoom-in;
+}
+
+.platform-payment-receipt-image img {
+  display: block;
   width: 100%;
   max-height: 420px;
-  border-radius: 12px;
   object-fit: contain;
-  background: #f5f7f5;
+}
+
+.platform-payment-edit-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.platform-payment-receipt-backdrop {
+  z-index: 12000;
+}
+
+.platform-payment-receipt-modal {
+  width: min(1100px, calc(100vw - 32px));
+  max-width: min(1100px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+}
+
+.platform-payment-receipt-full {
+  display: block;
+  width: 100%;
+  max-height: calc(100dvh - 150px);
+  margin: 0 auto;
+  object-fit: contain;
 }
 
 .platform-payment-request .field-label {
@@ -11087,7 +11169,8 @@ html[data-theme="dark"] .platform-payment-panel {
   background: #101a13;
 }
 
-html[data-theme="dark"] .platform-payment-request > img {
+html[data-theme="dark"] .platform-payment-receipt-image,
+html[data-theme="dark"] .platform-payment-receipt-image img {
   background: #101a13;
 }
 

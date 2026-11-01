@@ -136,6 +136,11 @@ const currentLanguage = () => {
   const language = document.documentElement.lang;
   return language === "ru" || language === "en" ? language : "uz";
 };
+const formatCardNumber = (value) =>
+  String(value || "")
+    .replace(/\D/g, "")
+    .match(/\d{1,4}/g)
+    ?.join(" ") || "";
 const employeeCountLabel = (count) => {
   const language = currentLanguage();
   if (language === "en")
@@ -1904,6 +1909,13 @@ function LandingPage({
           </span>
         </a>
         <span>© {now.getFullYear()} Yemzor. Barcha huquqlar himoyalangan.</span>
+        <a
+          className="button button-secondary landing-footer-download"
+          href="#ilovani-yuklab-olish"
+        >
+          {translateText("Yuklab olish", currentLanguage())}
+          <FiDownload aria-hidden="true" />
+        </a>
       </footer>
 
       {selectedFeature && (
@@ -7573,7 +7585,8 @@ function BootScreen({ progress, error, networkOffline, onRetry }) {
 function Loading() {
   return (
     <div className="loading-state">
-      <span className="spinner" /> Ma’lumotlar yuklanmoqda...
+      <span className="spinner" />
+      {translateText("Ma’lumotlar yuklanmoqda...", currentLanguage())}
     </div>
   );
 }
@@ -7586,6 +7599,7 @@ function SubscriptionPaymentGate({
   theme,
   onToggleTheme,
 }) {
+  const t = (value) => translateText(value, currentLanguage());
   const [details, setDetails] = useState(null);
   const [error, setError] = useState("");
   const [receipt, setReceipt] = useState("");
@@ -7602,7 +7616,9 @@ function SubscriptionPaymentGate({
         setDetails(result);
         if (result.subscription.active) await onRefresh();
       } catch (cause) {
-        if (active) setError(cause.message);
+        if (active) {
+          setError(translateText(cause.message, currentLanguage()));
+        }
       }
     };
     void checkPayment();
@@ -7616,9 +7632,11 @@ function SubscriptionPaymentGate({
   const copyText = async (value, label) => {
     try {
       await navigator.clipboard.writeText(String(value));
-      toast.success(`${label} nusxalandi.`);
+      toast.success(translateText(`${label} nusxalandi.`, currentLanguage()));
     } catch (cause) {
-      toast.error(`Nusxalab bo‘lmadi: ${cause.message}`);
+      toast.error(
+        translateText(`Nusxalab bo‘lmadi: ${cause.message}`, currentLanguage()),
+      );
     }
   };
 
@@ -7627,12 +7645,12 @@ function SubscriptionPaymentGate({
     setReceipt("");
     if (!file) return;
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError("Chek rasmi JPG, PNG yoki WEBP formatida bo‘lishi kerak.");
+      setError(t("Chek rasmi JPG, PNG yoki WEBP formatida bo‘lishi kerak."));
       event.target.value = "";
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      setError("Chek rasmi 3 MB dan kichik bo‘lishi kerak.");
+      setError(t("Chek rasmi 3 MB dan kichik bo‘lishi kerak."));
       event.target.value = "";
       return;
     }
@@ -7642,16 +7660,16 @@ function SubscriptionPaymentGate({
         setReceipt(reader.result);
         setError("");
       } else {
-        setError("Chek rasmini o‘qib bo‘lmadi.");
+        setError(t("Chek rasmini o‘qib bo‘lmadi."));
       }
     };
-    reader.onerror = () => setError("Chek rasmini o‘qib bo‘lmadi.");
+    reader.onerror = () => setError(t("Chek rasmini o‘qib bo‘lmadi."));
     reader.readAsDataURL(file);
   };
 
   const sendReceipt = async () => {
     if (!receipt) {
-      setError("Avval to‘lov cheki yoki screenshotini tanlang.");
+      setError(t("Avval to‘lov cheki yoki screenshotini tanlang."));
       fileInputRef.current?.click();
       return;
     }
@@ -7666,9 +7684,9 @@ function SubscriptionPaymentGate({
         current ? { ...current, paymentRequest: result.paymentRequest } : current,
       );
       setReceipt("");
-      toast.success("To‘lov cheki egasiga ko‘rib chiqish uchun yuborildi.");
+      toast.success(t("To‘lov cheki egasiga ko‘rib chiqish uchun yuborildi."));
     } catch (cause) {
-      setError(cause.message);
+      setError(t(cause.message));
     } finally {
       setSending(false);
     }
@@ -7687,7 +7705,7 @@ function SubscriptionPaymentGate({
       setDetails(result);
       if (result.subscription.active) await onRefresh();
     } catch (cause) {
-      setError(cause.message);
+      setError(t(cause.message));
     }
   };
 
@@ -7697,26 +7715,31 @@ function SubscriptionPaymentGate({
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </div>
       <section className="subscription-payment-card">
-        <span className="eyebrow">OBUNA TO‘LOVI</span>
-        <h1>Obunani davom ettirish</h1>
+        <span className="eyebrow">{t("OBUNA TO‘LOVI")}</span>
+        <h1>{t("Obunani davom ettirish")}</h1>
         <p>
           {details?.companyName
-            ? `${details.companyName} do‘koni uchun obuna to‘lovi kutilmoqda.`
-            : "Joriy oy uchun obuna to‘lovi tasdiqlanishi kutilmoqda."}
+            ? `${details.companyName} ${t("do‘koni uchun obuna to‘lovi kutilmoqda.")}`
+            : t("Joriy oy uchun obuna to‘lovi tasdiqlanishi kutilmoqda.")}
         </p>
+        {details?.dueAmount > 0 && (
+          <div className="subscription-payment-due">
+            <span>{t("To‘lanishi kerak")}</span>
+            <strong>{money(details.dueAmount)}</strong>
+          </div>
+        )}
         {paymentRequest?.status === "pending" && (
           <div className="security-note">
-            To‘lov cheki yuborildi. Egasi tekshirayotgan paytda shu sahifada
-            kuting.
+            {t("To‘lov cheki yuborildi. Egasi tekshirayotgan paytda shu sahifada kuting.")}
           </div>
         )}
         {paymentRequest?.status === "rejected" && (
           <p className="form-error" role="alert">
-            To‘lov cheki rad etildi
+            {t("To‘lov cheki rad etildi")}
             {paymentRequest.rejectionReason
               ? `: ${paymentRequest.rejectionReason}`
               : "."}{" "}
-            Chekni tekshirib qayta yuboring.
+            {t("Chekni tekshirib qayta yuboring.")}
           </p>
         )}
         <div className="subscription-payment-actions">
@@ -7726,7 +7749,7 @@ function SubscriptionPaymentGate({
             target={telegramLink ? "_blank" : undefined}
             rel={telegramLink ? "noreferrer" : undefined}
           >
-            Bog‘lanish
+            {t("Bog‘lanish")}
           </a>
           {details?.canSubmitPayment && (
             <button
@@ -7734,13 +7757,13 @@ function SubscriptionPaymentGate({
               type="button"
               onClick={() => setShowPayment((visible) => !visible)}
             >
-              {showPayment ? "Yopish" : "Saytda to‘lash"}
+              {showPayment ? t("Yopish") : t("Saytda to‘lash")}
             </button>
           )}
         </div>
         {details && !details.canSubmitPayment && (
           <div className="security-note">
-            Sayt orqali to‘lovni faqat do‘kon egasi yuborishi mumkin.
+            {t("Sayt orqali to‘lovni faqat do‘kon egasi yuborishi mumkin.")}
           </div>
         )}
         {showPayment && (
@@ -7748,34 +7771,34 @@ function SubscriptionPaymentGate({
             {details ? (
               paymentUnavailable ? (
                 <p className="form-error">
-                  To‘lov summasi yoki karta rekvizitlari sozlanmagan. Telegram
-                  orqali bog‘laning.
+                  {t("To‘lov summasi yoki karta rekvizitlari sozlanmagan. Telegram orqali bog‘laning.")}
                 </p>
               ) : (
                 <>
-                  <span className="eyebrow">KARTA RAQAMI</span>
+                  <span className="eyebrow">{t("KARTA RAQAMI")}</span>
                   <div className="payment-copy-row">
-                    <strong>{details.paymentCardNumber}</strong>
+                    <strong>{formatCardNumber(details.paymentCardNumber)}</strong>
                     <button
                       type="button"
                       className="button button-secondary"
                       onClick={() =>
-                        copyText(details.paymentCardNumber, "Karta raqami")
+                        copyText(
+                          formatCardNumber(details.paymentCardNumber),
+                          "Karta raqami",
+                        )
                       }
                     >
-                      Nusxalash
+                      {t("Nusxalash")}
                     </button>
                   </div>
                   {details.paymentCardHolder && (
                     <p className="payment-card-holder">
-                      Karta egasi: <strong>{details.paymentCardHolder}</strong>
+                      {t("Karta egasi:")} <strong>{details.paymentCardHolder}</strong>
                     </p>
                   )}
-                  <span className="eyebrow">TO‘LOV SUMMASI</span>
+                  <span className="eyebrow">{t("TO‘LOV SUMMASI")}</span>
                   <div className="payment-copy-row">
-                    <strong>
-                      {money(details.dueAmount)} so‘m
-                    </strong>
+                    <strong>{money(details.dueAmount)}</strong>
                     <button
                       type="button"
                       className="button button-secondary"
@@ -7783,7 +7806,7 @@ function SubscriptionPaymentGate({
                         copyText(details.dueAmount, "To‘lov summasi")
                       }
                     >
-                      Nusxalash
+                      {t("Nusxalash")}
                     </button>
                   </div>
                   {paymentRequest?.status !== "pending" && (
@@ -7793,7 +7816,7 @@ function SubscriptionPaymentGate({
                         className="button button-secondary button-wide"
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        To‘lov qildim
+                        {t("To‘lov qildim")}
                       </button>
                       <input
                         ref={fileInputRef}
@@ -7804,14 +7827,14 @@ function SubscriptionPaymentGate({
                       />
                       {receipt && (
                         <div className="payment-receipt-preview">
-                          <img src={receipt} alt="Tanlangan to‘lov cheki" />
+                          <img src={receipt} alt={t("Tanlangan to‘lov cheki")} />
                           <button
                             type="button"
                             className="button button-primary"
                             disabled={sending}
                             onClick={sendReceipt}
                           >
-                            {sending ? "Yuborilmoqda..." : "Yuborish"}
+                            {sending ? t("Yuborilmoqda...") : t("Yuborish")}
                           </button>
                         </div>
                       )}
@@ -7832,13 +7855,17 @@ function SubscriptionPaymentGate({
         <div className="subscription-payment-footer">
           <button
             type="button"
-            className="text-button"
+            className="button button-secondary"
             onClick={() => void checkNow()}
           >
-            To‘lovni tekshirish
+            {t("To‘lovni tekshirish")}
           </button>
-          <button type="button" className="text-button" onClick={onLogout}>
-            Chiqish
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={onLogout}
+          >
+            {t("Chiqish")}
           </button>
         </div>
       </section>
@@ -7847,14 +7874,36 @@ function SubscriptionPaymentGate({
 }
 
 function PlatformPaymentReviewPanel() {
+  const t = (value) => translateText(value, currentLanguage());
   const [open, setOpen] = useState(false);
   const [paymentRequests, setPaymentRequests] = useState([]);
+  const [pendingPaymentCount, setPendingPaymentCount] = useState(0);
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
   const [paymentCardNumber, setPaymentCardNumber] = useState("");
   const [paymentCardHolder, setPaymentCardHolder] = useState("");
   const [rejectionReasons, setRejectionReasons] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    const refreshPendingCount = async () => {
+      try {
+        const result = await api("/api/platform/payment-requests/pending-count");
+        if (active) setPendingPaymentCount(result.count);
+      } catch (cause) {
+        if (active) {
+          setError(translateText(cause.message, currentLanguage()));
+        }
+      }
+    };
+    void refreshPendingCount();
+    const interval = window.setInterval(() => void refreshPendingCount(), 30_000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
 
   const loadPanel = async () => {
     setLoading(true);
@@ -7865,10 +7914,15 @@ function PlatformPaymentReviewPanel() {
         api("/api/platform/settings"),
       ]);
       setPaymentRequests(requests.paymentRequests);
+      setPendingPaymentCount(
+        requests.paymentRequests.filter(
+          (paymentRequest) => paymentRequest.status === "pending",
+        ).length,
+      );
       setPaymentCardNumber(settings.paymentCardNumber || "");
       setPaymentCardHolder(settings.paymentCardHolder || "");
     } catch (cause) {
-      setError(cause.message);
+      setError(t(cause.message));
     } finally {
       setLoading(false);
     }
@@ -7887,10 +7941,10 @@ function PlatformPaymentReviewPanel() {
       });
       await loadPanel();
       toast.success(
-        action === "approve" ? "To‘lov tasdiqlandi." : "To‘lov rad etildi.",
+        action === "approve" ? t("To‘lov tasdiqlandi.") : t("To‘lov rad etildi."),
       );
     } catch (cause) {
-      setError(cause.message);
+      setError(t(cause.message));
     } finally {
       setSaving(false);
     }
@@ -7907,9 +7961,9 @@ function PlatformPaymentReviewPanel() {
       });
       setPaymentCardNumber(settings.paymentCardNumber || "");
       setPaymentCardHolder(settings.paymentCardHolder || "");
-      toast.success("Karta rekvizitlari saqlandi.");
+      toast.success(t("Karta rekvizitlari saqlandi."));
     } catch (cause) {
-      setError(cause.message);
+      setError(t(cause.message));
     } finally {
       setSaving(false);
     }
@@ -7926,31 +7980,39 @@ function PlatformPaymentReviewPanel() {
           if (nextOpen) void loadPanel();
         }}
       >
-        To‘lovlar
+        {t("To‘lovlar")}
+        {pendingPaymentCount > 0 && (
+          <span
+            className="platform-payment-count"
+            aria-label={`${pendingPaymentCount} ${t("ta kutilayotgan to‘lov")}`}
+          >
+            {pendingPaymentCount}
+          </span>
+        )}
       </button>
       {open && (
         <div className="platform-payment-overlay">
           <section
             className="platform-payment-panel"
-            aria-label="Obuna to‘lovlarini boshqarish"
+            aria-label={t("Obuna to‘lovlarini boshqarish")}
           >
             <header>
               <div>
-                <span className="eyebrow">PLATFORMA EGASI</span>
-                <h2>Obuna to‘lovlari</h2>
+                <span className="eyebrow">{t("PLATFORMA EGASI")}</span>
+                <h2>{t("Obuna to‘lovlari")}</h2>
               </div>
               <button
                 type="button"
                 className="icon-button"
-                aria-label="Yopish"
+                aria-label={t("Yopish")}
                 onClick={() => setOpen(false)}
               >
                 <FiX />
               </button>
             </header>
             <form className="platform-payment-settings" onSubmit={savePaymentSettings}>
-              <h3>To‘lov rekvizitlari</h3>
-              <Field label="Karta raqami">
+              <h3>{t("To‘lov rekvizitlari")}</h3>
+              <Field label={t("Karta raqami")}>
                 <input
                   value={paymentCardNumber}
                   onChange={(event) => setPaymentCardNumber(event.target.value)}
@@ -7959,12 +8021,12 @@ function PlatformPaymentReviewPanel() {
                   placeholder="8600 0000 0000 0000"
                 />
               </Field>
-              <Field label="Karta egasi">
+              <Field label={t("Karta egasi")}>
                 <input
                   value={paymentCardHolder}
                   onChange={(event) => setPaymentCardHolder(event.target.value)}
                   autoComplete="name"
-                  placeholder="Ism Familiya"
+                  placeholder={t("Ism Familiya")}
                 />
               </Field>
               <button
@@ -7972,7 +8034,7 @@ function PlatformPaymentReviewPanel() {
                 className="button button-primary"
                 disabled={saving}
               >
-                Rekvizitlarni saqlash
+                {t("Rekvizitlarni saqlash")}
               </button>
             </form>
             {error && (
@@ -7980,7 +8042,7 @@ function PlatformPaymentReviewPanel() {
                 {error}
               </p>
             )}
-            <h3>Cheklarni tekshirish</h3>
+            <h3>{t("Cheklarni tekshirish")}</h3>
             {loading ? (
               <Loading />
             ) : paymentRequests.length ? (
@@ -7993,65 +8055,89 @@ function PlatformPaymentReviewPanel() {
                     <header>
                       <strong>{paymentRequest.companyName}</strong>
                       <span>
-                        {paymentRequest.period} · {money(paymentRequest.amount)} so‘m
+                        {paymentRequest.period} · {money(paymentRequest.amount)}
                       </span>
                     </header>
                     <p>
                       {paymentRequest.ownerName} ·{" "}
-                      {new Date(paymentRequest.createdAt).toLocaleString("uz-UZ")}
+                      {new Date(paymentRequest.createdAt).toLocaleString(currentLocale())}
                     </p>
-                    <img
-                      src={paymentRequest.receipt}
-                      alt={`${paymentRequest.companyName} to‘lov cheki`}
-                    />
-                    {paymentRequest.status === "pending" ? (
-                      <>
-                        <label className="field-label">
-                          Rad etish sababi
-                          <input
-                            value={rejectionReasons[paymentRequest.id] || ""}
-                            onChange={(event) =>
-                              setRejectionReasons((current) => ({
-                                ...current,
-                                [paymentRequest.id]: event.target.value,
-                              }))
-                            }
-                            maxLength="300"
-                            placeholder="Ixtiyoriy izoh"
-                          />
-                        </label>
-                        <div className="platform-payment-actions">
-                          <button
-                            type="button"
-                            className="button button-primary"
-                            disabled={saving}
-                            onClick={() => void review(paymentRequest, "approve")}
-                          >
-                            Tasdiqlash
-                          </button>
-                          <button
-                            type="button"
-                            className="button button-secondary"
-                            disabled={saving}
-                            onClick={() => void review(paymentRequest, "reject")}
-                          >
-                            Rad etish
-                          </button>
-                        </div>
-                      </>
-                    ) : (
+                    <button
+                      type="button"
+                      className="platform-payment-receipt-image"
+                      onClick={() => setSelectedReceipt(paymentRequest)}
+                      aria-label={t("To‘lov chekini katta ko‘rish")}
+                    >
+                      <img
+                        src={paymentRequest.receipt}
+                        alt={`${paymentRequest.companyName} ${t("to‘lov cheki")}`}
+                      />
+                    </button>
+                    {paymentRequest.status !== "pending" && (
                       <strong className={`payment-status is-${paymentRequest.status}`}>
-                        {paymentRequest.status === "approved" ? "Tasdiqlangan" : "Rad etilgan"}
+                        {paymentRequest.status === "approved"
+                          ? t("Tasdiqlangan")
+                          : t("Rad etilgan")}
                       </strong>
                     )}
+                    <label className="field-label">
+                      {t("Rad etish sababi")}
+                      <input
+                        value={rejectionReasons[paymentRequest.id] || ""}
+                        onChange={(event) =>
+                          setRejectionReasons((current) => ({
+                            ...current,
+                            [paymentRequest.id]: event.target.value,
+                          }))
+                        }
+                        maxLength="300"
+                        placeholder={t("Ixtiyoriy izoh")}
+                      />
+                    </label>
+                    <div className="platform-payment-actions">
+                      <button
+                        type="button"
+                        className="button button-primary"
+                        disabled={saving}
+                        onClick={() => void review(paymentRequest, "approve")}
+                      >
+                        {t("Tasdiqlash")}
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        disabled={saving}
+                        onClick={() => void review(paymentRequest, "reject")}
+                      >
+                        {t("Rad etish")}
+                      </button>
+                    </div>
+                    <small className="platform-payment-edit-note">
+                      {t("To‘lov qarorini 24 soat ichida o‘zgartirish mumkin.")}
+                    </small>
                   </article>
                 ))}
               </div>
             ) : (
-              <p className="muted">Hozircha chek yuborilmagan.</p>
+              <p className="muted">{t("Hozircha chek yuborilmagan.")}</p>
             )}
           </section>
         </div>
+      )}
+      {selectedReceipt && (
+        <Modal
+          className="platform-payment-receipt-modal"
+          backdropClassName="platform-payment-receipt-backdrop"
+          title={t("To‘lov cheki")}
+          subtitle={selectedReceipt.companyName}
+          onClose={() => setSelectedReceipt(null)}
+        >
+          <img
+            className="platform-payment-receipt-full"
+            src={selectedReceipt.receipt}
+            alt={`${selectedReceipt.companyName} ${t("to‘lov cheki")}`}
+          />
+        </Modal>
       )}
     </>
   );

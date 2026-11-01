@@ -48,10 +48,30 @@ const paymentRequestLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Chek yuborish urinishlari ko‘payib ketdi. Birozdan keyin qayta urinib ko‘ring.' },
 })
+const paymentRequestRetentionMs = 24 * 60 * 60 * 1000
 const pendingDemoVerifications = new Map()
 
 function fail(statusCode, message) {
   throw Object.assign(new Error(message), { statusCode })
+}
+
+function paymentRequestExpired(entry, now = Date.now()) {
+  if (!['approved', 'rejected'].includes(entry.status)) return false
+  const reviewedAt = Date.parse(entry.reviewedAt || '')
+  return !Number.isFinite(reviewedAt) || now - reviewedAt >= paymentRequestRetentionMs
+}
+
+async function pruneExpiredPaymentRequests() {
+  const now = Date.now()
+  const paymentRequests = readDatabase().subscriptionPaymentRequests
+  if (!paymentRequests.some((entry) => paymentRequestExpired(entry, now))) return
+  await updateDatabase((database) => {
+    const before = database.subscriptionPaymentRequests.length
+    database.subscriptionPaymentRequests = database.subscriptionPaymentRequests.filter(
+      (entry) => !paymentRequestExpired(entry, now),
+    )
+    return before - database.subscriptionPaymentRequests.length
+  })
 }
 
 function normalizeLogin(value) {
@@ -744,7 +764,8 @@ app.post('/api/platform/payment-settings', requireAuth, requirePlatformAdmin, as
   response.json(settings)
 })
 
-app.get('/api/subscription/payment-status', requireAuth, (request, response) => {
+app.get('/api/subscription/payment-status', requireAuth, async (request, response) => {
+  await pruneExpiredPaymentRequests()
   const database = readDatabase()
   const company = requireCompany(request, database)
   if (company.isDemo) fail(403, 'Demo akkaunt uchun obuna to‘lovi talab qilinmaydi.')
@@ -808,7 +829,16 @@ app.post('/api/subscription/payment-requests', requireAuth, paymentRequestLimite
   response.status(201).json({ paymentRequest })
 })
 
-app.get('/api/platform/payment-requests', requireAuth, requirePlatformAdmin, (_request, response) => {
+app.get('/api/platform/payment-requests/pending-count', requireAuth, requirePlatformAdmin, async (_request, response) => {
+  await pruneExpiredPaymentRequests()
+  const paymentRequests = readDatabase().subscriptionPaymentRequests
+  response.json({
+    count: paymentRequests.filter((entry) => entry.status === 'pending').length,
+  })
+})
+
+app.get('/api/platform/payment-requests', requireAuth, requirePlatformAdmin, async (_request, response) => {
+  await pruneExpiredPaymentRequests()
   const database = readDatabase()
   const paymentRequests = database.subscriptionPaymentRequests
     .map((entry) => ({
@@ -822,27 +852,32 @@ app.get('/api/platform/payment-requests', requireAuth, requirePlatformAdmin, (_r
 app.patch('/api/platform/payment-requests/:requestId', requireAuth, requirePlatformAdmin, async (request, response) => {
   const action = request.body?.action
   if (!['approve', 'reject'].includes(action)) fail(400, 'To‘lovni tasdiqlash yoki rad etishni tanlang.')
+  await pruneExpiredPaymentRequests()
   const rejectionReason = action === 'reject'
     ? (typeof request.body?.rejectionReason === 'string' ? request.body.rejectionReason.trim().slice(0, 300) : '')
     : ''
   const paymentRequest = await updateDatabase((database) => {
     const entry = database.subscriptionPaymentRequests.find((item) => item.id === request.params.requestId)
     if (!entry) fail(404, 'To‘lov so‘rovi topilmadi.')
-    if (entry.status !== 'pending') fail(409, 'Bu to‘lov so‘rovi avval ko‘rib chiqilgan.')
     const company = database.companies.find((item) => item.id === entry.companyId)
     if (!company) fail(404, 'To‘lov so‘roviga tegishli do‘kon topilmadi.')
     if (action === 'approve') {
-      database.subscriptions.push({
-        id: randomUUID(),
-        companyId: entry.companyId,
-        period: entry.period,
-        amount: entry.amount,
-        paidAt: new Date().toISOString(),
-        createdBy: request.user.id,
-        paymentRequestId: entry.id,
-      })
+      if (!database.subscriptions.some((payment) => payment.paymentRequestId === entry.id)) {
+        database.subscriptions.push({
+          id: randomUUID(),
+          companyId: entry.companyId,
+          period: entry.period,
+          amount: entry.amount,
+          paidAt: new Date().toISOString(),
+          createdBy: request.user.id,
+          paymentRequestId: entry.id,
+        })
+      }
       entry.status = 'approved'
     } else {
+      database.subscriptions = database.subscriptions.filter(
+        (payment) => payment.paymentRequestId !== entry.id,
+      )
       entry.status = 'rejected'
       entry.rejectionReason = rejectionReason
     }
@@ -1454,7 +1489,14 @@ app.use((error, _request, response, _next) => {
 })
 
 initializeDatabase()
-  .then(() => {
+  .then(async () => {
+    await pruneExpiredPaymentRequests()
+    const cleanupInterval = setInterval(() => {
+      void pruneExpiredPaymentRequests().catch((error) => {
+        console.error('Muddati tugagan to‘lov so‘rovlarini o‘chirishda xatolik:', error)
+      })
+    }, 60_000)
+    cleanupInterval.unref()
     app.listen(port, () => console.log(`Yemzor API http://localhost:${port} — database.json`))
   })
   .catch((error) => {
