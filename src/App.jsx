@@ -3484,6 +3484,7 @@ function Shell({
   const mobileDockIndicatorRef = useRef(null);
   const previousDockPositionRef = useRef(null);
   const dockInteractionAnimationRef = useRef(null);
+  const dockAnimationFrameRef = useRef(null);
   const dockDragRef = useRef(null);
   const suppressTabClickRef = useRef(false);
   const now = useClock();
@@ -3496,48 +3497,114 @@ function Shell({
       )
     : 0;
   const demoTimeLeft = `${Math.floor(remainingMinutes / 60)} soat ${remainingMinutes % 60} daqiqa qoldi`;
+  const animateDockPosition = (fromX, toX) => {
+    const indicator = mobileDockIndicatorRef.current;
+    if (!indicator) return;
+    dockInteractionAnimationRef.current?.cancel();
+    indicator.style.transform = `translate3d(${fromX}px, 0, 0)`;
+    if (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      Math.abs(toX - fromX) < 1
+    ) {
+      indicator.style.transform = `translate3d(${toX}px, 0, 0)`;
+      previousDockPositionRef.current = toX;
+      return;
+    }
+    const direction = toX > fromX ? 1 : -1;
+    const animation = indicator.animate(
+      [
+        { transform: `translate3d(${fromX}px, 0, 0) scaleX(1.12) scaleY(.9)`, offset: 0 },
+        { transform: `translate3d(${toX + direction * 7}px, 0, 0) scaleX(.9) scaleY(1.08)`, offset: 0.78 },
+        { transform: `translate3d(${toX}px, 0, 0) scale(1)`, offset: 1 },
+      ],
+      { duration: 480, easing: "cubic-bezier(.2, .8, .2, 1)" },
+    );
+    animation.onfinish = () => {
+      indicator.style.transform = `translate3d(${toX}px, 0, 0)`;
+      animation.cancel();
+    };
+    dockInteractionAnimationRef.current = animation;
+    previousDockPositionRef.current = toX;
+  };
+  const getActiveDockPosition = () => {
+    const tabbar = mobileTabbarRef.current;
+    const indicator = mobileDockIndicatorRef.current;
+    const activeButton = tabbar?.querySelector(".mobile-tabbar-item.active");
+    if (!tabbar || !indicator || !activeButton) return null;
+    const tabbarBounds = tabbar.getBoundingClientRect();
+    const buttonBounds = activeButton.getBoundingClientRect();
+    return buttonBounds.left + buttonBounds.width / 2 - tabbarBounds.left - 23;
+  };
+  const getRenderedDockPosition = () => {
+    const tabbar = mobileTabbarRef.current;
+    const indicator = mobileDockIndicatorRef.current;
+    if (!tabbar || !indicator) return getActiveDockPosition();
+    return (
+      indicator.getBoundingClientRect().left +
+      indicator.getBoundingClientRect().width / 2 -
+      tabbar.getBoundingClientRect().left -
+      23
+    );
+  };
+  const findDockTarget = (clientX, clientY) => {
+    const tabbar = mobileTabbarRef.current;
+    if (!tabbar) return null;
+    const tabbarBounds = tabbar.getBoundingClientRect();
+    if (
+      clientX < tabbarBounds.left ||
+      clientX > tabbarBounds.right ||
+      clientY < tabbarBounds.top ||
+      clientY > tabbarBounds.bottom
+    ) {
+      return null;
+    }
+    const directTarget = document
+      .elementFromPoint(clientX, clientY)
+      ?.closest(".mobile-tabbar-item");
+    if (directTarget) return directTarget;
+    const buttons = [...tabbar.querySelectorAll(".mobile-tabbar-item")];
+    return buttons.reduce((nearest, button) => {
+      if (!nearest) return button;
+      const bounds = button.getBoundingClientRect();
+      const nearestBounds = nearest.getBoundingClientRect();
+      return Math.abs(bounds.left + bounds.width / 2 - clientX) <
+        Math.abs(nearestBounds.left + nearestBounds.width / 2 - clientX)
+        ? button
+        : nearest;
+    }, null);
+  };
+  const stopDockDrag = (drag) => {
+    if (dockAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(dockAnimationFrameRef.current);
+      dockAnimationFrameRef.current = null;
+    }
+    const indicator = mobileDockIndicatorRef.current;
+    indicator?.classList.remove("is-dragging");
+    if (indicator) {
+      indicator.style.transform = `translate3d(${drag.x}px, 0, 0)`;
+    }
+  };
   useLayoutEffect(() => {
     const tabbar = mobileTabbarRef.current;
     const indicator = mobileDockIndicatorRef.current;
     const activeButton = tabbar?.querySelector(".mobile-tabbar-item.active");
     if (!tabbar || !indicator || !activeButton) return undefined;
 
-    let animation;
     const updatePosition = (animate) => {
       const tabbarBounds = tabbar.getBoundingClientRect();
       const buttonBounds = activeButton.getBoundingClientRect();
       const nextX =
         buttonBounds.left + buttonBounds.width / 2 - tabbarBounds.left - 23;
       const previousX = previousDockPositionRef.current;
-      indicator.style.transform = `translate3d(${nextX}px, 0, 0)`;
-
       if (
         animate &&
         previousX !== null &&
         previousX !== nextX &&
         !window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ) {
-        animation?.cancel();
-        dockInteractionAnimationRef.current?.cancel();
-        const direction = nextX > previousX ? 1 : -1;
-        animation = indicator.animate(
-          [
-            {
-              transform: `translate3d(${previousX}px, 0, 0) scaleX(1.08) scaleY(.92)`,
-              offset: 0,
-            },
-            {
-              transform: `translate3d(${nextX - direction * 8}px, 0, 0) scaleX(.88) scaleY(1.12)`,
-              offset: 0.78,
-            },
-            {
-              transform: `translate3d(${nextX}px, 0, 0) scaleX(1) scaleY(1)`,
-              offset: 1,
-            },
-          ],
-          { duration: 620, easing: "cubic-bezier(.2, .8, .2, 1)" },
-        );
-        dockInteractionAnimationRef.current = animation;
+        animateDockPosition(previousX, nextX);
+      } else {
+        indicator.style.transform = `translate3d(${nextX}px, 0, 0)`;
       }
 
       previousDockPositionRef.current = nextX;
@@ -3547,7 +3614,6 @@ function Shell({
     const handleResize = () => updatePosition(false);
     window.addEventListener("resize", handleResize);
     return () => {
-      animation?.cancel();
       dockInteractionAnimationRef.current?.cancel();
       window.removeEventListener("resize", handleResize);
     };
@@ -3555,37 +3621,25 @@ function Shell({
   const handleDockPointerDown = (event) => {
     const button = event.target.closest(".mobile-tabbar-item");
     if (!button) return;
+    const startPosition = getRenderedDockPosition() ?? 0;
+    const indicator = mobileDockIndicatorRef.current;
+    dockInteractionAnimationRef.current?.cancel();
+    dockInteractionAnimationRef.current = null;
+    if (indicator) {
+      indicator.style.transform = `translate3d(${startPosition}px, 0, 0)`;
+    }
     dockDragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       didDrag: false,
       targetId: button.dataset.pageId,
+      x: startPosition,
+      targetX: startPosition,
+      velocity: 0,
+      lastFrame: 0,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
-    dockInteractionAnimationRef.current?.cancel();
-    const indicator = mobileDockIndicatorRef.current;
-    if (indicator && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      dockInteractionAnimationRef.current = indicator.animate(
-        [
-          { transform: indicator.style.transform, offset: 0 },
-          { transform: `${indicator.style.transform} scaleX(1.16) scaleY(.82)`, offset: 0.32 },
-          { transform: `${indicator.style.transform} scaleX(.9) scaleY(1.12)`, offset: 0.68 },
-          { transform: `${indicator.style.transform} scale(1)`, offset: 1 },
-        ],
-        { duration: 560, easing: "cubic-bezier(.2, .8, .2, 1)" },
-      );
-    }
-  };
-  const restoreDockIndicator = () => {
-    const tabbar = mobileTabbarRef.current;
-    const indicator = mobileDockIndicatorRef.current;
-    const activeButton = tabbar?.querySelector(".mobile-tabbar-item.active");
-    if (!tabbar || !indicator || !activeButton) return;
-    const tabbarBounds = tabbar.getBoundingClientRect();
-    const buttonBounds = activeButton.getBoundingClientRect();
-    const activeX = buttonBounds.left + buttonBounds.width / 2 - tabbarBounds.left - 23;
-    indicator.style.transform = `translate3d(${activeX}px, 0, 0)`;
   };
   const handleDockPointerMove = (event) => {
     const drag = dockDragRef.current;
@@ -3594,37 +3648,94 @@ function Shell({
       return;
     }
     drag.didDrag = true;
-    const target = document
-      .elementFromPoint(event.clientX, event.clientY)
-      ?.closest(".mobile-tabbar-item");
-    if (!target) {
-      drag.targetId = null;
-      restoreDockIndicator();
-      return;
-    }
-    drag.targetId = target.dataset.pageId;
     const tabbar = mobileTabbarRef.current;
     const indicator = mobileDockIndicatorRef.current;
     if (!tabbar || !indicator) return;
     dockInteractionAnimationRef.current?.cancel();
+    dockInteractionAnimationRef.current = null;
+    indicator.classList.add("is-dragging");
     const tabbarBounds = tabbar.getBoundingClientRect();
-    const buttonBounds = target.getBoundingClientRect();
-    const nextX = buttonBounds.left + buttonBounds.width / 2 - tabbarBounds.left - 23;
-    indicator.style.transform = `translate3d(${nextX}px, 0, 0)`;
+    const minX = 7;
+    const maxX = tabbarBounds.width - 53;
+    drag.targetX = Math.max(
+      minX,
+      Math.min(maxX, event.clientX - tabbarBounds.left - 23),
+    );
+    const target = findDockTarget(event.clientX, event.clientY);
+    drag.targetId = target?.dataset.pageId || null;
+    if (dockAnimationFrameRef.current !== null) return;
+    const animateDrag = (now) => {
+      const currentDrag = dockDragRef.current;
+      const currentIndicator = mobileDockIndicatorRef.current;
+      if (!currentDrag || !currentIndicator) {
+        dockAnimationFrameRef.current = null;
+        return;
+      }
+      const delta = currentDrag.lastFrame
+        ? Math.min((now - currentDrag.lastFrame) / 1000, 0.032)
+        : 1 / 60;
+      currentDrag.lastFrame = now;
+      const distance = currentDrag.targetX - currentDrag.x;
+      currentDrag.velocity += distance * 260 * delta;
+      currentDrag.velocity *= Math.exp(-24 * delta);
+      currentDrag.x += currentDrag.velocity * delta;
+      const stretch = Math.min(1.22, 1 + Math.abs(currentDrag.velocity) * 0.0015);
+      currentIndicator.style.transform =
+        `translate3d(${currentDrag.x}px, 0, 0) scaleX(${stretch}) scaleY(${2 - stretch})`;
+      if (
+        Math.abs(distance) < 0.15 &&
+        Math.abs(currentDrag.velocity) < 1.5
+      ) {
+        currentDrag.x = currentDrag.targetX;
+        currentIndicator.style.transform =
+          `translate3d(${currentDrag.x}px, 0, 0)`;
+        dockAnimationFrameRef.current = null;
+        return;
+      }
+      dockAnimationFrameRef.current = window.requestAnimationFrame(animateDrag);
+    };
+    dockAnimationFrameRef.current = window.requestAnimationFrame(animateDrag);
   };
   const handleDockPointerUp = (event) => {
     const drag = dockDragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     dockDragRef.current = null;
-    if (!drag.didDrag) return;
+    if (!drag.didDrag) {
+      const activePosition = getActiveDockPosition();
+      if (activePosition !== null) animateDockPosition(drag.x, activePosition);
+      return;
+    }
+    stopDockDrag(drag);
     suppressTabClickRef.current = true;
-    if (drag.targetId) {
-      setActivePage(drag.targetId);
+    const targetId =
+      findDockTarget(event.clientX, event.clientY)?.dataset.pageId || null;
+    const activePosition = getActiveDockPosition();
+    const activePageId = mobileTabbarRef.current
+      ?.querySelector(".mobile-tabbar-item.active")
+      ?.getAttribute("data-page-id");
+    if (targetId && targetId !== activePageId) {
+      previousDockPositionRef.current = drag.x;
+      setActivePage(targetId);
       setMobileMenuOpen(false);
+    } else if (activePosition !== null) {
+      animateDockPosition(drag.x, activePosition);
     }
     window.requestAnimationFrame(() => {
       suppressTabClickRef.current = false;
     });
+  };
+  const handleDockPointerCancel = (event) => {
+    const drag = dockDragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    dockDragRef.current = null;
+    if (!drag.didDrag) {
+      const activePosition = getActiveDockPosition();
+      if (activePosition !== null) animateDockPosition(drag.x, activePosition);
+      return;
+    }
+    stopDockDrag(drag);
+    const activePosition = getActiveDockPosition();
+    if (activePosition !== null) animateDockPosition(drag.x, activePosition);
   };
   const handleDockClickCapture = (event) => {
     if (!suppressTabClickRef.current) return;
@@ -3794,10 +3905,7 @@ function Shell({
           onPointerDown={handleDockPointerDown}
           onPointerMove={handleDockPointerMove}
           onPointerUp={handleDockPointerUp}
-          onPointerCancel={() => {
-            dockDragRef.current = null;
-            restoreDockIndicator();
-          }}
+          onPointerCancel={handleDockPointerCancel}
           onClickCapture={handleDockClickCapture}
         >
           <span
