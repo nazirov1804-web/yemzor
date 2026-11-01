@@ -1919,6 +1919,13 @@ function LandingPage({
       </section>
 
       <section className="landing-legal" aria-label="Huquqiy ma’lumotlar">
+        <a
+          className="button button-secondary landing-footer-download"
+          href="#ilovani-yuklab-olish"
+        >
+          {translateText("Yuklab olish", currentLanguage())}
+          <FiDownload aria-hidden="true" />
+        </a>
         <button
           className="landing-legal-button"
           type="button"
@@ -1944,13 +1951,6 @@ function LandingPage({
           </span>
         </a>
         <span>© {now.getFullYear()} Yemzor. Barcha huquqlar himoyalangan.</span>
-        <a
-          className="button button-secondary landing-footer-download"
-          href="#ilovani-yuklab-olish"
-        >
-          {translateText("Yuklab olish", currentLanguage())}
-          <FiDownload aria-hidden="true" />
-        </a>
       </footer>
 
       {selectedFeature && (
@@ -2939,15 +2939,23 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
           <form className="modal-form" onSubmit={savePaymentCard}>
             <Field label={translateText("Karta raqami", currentLanguage())}>
               <input
-                value={platformSettings.paymentCardNumber}
+                value={formatCardNumber(
+                  String(platformSettings.paymentCardNumber || "")
+                    .replace(/\D/g, "")
+                    .slice(0, 16),
+                )}
                 onChange={(event) =>
                   setPlatformSettings((current) => ({
                     ...current,
-                    paymentCardNumber: event.target.value,
+                    paymentCardNumber: event.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 16),
                   }))
                 }
+                type="text"
                 inputMode="numeric"
                 autoComplete="off"
+                maxLength={19}
                 placeholder="8600 0000 0000 0000"
               />
             </Field>
