@@ -69,7 +69,8 @@ const landingSectionNavigation = [
   ["#birliklar", "Birliklar"],
   ["#boglanish", "Bog‘lanish"],
 ];
-const installedBuildStorageKey = "yemzor:installed-build-id:v2";
+const installedReleaseStorageKey = "yemzor:installed-release:v1";
+const previousInstalledBuildStorageKey = "yemzor:installed-build-id:v2";
 const dateWeekday = (date) => new Date(`${date}T00:00:00.000Z`).getUTCDay();
 const isRestDay = (employee, date) =>
   Number.isInteger(employee?.restDay) && dateWeekday(date) === employee.restDay;
@@ -287,6 +288,7 @@ function App() {
   const [appUpdateAvailable, setAppUpdateAvailable] = useState(false);
   const [appRefreshing, setAppRefreshing] = useState(false);
   const [latestBuildId, setLatestBuildId] = useState("");
+  const [latestAppVersion, setLatestAppVersion] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [bootProgress, setBootProgress] = useState(5);
@@ -315,8 +317,11 @@ function App() {
     } catch (error) {
       console.error("Yemzor ilova yangilanishini tekshirib bo‘lmadi.", error);
     }
-    if (latestBuildId) {
-      window.localStorage.setItem(installedBuildStorageKey, latestBuildId);
+    if (latestBuildId && latestAppVersion) {
+      window.localStorage.setItem(
+        installedReleaseStorageKey,
+        JSON.stringify({ buildId: latestBuildId, version: latestAppVersion }),
+      );
     }
     const refreshUrl = new URL(window.location.href);
     refreshUrl.searchParams.set("_yemzor_refresh", String(Date.now()));
@@ -333,11 +338,31 @@ function App() {
         });
         if (!response.ok) throw new Error(`Version check failed: ${response.status}`);
         const latest = await response.json();
-        if (active && latest.buildId) {
+        if (active && latest.buildId && latest.version) {
           setLatestBuildId(latest.buildId);
-          const previousBuildId = window.localStorage.getItem(installedBuildStorageKey);
-          if (!previousBuildId || previousBuildId !== latest.buildId) {
-            setAppUpdateAvailable(true);
+          setLatestAppVersion(latest.version);
+          let installedRelease;
+          try {
+            installedRelease = JSON.parse(
+              window.localStorage.getItem(installedReleaseStorageKey) || "null",
+            );
+          } catch {
+            installedRelease = null;
+          }
+          const previousBuildId = window.localStorage.getItem(
+            previousInstalledBuildStorageKey,
+          );
+          const installedVersion = installedRelease?.version || "1.0.0";
+          const installedBuildId = installedRelease?.buildId || previousBuildId;
+          const needsUpdate =
+            installedVersion !== latest.version ||
+            (installedBuildId !== null && installedBuildId !== latest.buildId);
+          setAppUpdateAvailable(needsUpdate);
+          if (!installedRelease && !previousBuildId && !needsUpdate) {
+            window.localStorage.setItem(
+              installedReleaseStorageKey,
+              JSON.stringify({ buildId: latest.buildId, version: latest.version }),
+            );
           }
         }
       } catch (error) {
@@ -710,13 +735,14 @@ function App() {
     );
   return (
     <>
-      {isInstalledApp && !import.meta.env.DEV && (
+      {isInstalledApp && appUpdateAvailable && !import.meta.env.DEV && (
         <div className="app-update-banner" role="status">
           <span>
             {translateText(
-              appUpdateAvailable ? "Yangi versiya tayyor" : "Ilovani yangilash",
+              "Yangi versiya tayyor",
               currentLanguage(),
             )}
+            {latestAppVersion ? ` · v${latestAppVersion}` : ""}
           </span>
           <button
             type="button"
