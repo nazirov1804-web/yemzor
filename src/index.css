@@ -11498,6 +11498,7 @@ html[data-theme="dark"] .boot-progress-track {
 
   .landing-brand-glass,
   .landing-header > .landing-nav,
+  html[data-theme="dark"] .landing-header > .landing-nav,
   .landing-header-actions {
     padding: 0 !important;
     border: 0 !important;
@@ -11516,7 +11517,11 @@ html[data-theme="dark"] .boot-progress-track {
   .landing-header > .landing-nav a,
   .landing-header > .landing-nav a:hover,
   .landing-header > .landing-nav a:focus-visible,
-  .landing-header > .landing-nav a.active {
+  .landing-header > .landing-nav a.active,
+  html[data-theme="dark"] .landing-header > .landing-nav a,
+  html[data-theme="dark"] .landing-header > .landing-nav a:hover,
+  html[data-theme="dark"] .landing-header > .landing-nav a:focus-visible,
+  html[data-theme="dark"] .landing-header > .landing-nav a.active {
     border: 0 !important;
     border-radius: 0 !important;
     background: transparent !important;
