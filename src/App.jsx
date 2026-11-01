@@ -1317,9 +1317,9 @@ function LandingPage({
         </div>
         <div className="role-flow-grid">
           <article className="flow-node flow-node-top-left">
-            <span className="flow-icon"><FiBriefcase /></span>
-            <strong>Boshliq</strong>
-            <small>Umumiy nazorat va qarorlar</small>
+            <span className="flow-icon"><FiUsers /></span>
+            <strong>Xodim</strong>
+            <small>Davomat va oylik</small>
           </article>
           <article className="flow-node flow-node-top-center">
             <span className="flow-icon"><FiBox /></span>
@@ -1327,22 +1327,22 @@ function LandingPage({
             <small>Kirim, qoldiq va tan narx</small>
           </article>
           <article className="flow-node flow-node-top-right">
-            <span className="flow-icon"><FiTrendingUp /></span>
-            <strong>Savdo</strong>
-            <small>Chek, narx va tushum</small>
+            <span className="flow-icon"><FiShoppingCart /></span>
+            <strong>Hisobot</strong>
+            <small>Kunlik, haftalik va oylik</small>
           </article>
           <div className="flow-center">
             <span>Yemzor</span>
           </div>
           <article className="flow-node flow-node-bottom-left">
-            <span className="flow-icon"><FiShoppingCart /></span>
-            <strong>Hisobot</strong>
-            <small>Kunlik, haftalik va oylik</small>
+            <span className="flow-icon"><FiTrendingUp /></span>
+            <strong>Savdo</strong>
+            <small>Chek, narx va tushum</small>
           </article>
           <article className="flow-node flow-node-bottom-center">
-            <span className="flow-icon"><FiUsers /></span>
-            <strong>Xodim</strong>
-            <small>Davomat va oylik</small>
+            <span className="flow-icon"><FiBriefcase /></span>
+            <strong>Boshliq</strong>
+            <small>Umumiy nazorat va qarorlar</small>
           </article>
           <article className="flow-node flow-node-bottom-right">
             <span className="flow-icon"><FiDollarSign /></span>
@@ -1362,31 +1362,37 @@ function LandingPage({
             <path id="flow-path-bottom-left" className="flow-path flow-path-bottom-left" d="M500 200L150 315" />
             <path id="flow-path-bottom-center" className="flow-path flow-path-bottom-center" d="M500 200L500 315" />
             <path id="flow-path-bottom-right" className="flow-path flow-path-bottom-right" d="M500 200L850 315" />
+            <path id="flow-route-employee-sales" className="flow-route flow-route-employee-sales" d="M0 95C-35 95 -35 315 0 315" />
+            <path id="flow-route-sales-owner" className="flow-route flow-route-sales-owner" d="M150 392C240 430 410 430 500 392" />
+            <path id="flow-route-owner-payment" className="flow-route flow-route-owner-payment" d="M500 392C610 430 750 430 850 392" />
+            <path id="flow-route-payment-report" className="flow-route flow-route-payment-report" d="M1000 315C1035 315 1035 95 1000 95" />
+            <path id="flow-route-report-inventory" className="flow-route flow-route-report-inventory" d="M850 18C760 -20 600 -20 500 18" />
+            <path id="flow-route-inventory-employee" className="flow-route flow-route-inventory-employee" d="M500 18C400 -20 240 -20 150 18" />
             {[
-              ["top-left", "0s"],
-              ["top-center", ".3s"],
-              ["top-right", ".6s"],
-              ["bottom-left", ".9s"],
-              ["bottom-center", "1.2s"],
-              ["bottom-right", "1.5s"],
-            ].map(([position, delay]) => (
+              "employee-sales",
+              "sales-owner",
+              "owner-payment",
+              "payment-report",
+              "report-inventory",
+              "inventory-employee",
+            ].map((position) => (
               <circle
                 key={position}
-                className={`flow-dot flow-dot-${position}`}
+                className={`flow-dot flow-dot-route-${position}`}
                 r="5"
               >
                 <animateMotion
-                  dur="2.4s"
-                  begin={delay}
+                  dur="3s"
+                  begin="0s"
                   repeatCount="indefinite"
                   calcMode="linear"
                 >
-                  <mpath href={`#flow-path-${position}`} />
+                  <mpath href={`#flow-route-${position}`} />
                 </animateMotion>
                 <animate
                   attributeName="opacity"
-                  dur="2.4s"
-                  begin={delay}
+                  dur="3s"
+                  begin="0s"
                   values="0;1;1;0;0"
                   keyTimes="0;0.08;0.86;0.98;1"
                   repeatCount="indefinite"

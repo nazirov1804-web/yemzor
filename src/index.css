@@ -10095,7 +10095,7 @@ html[data-theme="dark"] .landing-download-button small {
 }
 
 .landing-role-flow {
-  width: min(calc(100% - 48px), 1120px);
+  width: min(calc(100% - 48px), 1280px);
   margin: clamp(42px, 7vw, 82px) auto;
   padding: clamp(24px, 5vw, 56px);
   overflow: hidden;
@@ -10124,10 +10124,10 @@ html[data-theme="dark"] .landing-download-button small {
   position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(142px, auto));
-  gap: 42px 54px;
+  grid-template-rows: repeat(2, minmax(154px, auto));
+  gap: 68px 84px;
   align-items: center;
-  max-width: 980px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 18px 0;
 }
@@ -10151,11 +10151,52 @@ html[data-theme="dark"] .landing-download-button small {
   transition: stroke 180ms ease, stroke-width 180ms ease, filter 180ms ease;
 }
 
+.flow-route {
+  fill: none;
+  stroke: #77aaff;
+  stroke-width: 2;
+  stroke-dasharray: 3 8;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: stroke;
+  transition: stroke 180ms ease, stroke-width 180ms ease, filter 180ms ease;
+}
+
+.flow-route:hover,
+.flow-node-top-left:hover ~ .flow-connectors .flow-route-inventory-employee,
+.flow-node-top-left:hover ~ .flow-connectors .flow-route-employee-sales,
+.flow-node-top-center:hover ~ .flow-connectors .flow-route-report-inventory,
+.flow-node-top-center:hover ~ .flow-connectors .flow-route-inventory-employee,
+.flow-node-top-right:hover ~ .flow-connectors .flow-route-payment-report,
+.flow-node-top-right:hover ~ .flow-connectors .flow-route-report-inventory,
+.flow-node-bottom-left:hover ~ .flow-connectors .flow-route-employee-sales,
+.flow-node-bottom-left:hover ~ .flow-connectors .flow-route-sales-owner,
+.flow-node-bottom-center:hover ~ .flow-connectors .flow-route-sales-owner,
+.flow-node-bottom-center:hover ~ .flow-connectors .flow-route-owner-payment,
+.flow-node-bottom-right:hover ~ .flow-connectors .flow-route-owner-payment,
+.flow-node-bottom-right:hover ~ .flow-connectors .flow-route-payment-report {
+  stroke: #347ef1;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 4px rgb(75 143 245 / 46%));
+}
+
 .flow-dot {
   fill: #4b8ff5;
   stroke: rgb(75 143 245 / 24%);
   stroke-width: 7;
   pointer-events: none;
+}
+
+.flow-dot-route-employee-sales,
+.flow-dot-route-sales-owner,
+.flow-dot-route-owner-payment,
+.flow-dot-route-payment-report,
+.flow-dot-route-report-inventory,
+.flow-dot-route-inventory-employee {
+  fill: #347ef1;
+  stroke: rgb(75 143 245 / 28%);
+  stroke-width: 8;
+  filter: drop-shadow(0 0 3px rgb(75 143 245 / 42%));
 }
 
 .flow-node {
@@ -10249,6 +10290,23 @@ html[data-theme="dark"] .landing-download-button small {
 .flow-node-bottom-right:hover ~ .flow-connectors .flow-dot-bottom-right {
   fill: #84b5ff;
   stroke: rgb(75 143 245 / 42%);
+  filter: drop-shadow(0 0 5px rgb(75 143 245 / 64%));
+}
+
+.flow-node-top-left:hover ~ .flow-connectors .flow-dot-route-inventory-employee,
+.flow-node-top-left:hover ~ .flow-connectors .flow-dot-route-employee-sales,
+.flow-node-top-center:hover ~ .flow-connectors .flow-dot-route-report-inventory,
+.flow-node-top-center:hover ~ .flow-connectors .flow-dot-route-inventory-employee,
+.flow-node-top-right:hover ~ .flow-connectors .flow-dot-route-payment-report,
+.flow-node-top-right:hover ~ .flow-connectors .flow-dot-route-report-inventory,
+.flow-node-bottom-left:hover ~ .flow-connectors .flow-dot-route-employee-sales,
+.flow-node-bottom-left:hover ~ .flow-connectors .flow-dot-route-sales-owner,
+.flow-node-bottom-center:hover ~ .flow-connectors .flow-dot-route-sales-owner,
+.flow-node-bottom-center:hover ~ .flow-connectors .flow-dot-route-owner-payment,
+.flow-node-bottom-right:hover ~ .flow-connectors .flow-dot-route-owner-payment,
+.flow-node-bottom-right:hover ~ .flow-connectors .flow-dot-route-payment-report {
+  fill: #84b5ff;
+  stroke: rgb(75 143 245 / 48%);
   filter: drop-shadow(0 0 5px rgb(75 143 245 / 64%));
 }
 
@@ -10617,6 +10675,15 @@ html[data-theme="dark"] .flow-center {
 }
 
 @media (min-width: 1024px) {
+  .landing-header {
+    border-color: transparent !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
   .landing-header > .landing-nav {
     gap: clamp(4px, .7vw, 10px) !important;
     padding: 6px !important;
