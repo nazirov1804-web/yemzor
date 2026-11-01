@@ -10369,3 +10369,440 @@ html[data-theme="dark"] .flow-center {
   .flow-node-bottom-center { grid-column: 1; grid-row: 6; }
   .flow-node-bottom-right { grid-column: 1; grid-row: 7; }
 }
+
+.button,
+.icon-button,
+.password-visibility,
+.notification-trigger,
+.theme-toggle,
+.landing-menu-trigger,
+.mobile-menu-trigger,
+.back-link,
+.legal-back-button,
+.landing-legal-button,
+.role-switch button,
+.logout-button {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 72%) !important;
+  border-radius: 14px !important;
+  background-color: var(--glass-surface-soft);
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgb(255 255 255 / 64%), transparent 58%),
+    linear-gradient(145deg, rgb(255 255 255 / 35%), rgb(255 255 255 / 7%) 58%, rgb(161 216 179 / 14%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 82%),
+    inset 0 -1px 0 rgb(73 132 87 / 10%),
+    0 7px 18px rgb(35 74 48 / 12%);
+  backdrop-filter: blur(18px) saturate(175%);
+  -webkit-backdrop-filter: blur(18px) saturate(175%);
+  transition:
+    transform 200ms cubic-bezier(.2, .8, .2, 1),
+    border-color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease,
+    color 200ms ease;
+}
+
+.button-primary {
+  border-color: rgb(255 255 255 / 52%) !important;
+  color: #fff;
+  background-color: #267c4b;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgb(255 255 255 / 38%), transparent 62%),
+    linear-gradient(145deg, rgb(108 203 139 / 94%), rgb(35 126 75 / 94%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 58%),
+    inset 0 -1px 0 rgb(12 78 39 / 20%),
+    0 8px 20px rgb(29 105 58 / 22%);
+}
+
+.button-secondary,
+.back-link,
+.legal-back-button,
+.landing-legal-button,
+.theme-toggle,
+.icon-button,
+.password-visibility,
+.notification-trigger,
+.role-switch button {
+  color: #3e5848;
+}
+
+.button-tertiary {
+  border-color: rgb(255 255 255 / 78%) !important;
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgb(255 255 255 / 72%), transparent 58%),
+    linear-gradient(145deg, rgb(222 243 228 / 78%), rgb(191 225 201 / 46%));
+}
+
+.segmented button {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background:
+    radial-gradient(ellipse at 18% 0%, rgb(255 255 255 / 54%), transparent 58%),
+    linear-gradient(145deg, rgb(255 255 255 / 30%), rgb(255 255 255 / 8%));
+  transition: color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.segmented button.selected {
+  border-color: rgb(255 255 255 / 82%);
+  background:
+    radial-gradient(ellipse at 18% 0%, rgb(255 255 255 / 86%), transparent 62%),
+    linear-gradient(145deg, rgb(255 255 255 / 82%), rgb(217 237 223 / 58%));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 92%), 0 4px 12px rgb(35 74 48 / 12%);
+}
+
+.segmented button:focus-visible {
+  outline: 3px solid rgb(70 151 97 / 52%);
+  outline-offset: 2px;
+}
+
+.button-danger {
+  border: 1px solid rgb(255 255 255 / 48%) !important;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgb(255 255 255 / 32%), transparent 62%),
+    linear-gradient(145deg, #d86a60, #a93630);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 46%),
+    0 8px 20px rgb(145 48 42 / 20%);
+}
+
+.button:not(:disabled):hover,
+.icon-button:not(:disabled):hover,
+.password-visibility:not(:disabled):hover,
+.notification-trigger:not(:disabled):hover,
+.theme-toggle:not(:disabled):hover,
+.landing-menu-trigger:not(:disabled):hover,
+.mobile-menu-trigger:not(:disabled):hover,
+.back-link:not(:disabled):hover,
+.legal-back-button:not(:disabled):hover,
+.landing-legal-button:not(:disabled):hover,
+.role-switch button:not(:disabled):hover,
+.logout-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  border-color: rgb(255 255 255 / 94%) !important;
+  background-color: var(--glass-surface-strong);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 94%),
+    inset 0 -1px 0 rgb(73 132 87 / 12%),
+    0 12px 24px rgb(35 74 48 / 17%);
+}
+
+.button-primary:not(:disabled):hover {
+  background-color: #24784a;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgb(255 255 255 / 46%), transparent 62%),
+    linear-gradient(145deg, #7bd49a, #23844d);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 68%),
+    0 12px 26px rgb(29 105 58 / 28%);
+}
+
+.button-danger:not(:disabled):hover {
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgb(255 255 255 / 42%), transparent 62%),
+    linear-gradient(145deg, #e17469, #a93630);
+}
+
+.button:active:not(:disabled),
+.icon-button:active:not(:disabled),
+.password-visibility:active:not(:disabled),
+.notification-trigger:active:not(:disabled),
+.theme-toggle:active:not(:disabled),
+.landing-menu-trigger:active:not(:disabled),
+.mobile-menu-trigger:active:not(:disabled),
+.back-link:active:not(:disabled),
+.legal-back-button:active:not(:disabled),
+.landing-legal-button:active:not(:disabled),
+.role-switch button:active:not(:disabled),
+.logout-button:active:not(:disabled) {
+  transform: translateY(0) scale(.97);
+}
+
+.button:focus-visible,
+.icon-button:focus-visible,
+.password-visibility:focus-visible,
+.notification-trigger:focus-visible,
+.theme-toggle:focus-visible,
+.landing-menu-trigger:focus-visible,
+.mobile-menu-trigger:focus-visible,
+.back-link:focus-visible,
+.legal-back-button:focus-visible,
+.landing-legal-button:focus-visible,
+.role-switch button:focus-visible,
+.logout-button:focus-visible {
+  outline: 3px solid rgb(70 151 97 / 52%);
+  outline-offset: 3px;
+}
+
+.button:disabled,
+.icon-button:disabled,
+.notification-trigger:disabled {
+  cursor: not-allowed;
+  opacity: .58;
+}
+
+.landing-header,
+.topbar {
+  border-color: rgb(255 255 255 / 72%);
+  background-color: rgb(248 252 249 / 76%);
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgb(255 255 255 / 72%), transparent 58%),
+    linear-gradient(145deg, rgb(255 255 255 / 42%), rgb(255 255 255 / 12%) 58%, rgb(161 216 179 / 12%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 10px 28px rgb(35 74 48 / 12%);
+  backdrop-filter: blur(26px) saturate(180%);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+}
+
+.landing-nav a,
+.nav-link {
+  border: 1px solid transparent;
+  border-radius: 13px;
+  transition:
+    transform 200ms cubic-bezier(.2, .8, .2, 1),
+    color 200ms ease,
+    border-color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.landing-nav a:hover,
+.landing-nav a:focus-visible,
+.landing-nav a.active,
+.nav-link:hover,
+.nav-link.active {
+  border-color: rgb(255 255 255 / 78%);
+  color: var(--green);
+  background:
+    radial-gradient(ellipse at 20% 0%, rgb(255 255 255 / 80%), transparent 65%),
+    linear-gradient(145deg, rgb(255 255 255 / 68%), rgb(214 238 221 / 40%));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 88%),
+    0 5px 14px rgb(35 74 48 / 10%);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+html[data-theme="dark"] .button,
+html[data-theme="dark"] .icon-button,
+html[data-theme="dark"] .password-visibility,
+html[data-theme="dark"] .notification-trigger,
+html[data-theme="dark"] .theme-toggle,
+html[data-theme="dark"] .landing-menu-trigger,
+html[data-theme="dark"] .mobile-menu-trigger,
+html[data-theme="dark"] .back-link,
+html[data-theme="dark"] .legal-back-button,
+html[data-theme="dark"] .landing-legal-button,
+html[data-theme="dark"] .role-switch button,
+html[data-theme="dark"] .logout-button {
+  border-color: rgb(226 255 234 / 30%) !important;
+  color: #e0eee4;
+  background-color: rgb(28 45 35 / 68%);
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgb(226 255 234 / 24%), transparent 58%),
+    linear-gradient(145deg, rgb(226 255 234 / 14%), rgb(19 36 26 / 30%) 58%, rgb(74 133 91 / 17%));
+  box-shadow:
+    inset 0 1px 0 rgb(236 255 241 / 34%),
+    inset 0 -1px 0 rgb(0 0 0 / 12%),
+    0 8px 22px rgb(0 0 0 / 22%);
+}
+
+html[data-theme="dark"] .button-primary {
+  border-color: rgb(226 255 234 / 42%) !important;
+  color: #f5fff7;
+  background-image:
+    radial-gradient(ellipse at 20% 0%, rgb(226 255 234 / 34%), transparent 62%),
+    linear-gradient(145deg, #459c64, #17623a);
+}
+
+html[data-theme="dark"] .button-tertiary {
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgb(226 255 234 / 25%), transparent 58%),
+    linear-gradient(145deg, rgb(51 87 62 / 82%), rgb(28 50 36 / 72%));
+}
+
+html[data-theme="dark"] .segmented button {
+  border-color: rgb(226 255 234 / 18%);
+  color: #b7c9bc;
+  background:
+    radial-gradient(ellipse at 18% 0%, rgb(226 255 234 / 14%), transparent 58%),
+    linear-gradient(145deg, rgb(226 255 234 / 8%), rgb(19 36 26 / 30%));
+}
+
+html[data-theme="dark"] .segmented button.selected {
+  border-color: rgb(226 255 234 / 30%);
+  color: #ddf2e2;
+  background:
+    radial-gradient(ellipse at 18% 0%, rgb(226 255 234 / 24%), transparent 62%),
+    linear-gradient(145deg, rgb(49 76 57 / 88%), rgb(28 50 36 / 78%));
+  box-shadow: inset 0 1px 0 rgb(236 255 241 / 26%), 0 4px 12px rgb(0 0 0 / 22%);
+}
+
+html[data-theme="dark"] .button:not(:disabled):hover,
+html[data-theme="dark"] .icon-button:not(:disabled):hover,
+html[data-theme="dark"] .password-visibility:not(:disabled):hover,
+html[data-theme="dark"] .notification-trigger:not(:disabled):hover,
+html[data-theme="dark"] .theme-toggle:not(:disabled):hover,
+html[data-theme="dark"] .landing-menu-trigger:not(:disabled):hover,
+html[data-theme="dark"] .mobile-menu-trigger:not(:disabled):hover,
+html[data-theme="dark"] .back-link:not(:disabled):hover,
+html[data-theme="dark"] .legal-back-button:not(:disabled):hover,
+html[data-theme="dark"] .landing-legal-button:not(:disabled):hover,
+html[data-theme="dark"] .role-switch button:not(:disabled):hover,
+html[data-theme="dark"] .logout-button:not(:disabled):hover {
+  border-color: rgb(236 255 241 / 58%) !important;
+  background-color: rgb(47 70 54 / 82%);
+  box-shadow:
+    inset 0 1px 0 rgb(236 255 241 / 48%),
+    0 12px 26px rgb(0 0 0 / 30%);
+}
+
+html[data-theme="dark"] .landing-header,
+html[data-theme="dark"] .topbar {
+  border-color: rgb(226 255 234 / 24%);
+  background-color: rgb(18 31 23 / 76%);
+  background-image:
+    radial-gradient(ellipse at 18% 0%, rgb(226 255 234 / 19%), transparent 58%),
+    linear-gradient(145deg, rgb(226 255 234 / 10%), rgb(19 36 26 / 42%) 58%, rgb(74 133 91 / 12%));
+  box-shadow:
+    inset 0 1px 0 rgb(236 255 241 / 28%),
+    0 12px 30px rgb(0 0 0 / 26%);
+}
+
+html[data-theme="dark"] .landing-nav a:hover,
+html[data-theme="dark"] .landing-nav a:focus-visible,
+html[data-theme="dark"] .landing-nav a.active,
+html[data-theme="dark"] .nav-link:hover,
+html[data-theme="dark"] .nav-link.active {
+  border-color: rgb(226 255 234 / 30%);
+  color: #b6e4c3;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgb(226 255 234 / 20%), transparent 65%),
+    linear-gradient(145deg, rgb(226 255 234 / 12%), rgb(48 77 56 / 52%));
+  box-shadow: inset 0 1px 0 rgb(236 255 241 / 26%), 0 5px 14px rgb(0 0 0 / 18%);
+}
+
+@media (max-width: 820px) {
+  .mobile-tabbar {
+    border: 1px solid rgb(255 255 255 / 78%);
+    background:
+      radial-gradient(ellipse at 18% 0%, rgb(255 255 255 / 82%), transparent 58%),
+      linear-gradient(145deg, rgb(255 255 255 / 62%), rgb(228 241 231 / 48%) 58%, rgb(182 215 192 / 34%));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 92%),
+      inset 1px 0 0 rgb(255 255 255 / 40%),
+      inset 0 -1px 0 rgb(103 146 114 / 16%),
+      0 16px 38px rgb(31 62 41 / 24%);
+    backdrop-filter: blur(30px) saturate(185%);
+    -webkit-backdrop-filter: blur(30px) saturate(185%);
+  }
+
+  .mobile-dock-indicator {
+    border: 1px solid rgb(255 255 255 / 78%);
+    background:
+      radial-gradient(circle at 30% 14%, rgb(255 255 255 / 62%), transparent 52%),
+      linear-gradient(145deg, rgb(115 207 151 / 90%), rgb(28 126 76 / 88%));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 76%),
+      inset 0 -3px 7px rgb(10 81 50 / 20%),
+      0 8px 20px rgb(22 96 58 / 32%);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+  }
+
+  .mobile-tabbar-item {
+    border: 1px solid transparent;
+    transition:
+      transform 240ms cubic-bezier(.2, .8, .2, 1),
+      color 180ms ease,
+      filter 180ms ease;
+  }
+
+  .mobile-tabbar-item:not(.active):hover {
+    color: #276843;
+    filter: drop-shadow(0 2px 6px rgb(39 104 67 / 24%));
+  }
+
+  .mobile-tabbar-item:active {
+    transform: scale(.94);
+  }
+
+  .mobile-tabbar-item.active:active {
+    transform: translateY(-10px) scale(.94);
+  }
+
+  html[data-theme="dark"] .mobile-tabbar {
+    border-color: rgb(226 255 234 / 32%);
+    background:
+      radial-gradient(ellipse at 18% 0%, rgb(226 255 234 / 22%), transparent 58%),
+      linear-gradient(145deg, rgb(45 67 51 / 82%), rgb(22 38 28 / 86%) 58%, rgb(20 46 32 / 78%));
+    box-shadow:
+      inset 0 1px 0 rgb(236 255 241 / 36%),
+      inset 1px 0 0 rgb(236 255 241 / 15%),
+      inset 0 -1px 0 rgb(0 0 0 / 20%),
+      0 16px 38px rgb(0 0 0 / 42%);
+  }
+
+  html[data-theme="dark"] .mobile-dock-indicator {
+    border-color: rgb(236 255 241 / 66%);
+    background:
+      radial-gradient(circle at 30% 14%, rgb(255 255 255 / 56%), transparent 52%),
+      linear-gradient(145deg, rgb(104 192 133 / 94%), rgb(26 111 68 / 92%));
+  }
+}
+
+@media (max-width: 425px) {
+  .mobile-tabbar {
+    width: min(370px, calc(100vw - 28px));
+    padding: 8px;
+    border-radius: 26px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .button,
+  .icon-button,
+  .password-visibility,
+  .notification-trigger,
+  .theme-toggle,
+  .landing-menu-trigger,
+  .mobile-menu-trigger,
+  .back-link,
+  .legal-back-button,
+  .landing-legal-button,
+  .role-switch button,
+  .logout-button,
+  .landing-header,
+  .topbar,
+  .landing-nav a,
+  .nav-link,
+  .mobile-tabbar,
+  .mobile-dock-indicator {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button,
+  .icon-button,
+  .password-visibility,
+  .notification-trigger,
+  .theme-toggle,
+  .landing-menu-trigger,
+  .mobile-menu-trigger,
+  .back-link,
+  .legal-back-button,
+  .landing-legal-button,
+  .role-switch button,
+  .logout-button,
+  .segmented button,
+  .landing-nav a,
+  .nav-link,
+  .mobile-tabbar-item {
+    transition: none;
+  }
+}
