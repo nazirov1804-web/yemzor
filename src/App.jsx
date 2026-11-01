@@ -293,6 +293,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [bootProgress, setBootProgress] = useState(5);
   const [bootError, setBootError] = useState("");
+  const completedInitialBoot = useRef(false);
+  const resumeLoading = useRef(false);
   const [networkOffline, setNetworkOffline] = useState(
     () => !window.navigator.onLine,
   );
@@ -513,7 +515,10 @@ function App() {
           if (!active) return;
           setBootProgress(100);
           finishTimer = window.setTimeout(() => {
-            if (active) setLoading(false);
+            if (active) {
+              completedInitialBoot.current = true;
+              setLoading(false);
+            }
           }, 180);
         }, remainingTime);
       })
@@ -527,6 +532,68 @@ function App() {
       window.clearTimeout(finishTimer);
     };
   }, [emptyStoreData]);
+
+  useEffect(() => {
+    if (!isInstalledApp) return undefined;
+    let wasHidden = false;
+    let lastResumeAt = 0;
+    const timers = new Set();
+    const playResumeLoading = () => {
+      if (
+        !completedInitialBoot.current ||
+        resumeLoading.current ||
+        Date.now() - lastResumeAt < 1000
+      ) {
+        return;
+      }
+      lastResumeAt = Date.now();
+      resumeLoading.current = true;
+      setBootError("");
+      setBootProgress(5);
+      setLoading(true);
+      for (let step = 1; step <= 10; step += 1) {
+        const timer = window.setTimeout(() => {
+          setBootProgress(step === 10 ? 100 : 5 + step * 10);
+          if (step === 10) {
+            const finishTimer = window.setTimeout(() => {
+              resumeLoading.current = false;
+              setLoading(false);
+              timers.delete(finishTimer);
+            }, 180);
+            timers.add(finishTimer);
+          }
+          timers.delete(timer);
+        }, step * 250);
+        timers.add(timer);
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        wasHidden = true;
+      } else if (wasHidden) {
+        wasHidden = false;
+        playResumeLoading();
+      }
+    };
+    const handlePageHide = () => {
+      wasHidden = true;
+    };
+    const handlePageShow = (event) => {
+      if (event.persisted && wasHidden) {
+        wasHidden = false;
+        playResumeLoading();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+      window.removeEventListener("pageshow", handlePageShow);
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [isInstalledApp]);
 
   const refreshStore = useCallback(async () => {
     let storeData;
