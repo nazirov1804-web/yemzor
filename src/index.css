@@ -10781,7 +10781,6 @@ html[data-theme="dark"] .password-input-wrap > .password-visibility {
 }
 
 .topbar,
-.landing-header,
 .mobile-tabbar {
   background: #f8fcf9 !important;
   backdrop-filter: blur(8px) !important;
@@ -10789,7 +10788,6 @@ html[data-theme="dark"] .password-input-wrap > .password-visibility {
 }
 
 html[data-theme="dark"] .topbar,
-html[data-theme="dark"] .landing-header,
 html[data-theme="dark"] .mobile-tabbar {
   background: #121f17 !important;
 }
@@ -10828,6 +10826,18 @@ html[data-theme="dark"] .mobile-tabbar {
   html[data-theme="dark"] .mobile-tabbar-item:not(.active) {
     background: rgb(38 58 45 / 76%) !important;
     box-shadow: 0 3px 10px rgb(0 0 0 / 35%);
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-header,
+  html[data-theme="dark"] .landing-header {
+    border-color: transparent !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 
