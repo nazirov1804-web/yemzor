@@ -1316,12 +1316,6 @@ function LandingPage({
           <h2>Barcha boshqaruv jarayoni bitta markazda birlashadi</h2>
         </div>
         <div className="role-flow-grid">
-          <span className="flow-dot flow-dot-top-left" aria-hidden="true" />
-          <span className="flow-dot flow-dot-top-center" aria-hidden="true" />
-          <span className="flow-dot flow-dot-top-right" aria-hidden="true" />
-          <span className="flow-dot flow-dot-bottom-left" aria-hidden="true" />
-          <span className="flow-dot flow-dot-bottom-center" aria-hidden="true" />
-          <span className="flow-dot flow-dot-bottom-right" aria-hidden="true" />
           <article className="flow-node flow-node-top-left">
             <span className="flow-icon"><FiBriefcase /></span>
             <strong>Boshliq</strong>
@@ -1355,6 +1349,51 @@ function LandingPage({
             <strong>To‘lov</strong>
             <small>Avans, Abed va bonus</small>
           </article>
+          <svg
+            className="flow-connectors"
+            viewBox="0 0 1000 400"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path id="flow-path-top-left" className="flow-path flow-path-top-left" d="M500 200L150 85" />
+            <path id="flow-path-top-center" className="flow-path flow-path-top-center" d="M500 200L500 85" />
+            <path id="flow-path-top-right" className="flow-path flow-path-top-right" d="M500 200L850 85" />
+            <path id="flow-path-bottom-left" className="flow-path flow-path-bottom-left" d="M500 200L150 315" />
+            <path id="flow-path-bottom-center" className="flow-path flow-path-bottom-center" d="M500 200L500 315" />
+            <path id="flow-path-bottom-right" className="flow-path flow-path-bottom-right" d="M500 200L850 315" />
+            {[
+              ["top-left", "0s"],
+              ["top-center", ".3s"],
+              ["top-right", ".6s"],
+              ["bottom-left", ".9s"],
+              ["bottom-center", "1.2s"],
+              ["bottom-right", "1.5s"],
+            ].map(([position, delay]) => (
+              <circle
+                key={position}
+                className={`flow-dot flow-dot-${position}`}
+                r="5"
+              >
+                <animateMotion
+                  dur="2.4s"
+                  begin={delay}
+                  repeatCount="indefinite"
+                  calcMode="linear"
+                >
+                  <mpath href={`#flow-path-${position}`} />
+                </animateMotion>
+                <animate
+                  attributeName="opacity"
+                  dur="2.4s"
+                  begin={delay}
+                  values="0;1;1;0;0"
+                  keyTimes="0;0.08;0.86;0.98;1"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            ))}
+          </svg>
         </div>
       </section>
 
