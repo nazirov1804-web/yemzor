@@ -10841,6 +10841,22 @@ html[data-theme="dark"] .mobile-tabbar {
   }
 }
 
+@media (min-width: 1024px) {
+  .landing-brand-glass,
+  .landing-header > .landing-nav,
+  .landing-header-actions {
+    background: rgb(248 252 249 / 96%) !important;
+    backdrop-filter: blur(36px) saturate(155%) !important;
+    -webkit-backdrop-filter: blur(36px) saturate(155%) !important;
+  }
+
+  html[data-theme="dark"] .landing-brand-glass,
+  html[data-theme="dark"] .landing-header > .landing-nav,
+  html[data-theme="dark"] .landing-header-actions {
+    background: rgb(18 31 23 / 96%) !important;
+  }
+}
+
 .demo-consent {
   display: flex;
   align-items: flex-start;
