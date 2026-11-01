@@ -49,12 +49,21 @@ export async function initializeDatabase() {
       parsed.subscriptionRates = []
       changed = true
     }
+    if (!Array.isArray(parsed.subscriptionPaymentRequests)) {
+      parsed.subscriptionPaymentRequests = []
+      changed = true
+    }
     if (!Array.isArray(parsed.notifications)) {
       parsed.notifications = []
       changed = true
     }
     if (!parsed.platformSettings || typeof parsed.platformSettings !== 'object') {
-      parsed.platformSettings = { phone: '', telegram: 'naziroff1' }
+      parsed.platformSettings = {
+        phone: '',
+        telegram: 'naziroff1',
+        paymentCardNumber: '',
+        paymentCardHolder: '',
+      }
       changed = true
     } else {
       if (typeof parsed.platformSettings.phone !== 'string') {
@@ -63,6 +72,14 @@ export async function initializeDatabase() {
       }
       if (typeof parsed.platformSettings.telegram !== 'string') {
         parsed.platformSettings.telegram = 'naziroff1'
+        changed = true
+      }
+      if (typeof parsed.platformSettings.paymentCardNumber !== 'string') {
+        parsed.platformSettings.paymentCardNumber = ''
+        changed = true
+      }
+      if (typeof parsed.platformSettings.paymentCardHolder !== 'string') {
+        parsed.platformSettings.paymentCardHolder = ''
         changed = true
       }
     }
@@ -129,10 +146,16 @@ export async function initializeDatabase() {
       movements: [],
       subscriptions: [],
       subscriptionRates: [],
+      subscriptionPaymentRequests: [],
       attendance: [],
       notifications: [],
       demoRegistrations: [],
-      platformSettings: { phone: '', telegram: 'naziroff1' },
+      platformSettings: {
+        phone: '',
+        telegram: 'naziroff1',
+        paymentCardNumber: '',
+        paymentCardHolder: '',
+      },
     }
     await persist(database)
   }

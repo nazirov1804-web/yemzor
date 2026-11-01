@@ -20,6 +20,13 @@ const sections = [
     ],
   },
   {
+    title: "Obuna to‘lovi va chek tasdiqlari",
+    paragraphs: [
+      "Sayt orqali obuna to‘lovini tasdiqlashni so‘raganingizda, chek yoki to‘lov screenshotini, do‘kon nomini, tegishli oy va summani xizmatga yuborasiz. Ushbu ma’lumotlar platforma egasiga to‘lovni qo‘lda tekshirish uchun ko‘rsatiladi va xizmat ma’lumotlari tarkibida saqlanadi.",
+      "Chek rasmini yuborishda to‘lovni tekshirish uchun zarur bo‘lmagan shaxsiy yoki karta ma’lumotlarini berkitib qo‘yish tavsiya etiladi.",
+    ],
+  },
+  {
     title: "Sessiya va qurilmada saqlanadigan sozlamalar",
     paragraphs: [
       "Tizimga kirishni saqlash uchun brauzerda sessiya cookie-si ishlatiladi. U reklama kuzatuvi uchun emas, foydalanuvchini tizimda tanib turish va akkaunt xavfsizligini ta’minlash uchun kerak.",

@@ -32,6 +32,7 @@ const sections = [
     paragraphs: [
       "Demo rejimi xizmat imkoniyatlarini sinab ko‘rish uchun taqdim etiladi. Demo muddati, obuna va to‘lov shartlari foydalanuvchiga akkaunt yoki xizmat ichida ko‘rsatiladi.",
       "Xizmatning ayrim imkoniyatlari obuna holati yoki tanlangan foydalanish shartlariga bog‘liq bo‘lishi mumkin. To‘lovga oid savollar yuzasidan Yemzor aloqa kanallariga murojaat qilish mumkin.",
+      "Sayt orqali bank kartasiga to‘lov qilganda, foydalanuvchi chek rasmini yuborib tasdiqlashni so‘rashi mumkin. To‘lov avtomatik yechilmaydi: platforma egasi chekni tekshiradi va obunani qo‘lda tasdiqlaydi yoki rad etadi.",
     ],
   },
   {

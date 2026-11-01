@@ -20,7 +20,7 @@ const serverDirectory = dirname(fileURLToPath(import.meta.url))
 app.disable('x-powered-by')
 app.set('trust proxy', 1)
 app.use(cors({ origin: allowedOrigin, credentials: true }))
-app.use(express.json({ limit: '1mb' }))
+app.use(express.json({ limit: '5mb' }))
 app.use(session({
   name: 'yemzor.sid',
   secret: sessionSecret,
@@ -40,6 +40,13 @@ const registrationLimiter = rateLimit({
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: { error: 'Ro‘yxatdan o‘tish urinishlari ko‘payib ketdi. Birozdan keyin qayta urinib ko‘ring.' },
+})
+const paymentRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: { error: 'Chek yuborish urinishlari ko‘payib ketdi. Birozdan keyin qayta urinib ko‘ring.' },
 })
 const pendingDemoVerifications = new Map()
 
@@ -707,6 +714,143 @@ app.post('/api/platform/companies/:companyId/subscriptions', requireAuth, requir
 
 app.get('/api/platform/settings', requireAuth, requirePlatformAdmin, (_request, response) => {
   response.json(readDatabase().platformSettings)
+})
+
+app.post('/api/platform/payment-settings', requireAuth, requirePlatformAdmin, async (request, response) => {
+  const rawCardNumber = typeof request.body?.paymentCardNumber === 'string'
+    ? request.body.paymentCardNumber.trim()
+    : ''
+  const paymentCardNumber = rawCardNumber.replace(/[\s-]/g, '')
+  if (paymentCardNumber && !/^\d{13,19}$/.test(paymentCardNumber)) {
+    fail(400, 'Karta raqami 13–19 ta raqamdan iborat bo‘lishi kerak.')
+  }
+  const paymentCardHolder = typeof request.body?.paymentCardHolder === 'string'
+    ? request.body.paymentCardHolder.trim()
+    : ''
+  if (
+    paymentCardHolder.length > 80 ||
+    [...paymentCardHolder].some((character) => {
+      const code = character.charCodeAt(0)
+      return code < 32 || code === 127
+    })
+  ) {
+    fail(400, 'Karta egasining ismini tekshiring.')
+  }
+  const settings = await updateDatabase((database) => {
+    database.platformSettings.paymentCardNumber = paymentCardNumber
+    database.platformSettings.paymentCardHolder = paymentCardHolder
+    return database.platformSettings
+  })
+  response.json(settings)
+})
+
+app.get('/api/subscription/payment-status', requireAuth, (request, response) => {
+  const database = readDatabase()
+  const company = requireCompany(request, database)
+  if (company.isDemo) fail(403, 'Demo akkaunt uchun obuna to‘lovi talab qilinmaydi.')
+  const subscription = subscriptionStatus(database, company)
+  const period = subscription.period
+  const paymentRequest = database.subscriptionPaymentRequests
+    .filter((entry) => entry.companyId === company.id && entry.period === period)
+    .sort((first, second) => second.createdAt.localeCompare(first.createdAt))[0] || null
+  response.json({
+    companyName: company.name,
+    subscription,
+    dueAmount: Math.max(subscription.requiredAmount - subscription.paidAmount, 0),
+    canSubmitPayment: request.user.role === 'company_owner',
+    paymentRequest,
+    paymentCardNumber: database.platformSettings.paymentCardNumber || '',
+    paymentCardHolder: database.platformSettings.paymentCardHolder || '',
+    telegram: database.platformSettings.telegram || 'naziroff1',
+    phone: database.platformSettings.phone || '',
+  })
+})
+
+app.post('/api/subscription/payment-requests', requireAuth, paymentRequestLimiter, async (request, response) => {
+  const receipt = typeof request.body?.receipt === 'string' ? request.body.receipt : ''
+  const match = receipt.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/)
+  if (!match) fail(400, 'Chek rasmi JPG, PNG yoki WEBP formatida bo‘lishi kerak.')
+  const receiptBytes = Buffer.from(match[2], 'base64')
+  if (!receiptBytes.length || receiptBytes.length > 3 * 1024 * 1024) {
+    fail(400, 'Chek rasmi 3 MB dan kichik bo‘lishi kerak.')
+  }
+  const paymentRequest = await updateDatabase((database) => {
+    const company = requireCompany(request, database)
+    if (company.isDemo) fail(403, 'Demo akkaunt uchun to‘lov yuborib bo‘lmaydi.')
+    if (request.user.role !== 'company_owner') fail(403, 'To‘lov tasdig‘ini faqat do‘kon egasi yuborishi mumkin.')
+    const subscription = subscriptionStatus(database, company)
+    if (subscription.active) fail(409, 'Joriy oy uchun to‘lov tasdiqlangan.')
+    const amount = Math.max(subscription.requiredAmount - subscription.paidAmount, 0)
+    if (!amount) fail(409, 'Joriy oy uchun tarif summasi sozlanmagan.')
+    const pending = database.subscriptionPaymentRequests.find((entry) =>
+      entry.companyId === company.id &&
+      entry.period === subscription.period &&
+      entry.status === 'pending')
+    if (pending) fail(409, 'Ushbu oy uchun to‘lov tasdig‘i allaqachon ko‘rib chiqilmoqda.')
+    const entry = {
+      id: randomUUID(),
+      companyId: company.id,
+      companyName: company.name,
+      ownerId: request.user.id,
+      ownerName: request.user.name,
+      period: subscription.period,
+      amount,
+      receipt,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      reviewedAt: null,
+      reviewedBy: null,
+      rejectionReason: '',
+    }
+    database.subscriptionPaymentRequests.push(entry)
+    return entry
+  })
+  response.status(201).json({ paymentRequest })
+})
+
+app.get('/api/platform/payment-requests', requireAuth, requirePlatformAdmin, (_request, response) => {
+  const database = readDatabase()
+  const paymentRequests = database.subscriptionPaymentRequests
+    .map((entry) => ({
+      ...entry,
+      companyName: database.companies.find((company) => company.id === entry.companyId)?.name || entry.companyName,
+    }))
+    .sort((first, second) => second.createdAt.localeCompare(first.createdAt))
+  response.json({ paymentRequests })
+})
+
+app.patch('/api/platform/payment-requests/:requestId', requireAuth, requirePlatformAdmin, async (request, response) => {
+  const action = request.body?.action
+  if (!['approve', 'reject'].includes(action)) fail(400, 'To‘lovni tasdiqlash yoki rad etishni tanlang.')
+  const rejectionReason = action === 'reject'
+    ? (typeof request.body?.rejectionReason === 'string' ? request.body.rejectionReason.trim().slice(0, 300) : '')
+    : ''
+  const paymentRequest = await updateDatabase((database) => {
+    const entry = database.subscriptionPaymentRequests.find((item) => item.id === request.params.requestId)
+    if (!entry) fail(404, 'To‘lov so‘rovi topilmadi.')
+    if (entry.status !== 'pending') fail(409, 'Bu to‘lov so‘rovi avval ko‘rib chiqilgan.')
+    const company = database.companies.find((item) => item.id === entry.companyId)
+    if (!company) fail(404, 'To‘lov so‘roviga tegishli do‘kon topilmadi.')
+    if (action === 'approve') {
+      database.subscriptions.push({
+        id: randomUUID(),
+        companyId: entry.companyId,
+        period: entry.period,
+        amount: entry.amount,
+        paidAt: new Date().toISOString(),
+        createdBy: request.user.id,
+        paymentRequestId: entry.id,
+      })
+      entry.status = 'approved'
+    } else {
+      entry.status = 'rejected'
+      entry.rejectionReason = rejectionReason
+    }
+    entry.reviewedAt = new Date().toISOString()
+    entry.reviewedBy = request.user.id
+    return entry
+  })
+  response.json({ paymentRequest })
 })
 
 app.patch('/api/platform/settings', requireAuth, requirePlatformAdmin, async (request, response) => {

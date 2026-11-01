@@ -10884,12 +10884,217 @@ html[data-theme="dark"] .mobile-tabbar {
   outline-offset: 2px;
 }
 
+.subscription-payment-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 28px 16px;
+  color: #202b25;
+  background: #f5f7f5;
+}
+
+.subscription-payment-card {
+  display: grid;
+  gap: 16px;
+  width: min(520px, 100%);
+  padding: clamp(24px, 5vw, 40px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  background: var(--glass-surface-strong);
+  box-shadow: var(--glass-inset), var(--glass-shadow);
+}
+
+.subscription-payment-card h1 {
+  margin: 0;
+  font-size: clamp(24px, 5vw, 32px);
+}
+
+.subscription-payment-card > p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.subscription-payment-actions,
+.payment-copy-row,
+.platform-payment-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.subscription-payment-actions > * {
+  flex: 1 1 150px;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.subscription-payment-details {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: var(--glass-surface);
+}
+
+.payment-copy-row {
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.payment-copy-row strong {
+  overflow-wrap: anywhere;
+}
+
+.payment-card-holder {
+  margin: -5px 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.payment-receipt-input {
+  display: none !important;
+}
+
+.payment-receipt-preview {
+  display: grid;
+  gap: 10px;
+}
+
+.payment-receipt-preview img {
+  width: 100%;
+  max-height: 280px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: var(--page);
+}
+
+.subscription-payment-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.platform-payment-trigger {
+  position: fixed;
+  z-index: 120;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  min-height: 46px;
+  padding: 0 18px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  color: #fff;
+  background: var(--green);
+  box-shadow: 0 8px 24px rgb(20 70 40 / 25%);
+}
+
+.platform-payment-overlay {
+  position: fixed;
+  z-index: 11000;
+  inset: 0;
+  display: grid;
+  justify-items: end;
+  background: rgb(12 25 17 / 45%);
+}
+
+.platform-payment-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  width: min(580px, 100%);
+  height: 100%;
+  overflow: auto;
+  padding: max(22px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
+  color: #202b25;
+  background: #f5f7f5;
+  box-shadow: -16px 0 50px rgb(0 0 0 / 18%);
+}
+
+.platform-payment-panel > header,
+.platform-payment-request > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.platform-payment-panel h2,
+.platform-payment-panel h3 {
+  margin: 4px 0 0;
+}
+
+.platform-payment-settings,
+.platform-payment-request {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: var(--glass-surface-strong);
+  box-shadow: var(--glass-inset), var(--glass-shadow);
+}
+
+.platform-payment-list {
+  display: grid;
+  gap: 14px;
+}
+
+.platform-payment-request > header {
+  align-items: flex-start;
+}
+
+.platform-payment-request > header span,
+.platform-payment-request > p {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.platform-payment-request > img {
+  width: 100%;
+  max-height: 420px;
+  border-radius: 12px;
+  object-fit: contain;
+  background: #f5f7f5;
+}
+
+.platform-payment-request .field-label {
+  display: grid;
+  gap: 6px;
+}
+
+.payment-status.is-approved {
+  color: #267343;
+}
+
+.payment-status.is-rejected {
+  color: #b4433b;
+}
+
 html[data-theme="dark"] .demo-consent {
   color: #bdcfc2;
 }
 
 html[data-theme="dark"] .demo-consent a {
   color: #9cdbad;
+}
+
+html[data-theme="dark"] .subscription-payment-shell,
+html[data-theme="dark"] .platform-payment-panel {
+  color: #e4eee7;
+  background: #101a13;
+}
+
+html[data-theme="dark"] .platform-payment-request > img {
+  background: #101a13;
+}
+
+@media (max-width: 600px) {
+  .platform-payment-request > header {
+    flex-direction: column;
+  }
 }
 
 .app-update-banner {

@@ -752,13 +752,16 @@ function App() {
         </>
       ) : null
     ) : user.role === "platform_admin" ? (
-      <PlatformPage
-        user={user}
-        onLogout={logout}
-        onContactSave={setPublicSettings}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-      />
+      <>
+        <PlatformPage
+          user={user}
+          onLogout={logout}
+          onContactSave={setPublicSettings}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+        />
+        <PlatformPaymentReviewPanel />
+      </>
     ) : status.subscription?.demo && !status.subscription.active ? (
       <DemoExpiredGate
         onLogout={logout}
@@ -766,6 +769,15 @@ function App() {
           await logout();
           setAccessView("demo");
         }}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+    ) : status.subscription && !status.subscription.active ? (
+      <SubscriptionPaymentGate
+        onLogout={logout}
+        onRefresh={refreshStatus}
+        telegram={publicSettings.telegram}
+        phone={publicSettings.phone}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -7563,6 +7575,485 @@ function Loading() {
     <div className="loading-state">
       <span className="spinner" /> Ma’lumotlar yuklanmoqda...
     </div>
+  );
+}
+
+function SubscriptionPaymentGate({
+  onLogout,
+  onRefresh,
+  telegram,
+  phone,
+  theme,
+  onToggleTheme,
+}) {
+  const [details, setDetails] = useState(null);
+  const [error, setError] = useState("");
+  const [receipt, setReceipt] = useState("");
+  const [sending, setSending] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    let active = true;
+    const checkPayment = async () => {
+      try {
+        const result = await api("/api/subscription/payment-status");
+        if (!active) return;
+        setDetails(result);
+        if (result.subscription.active) await onRefresh();
+      } catch (cause) {
+        if (active) setError(cause.message);
+      }
+    };
+    void checkPayment();
+    const interval = window.setInterval(checkPayment, 30_000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [onRefresh]);
+
+  const copyText = async (value, label) => {
+    try {
+      await navigator.clipboard.writeText(String(value));
+      toast.success(`${label} nusxalandi.`);
+    } catch (cause) {
+      toast.error(`Nusxalab bo‘lmadi: ${cause.message}`);
+    }
+  };
+
+  const handleReceiptChange = (event) => {
+    const file = event.target.files?.[0];
+    setReceipt("");
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setError("Chek rasmi JPG, PNG yoki WEBP formatida bo‘lishi kerak.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setError("Chek rasmi 3 MB dan kichik bo‘lishi kerak.");
+      event.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setReceipt(reader.result);
+        setError("");
+      } else {
+        setError("Chek rasmini o‘qib bo‘lmadi.");
+      }
+    };
+    reader.onerror = () => setError("Chek rasmini o‘qib bo‘lmadi.");
+    reader.readAsDataURL(file);
+  };
+
+  const sendReceipt = async () => {
+    if (!receipt) {
+      setError("Avval to‘lov cheki yoki screenshotini tanlang.");
+      fileInputRef.current?.click();
+      return;
+    }
+    setSending(true);
+    setError("");
+    try {
+      const result = await api("/api/subscription/payment-requests", {
+        method: "POST",
+        body: { receipt },
+      });
+      setDetails((current) =>
+        current ? { ...current, paymentRequest: result.paymentRequest } : current,
+      );
+      setReceipt("");
+      toast.success("To‘lov cheki egasiga ko‘rib chiqish uchun yuborildi.");
+    } catch (cause) {
+      setError(cause.message);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const paymentRequest = details?.paymentRequest;
+  const telegramLink = telegram
+    ? `https://t.me/${String(telegram).replace(/^@/, "")}`
+    : "";
+  const paymentUnavailable =
+    details && (!details.paymentCardNumber || !details.dueAmount);
+  const checkNow = async () => {
+    setError("");
+    try {
+      const result = await api("/api/subscription/payment-status");
+      setDetails(result);
+      if (result.subscription.active) await onRefresh();
+    } catch (cause) {
+      setError(cause.message);
+    }
+  };
+
+  return (
+    <main className="subscription-payment-shell">
+      <div className="access-theme">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+      </div>
+      <section className="subscription-payment-card">
+        <span className="eyebrow">OBUNA TO‘LOVI</span>
+        <h1>Obunani davom ettirish</h1>
+        <p>
+          {details?.companyName
+            ? `${details.companyName} do‘koni uchun obuna to‘lovi kutilmoqda.`
+            : "Joriy oy uchun obuna to‘lovi tasdiqlanishi kutilmoqda."}
+        </p>
+        {paymentRequest?.status === "pending" && (
+          <div className="security-note">
+            To‘lov cheki yuborildi. Egasi tekshirayotgan paytda shu sahifada
+            kuting.
+          </div>
+        )}
+        {paymentRequest?.status === "rejected" && (
+          <p className="form-error" role="alert">
+            To‘lov cheki rad etildi
+            {paymentRequest.rejectionReason
+              ? `: ${paymentRequest.rejectionReason}`
+              : "."}{" "}
+            Chekni tekshirib qayta yuboring.
+          </p>
+        )}
+        <div className="subscription-payment-actions">
+          <a
+            className="button button-secondary"
+            href={telegramLink || (phone ? `tel:${phone}` : undefined)}
+            target={telegramLink ? "_blank" : undefined}
+            rel={telegramLink ? "noreferrer" : undefined}
+          >
+            Bog‘lanish
+          </a>
+          {details?.canSubmitPayment && (
+            <button
+              className="button button-primary"
+              type="button"
+              onClick={() => setShowPayment((visible) => !visible)}
+            >
+              {showPayment ? "Yopish" : "Saytda to‘lash"}
+            </button>
+          )}
+        </div>
+        {details && !details.canSubmitPayment && (
+          <div className="security-note">
+            Sayt orqali to‘lovni faqat do‘kon egasi yuborishi mumkin.
+          </div>
+        )}
+        {showPayment && (
+          <section className="subscription-payment-details">
+            {details ? (
+              paymentUnavailable ? (
+                <p className="form-error">
+                  To‘lov summasi yoki karta rekvizitlari sozlanmagan. Telegram
+                  orqali bog‘laning.
+                </p>
+              ) : (
+                <>
+                  <span className="eyebrow">KARTA RAQAMI</span>
+                  <div className="payment-copy-row">
+                    <strong>{details.paymentCardNumber}</strong>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() =>
+                        copyText(details.paymentCardNumber, "Karta raqami")
+                      }
+                    >
+                      Nusxalash
+                    </button>
+                  </div>
+                  {details.paymentCardHolder && (
+                    <p className="payment-card-holder">
+                      Karta egasi: <strong>{details.paymentCardHolder}</strong>
+                    </p>
+                  )}
+                  <span className="eyebrow">TO‘LOV SUMMASI</span>
+                  <div className="payment-copy-row">
+                    <strong>
+                      {money(details.dueAmount)} so‘m
+                    </strong>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() =>
+                        copyText(details.dueAmount, "To‘lov summasi")
+                      }
+                    >
+                      Nusxalash
+                    </button>
+                  </div>
+                  {paymentRequest?.status !== "pending" && (
+                    <>
+                      <button
+                        type="button"
+                        className="button button-secondary button-wide"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        To‘lov qildim
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        className="payment-receipt-input"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleReceiptChange}
+                      />
+                      {receipt && (
+                        <div className="payment-receipt-preview">
+                          <img src={receipt} alt="Tanlangan to‘lov cheki" />
+                          <button
+                            type="button"
+                            className="button button-primary"
+                            disabled={sending}
+                            onClick={sendReceipt}
+                          >
+                            {sending ? "Yuborilmoqda..." : "Yuborish"}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </>
+              )
+            ) : (
+              <Loading />
+            )}
+          </section>
+        )}
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="subscription-payment-footer">
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => void checkNow()}
+          >
+            To‘lovni tekshirish
+          </button>
+          <button type="button" className="text-button" onClick={onLogout}>
+            Chiqish
+          </button>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function PlatformPaymentReviewPanel() {
+  const [open, setOpen] = useState(false);
+  const [paymentRequests, setPaymentRequests] = useState([]);
+  const [paymentCardNumber, setPaymentCardNumber] = useState("");
+  const [paymentCardHolder, setPaymentCardHolder] = useState("");
+  const [rejectionReasons, setRejectionReasons] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const loadPanel = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [requests, settings] = await Promise.all([
+        api("/api/platform/payment-requests"),
+        api("/api/platform/settings"),
+      ]);
+      setPaymentRequests(requests.paymentRequests);
+      setPaymentCardNumber(settings.paymentCardNumber || "");
+      setPaymentCardHolder(settings.paymentCardHolder || "");
+    } catch (cause) {
+      setError(cause.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const review = async (paymentRequest, action) => {
+    setSaving(true);
+    setError("");
+    try {
+      await api(`/api/platform/payment-requests/${paymentRequest.id}`, {
+        method: "PATCH",
+        body: {
+          action,
+          rejectionReason: rejectionReasons[paymentRequest.id] || "",
+        },
+      });
+      await loadPanel();
+      toast.success(
+        action === "approve" ? "To‘lov tasdiqlandi." : "To‘lov rad etildi.",
+      );
+    } catch (cause) {
+      setError(cause.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const savePaymentSettings = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      const settings = await api("/api/platform/payment-settings", {
+        method: "POST",
+        body: { paymentCardNumber, paymentCardHolder },
+      });
+      setPaymentCardNumber(settings.paymentCardNumber || "");
+      setPaymentCardHolder(settings.paymentCardHolder || "");
+      toast.success("Karta rekvizitlari saqlandi.");
+    } catch (cause) {
+      setError(cause.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        className="platform-payment-trigger"
+        onClick={() => {
+          const nextOpen = !open;
+          setOpen(nextOpen);
+          if (nextOpen) void loadPanel();
+        }}
+      >
+        To‘lovlar
+      </button>
+      {open && (
+        <div className="platform-payment-overlay">
+          <section
+            className="platform-payment-panel"
+            aria-label="Obuna to‘lovlarini boshqarish"
+          >
+            <header>
+              <div>
+                <span className="eyebrow">PLATFORMA EGASI</span>
+                <h2>Obuna to‘lovlari</h2>
+              </div>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Yopish"
+                onClick={() => setOpen(false)}
+              >
+                <FiX />
+              </button>
+            </header>
+            <form className="platform-payment-settings" onSubmit={savePaymentSettings}>
+              <h3>To‘lov rekvizitlari</h3>
+              <Field label="Karta raqami">
+                <input
+                  value={paymentCardNumber}
+                  onChange={(event) => setPaymentCardNumber(event.target.value)}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  placeholder="8600 0000 0000 0000"
+                />
+              </Field>
+              <Field label="Karta egasi">
+                <input
+                  value={paymentCardHolder}
+                  onChange={(event) => setPaymentCardHolder(event.target.value)}
+                  autoComplete="name"
+                  placeholder="Ism Familiya"
+                />
+              </Field>
+              <button
+                type="submit"
+                className="button button-primary"
+                disabled={saving}
+              >
+                Rekvizitlarni saqlash
+              </button>
+            </form>
+            {error && (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
+            <h3>Cheklarni tekshirish</h3>
+            {loading ? (
+              <Loading />
+            ) : paymentRequests.length ? (
+              <div className="platform-payment-list">
+                {paymentRequests.map((paymentRequest) => (
+                  <article
+                    className="platform-payment-request"
+                    key={paymentRequest.id}
+                  >
+                    <header>
+                      <strong>{paymentRequest.companyName}</strong>
+                      <span>
+                        {paymentRequest.period} · {money(paymentRequest.amount)} so‘m
+                      </span>
+                    </header>
+                    <p>
+                      {paymentRequest.ownerName} ·{" "}
+                      {new Date(paymentRequest.createdAt).toLocaleString("uz-UZ")}
+                    </p>
+                    <img
+                      src={paymentRequest.receipt}
+                      alt={`${paymentRequest.companyName} to‘lov cheki`}
+                    />
+                    {paymentRequest.status === "pending" ? (
+                      <>
+                        <label className="field-label">
+                          Rad etish sababi
+                          <input
+                            value={rejectionReasons[paymentRequest.id] || ""}
+                            onChange={(event) =>
+                              setRejectionReasons((current) => ({
+                                ...current,
+                                [paymentRequest.id]: event.target.value,
+                              }))
+                            }
+                            maxLength="300"
+                            placeholder="Ixtiyoriy izoh"
+                          />
+                        </label>
+                        <div className="platform-payment-actions">
+                          <button
+                            type="button"
+                            className="button button-primary"
+                            disabled={saving}
+                            onClick={() => void review(paymentRequest, "approve")}
+                          >
+                            Tasdiqlash
+                          </button>
+                          <button
+                            type="button"
+                            className="button button-secondary"
+                            disabled={saving}
+                            onClick={() => void review(paymentRequest, "reject")}
+                          >
+                            Rad etish
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <strong className={`payment-status is-${paymentRequest.status}`}>
+                        {paymentRequest.status === "approved" ? "Tasdiqlangan" : "Rad etilgan"}
+                      </strong>
+                    )}
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="muted">Hozircha chek yuborilmagan.</p>
+            )}
+          </section>
+        </div>
+      )}
+    </>
   );
 }
 
