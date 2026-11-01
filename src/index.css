@@ -10813,16 +10813,20 @@ html[data-theme="dark"] .mobile-tabbar {
   }
 
   .mobile-tabbar-item:not(.active) {
-    background: #f8fcf9 !important;
+    background: rgb(248 252 249 / 68%) !important;
     box-shadow: 0 3px 10px rgb(31 62 41 / 18%);
+    backdrop-filter: blur(8px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(150%) !important;
   }
 
   .mobile-dock-indicator {
-    background: #168254 !important;
+    background: rgb(22 130 84 / 82%) !important;
+    backdrop-filter: blur(8px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(150%) !important;
   }
 
   html[data-theme="dark"] .mobile-tabbar-item:not(.active) {
-    background: #263a2d !important;
+    background: rgb(38 58 45 / 76%) !important;
     box-shadow: 0 3px 10px rgb(0 0 0 / 35%);
   }
 }
