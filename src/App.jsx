@@ -642,6 +642,7 @@ function LandingPage({
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [mobileDrawerMounted, setMobileDrawerMounted] = useState(false);
   const [activeSection, setActiveSection] = useState("");
+  const [flowCenterActive, setFlowCenterActive] = useState(false);
   const heroBannerRef = useRef(null);
   useEffect(() => {
     let frame = 0;
@@ -1014,13 +1015,15 @@ function LandingPage({
       <header
         className={`landing-header ${selectedFeature ? "landing-header-modal-open" : ""}`}
       >
-        <a href="#" className="brand">
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-          <span>
-            <strong>Yemzor</strong>
-            <small>SAVDO VA OMBOR BOSHQARUVI</small>
-          </span>
-        </a>
+        <div className="landing-brand-glass">
+          <a href="#" className="brand">
+            <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+            <span>
+              <strong>Yemzor</strong>
+              <small>SAVDO VA OMBOR BOSHQARUVI</small>
+            </span>
+          </a>
+        </div>
         <button
           className="landing-menu-trigger"
           type="button"
@@ -1315,7 +1318,7 @@ function LandingPage({
           </span>
           <h2>Barcha boshqaruv jarayoni bitta markazda birlashadi</h2>
         </div>
-        <div className="role-flow-grid">
+        <div className={`role-flow-grid ${flowCenterActive ? "flow-center-active" : ""}`}>
           <article className="flow-node flow-node-top-left">
             <span className="flow-icon"><FiUsers /></span>
             <strong>Xodim</strong>
@@ -1331,7 +1334,16 @@ function LandingPage({
             <strong>Hisobot</strong>
             <small>Kunlik, haftalik va oylik</small>
           </article>
-          <div className="flow-center">
+          <div
+            className="flow-center"
+            role="group"
+            tabIndex={0}
+            aria-label="Yemzor boshqaruv markazi"
+            onPointerEnter={() => setFlowCenterActive(true)}
+            onPointerLeave={() => setFlowCenterActive(false)}
+            onFocus={() => setFlowCenterActive(true)}
+            onBlur={() => setFlowCenterActive(false)}
+          >
             <span>Yemzor</span>
           </div>
           <article className="flow-node flow-node-bottom-left">
@@ -1356,12 +1368,12 @@ function LandingPage({
             aria-hidden="true"
             focusable="false"
           >
-            <path id="flow-path-top-left" className="flow-path flow-path-top-left" d="M500 200L150 85" />
-            <path id="flow-path-top-center" className="flow-path flow-path-top-center" d="M500 200L500 85" />
-            <path id="flow-path-top-right" className="flow-path flow-path-top-right" d="M500 200L850 85" />
-            <path id="flow-path-bottom-left" className="flow-path flow-path-bottom-left" d="M500 200L150 315" />
-            <path id="flow-path-bottom-center" className="flow-path flow-path-bottom-center" d="M500 200L500 315" />
-            <path id="flow-path-bottom-right" className="flow-path flow-path-bottom-right" d="M500 200L850 315" />
+            <path id="flow-path-top-left" className="flow-path flow-path-top-left" d="M500 200L138 59" />
+            <path id="flow-path-top-center" className="flow-path flow-path-top-center" d="M500 200L500 59" />
+            <path id="flow-path-top-right" className="flow-path flow-path-top-right" d="M500 200L862 59" />
+            <path id="flow-path-bottom-left" className="flow-path flow-path-bottom-left" d="M500 200L138 341" />
+            <path id="flow-path-bottom-center" className="flow-path flow-path-bottom-center" d="M500 200L500 341" />
+            <path id="flow-path-bottom-right" className="flow-path flow-path-bottom-right" d="M500 200L862 341" />
             {[
               "top-left",
               "top-center",
@@ -1376,7 +1388,7 @@ function LandingPage({
                 r="5"
               >
                 <animateMotion
-                  dur="2.8s"
+                  dur={flowCenterActive ? "1.1s" : "2.8s"}
                   begin="0s"
                   repeatCount="indefinite"
                   calcMode="linear"
@@ -1385,7 +1397,7 @@ function LandingPage({
                 </animateMotion>
                 <animate
                   attributeName="opacity"
-                  dur="2.8s"
+                  dur={flowCenterActive ? "1.1s" : "2.8s"}
                   begin="0s"
                   values="0;1;1;0;0"
                   keyTimes="0;0.08;0.82;0.95;1"

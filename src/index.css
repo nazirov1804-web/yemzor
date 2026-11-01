@@ -10095,7 +10095,7 @@ html[data-theme="dark"] .landing-download-button small {
 }
 
 .landing-role-flow {
-  width: min(calc(100% - 48px), 1280px);
+  width: min(calc(100% - 48px), 1120px);
   margin: clamp(42px, 7vw, 82px) auto;
   padding: clamp(24px, 5vw, 56px);
   overflow: hidden;
@@ -10123,9 +10123,9 @@ html[data-theme="dark"] .landing-download-button small {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(154px, auto));
-  gap: 120px 84px;
+  gap: 300px 84px;
   align-items: center;
-  max-width: 1120px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 18px 0;
 }
@@ -10174,8 +10174,15 @@ html[data-theme="dark"] .landing-download-button small {
 
 .flow-node:hover {
   transform: translateY(-5px);
-  border-color: #9dbbe7;
-  box-shadow: 0 16px 30px rgb(27 49 75 / 14%);
+  border-color: #75a8ff;
+  box-shadow: 0 14px 28px rgb(27 82 181 / 16%);
+}
+
+.flow-node:hover .flow-icon,
+.flow-center-active .flow-node .flow-icon {
+  color: #fff;
+  background: #2867ff;
+  box-shadow: 0 5px 14px rgb(40 103 255 / 24%);
 }
 
 .flow-icon {
@@ -10250,6 +10257,23 @@ html[data-theme="dark"] .landing-download-button small {
   filter: drop-shadow(0 0 5px rgb(75 143 245 / 64%));
 }
 
+.flow-center-active .flow-path {
+  stroke: #4b8ff5;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 4px rgb(75 143 245 / 42%));
+}
+
+.flow-center-active .flow-dot {
+  fill: #347ef1;
+  stroke: rgb(75 143 245 / 44%);
+  filter: drop-shadow(0 0 6px rgb(75 143 245 / 70%));
+}
+
+.flow-center-active .flow-node {
+  border-color: #8ab3ff;
+  box-shadow: 0 14px 28px rgb(27 82 181 / 14%);
+}
+
 .flow-center {
   position: absolute;
   z-index: 2;
@@ -10268,6 +10292,19 @@ html[data-theme="dark"] .landing-download-button small {
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.5px;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.flow-center:hover,
+.flow-center:focus-visible {
+  transform: translate(-50%, -50%) scale(1.05);
+  box-shadow: 0 16px 34px rgb(19 32 52 / 30%);
+}
+
+.flow-center:focus-visible {
+  outline: 3px solid #4b8ff5;
+  outline-offset: 4px;
 }
 
 html[data-theme="dark"] .landing-role-flow-head h2,
@@ -10283,6 +10320,17 @@ html[data-theme="dark"] .flow-node {
 html[data-theme="dark"] .flow-node:hover {
   border-color: #6386b8;
   box-shadow: 0 16px 30px rgb(0 0 0 / 28%);
+}
+
+html[data-theme="dark"] .flow-node:hover .flow-icon,
+html[data-theme="dark"] .flow-center-active .flow-node .flow-icon {
+  color: #fff;
+  background: #347ef1;
+}
+
+html[data-theme="dark"] .flow-center-active .flow-node {
+  border-color: #6386b8;
+  box-shadow: 0 14px 28px rgb(0 0 0 / 28%);
 }
 
 html[data-theme="dark"] .flow-node small {
@@ -10617,6 +10665,37 @@ html[data-theme="dark"] .flow-center {
     -webkit-backdrop-filter: none !important;
   }
 
+  .landing-brand-glass,
+  .landing-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px;
+    border: 1px solid rgb(255 255 255 / 76%);
+    border-radius: 22px;
+    background:
+      radial-gradient(ellipse at 18% 0%, rgb(255 255 255 / 78%), transparent 58%),
+      linear-gradient(145deg, rgb(255 255 255 / 54%), rgb(211 229 216 / 30%) 58%, rgb(161 216 179 / 14%));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 92%),
+      inset 1px 0 0 rgb(255 255 255 / 34%),
+      0 10px 28px rgb(35 74 48 / 12%);
+    backdrop-filter: blur(28px) saturate(185%);
+    -webkit-backdrop-filter: blur(28px) saturate(185%);
+  }
+
+  .landing-brand-glass .brand {
+    padding-inline: 8px;
+  }
+
+  .landing-header-actions {
+    gap: 8px;
+  }
+
+  .landing-header-actions .button {
+    min-height: 36px;
+  }
+
   .landing-header > .landing-nav {
     gap: clamp(4px, .7vw, 10px) !important;
     padding: 6px !important;
@@ -10681,6 +10760,17 @@ html[data-theme="dark"] .flow-center {
     box-shadow:
       inset 0 1px 0 rgb(236 255 241 / 24%),
       0 12px 30px rgb(0 0 0 / 28%) !important;
+  }
+
+  html[data-theme="dark"] .landing-brand-glass,
+  html[data-theme="dark"] .landing-header-actions {
+    border-color: rgb(226 255 234 / 30%);
+    background:
+      radial-gradient(ellipse at 18% 0%, rgb(226 255 234 / 18%), transparent 58%),
+      linear-gradient(145deg, rgb(226 255 234 / 12%), rgb(19 36 26 / 40%) 58%, rgb(74 133 91 / 12%));
+    box-shadow:
+      inset 0 1px 0 rgb(236 255 241 / 24%),
+      0 12px 30px rgb(0 0 0 / 28%);
   }
 
   html[data-theme="dark"] .landing-header > .landing-nav a {
