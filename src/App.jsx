@@ -723,13 +723,33 @@ function App() {
           onToggleTheme={toggleTheme}
         />
       ) : accessView === "demo" ? (
-        <DemoRegistrationPage
-          onSuccess={refreshStatus}
-          onBack={() => setAccessView(isInstalledApp ? "login" : "landing")}
-          onExistingDemo={() => setAccessView("login")}
-          theme={theme}
-          onToggleTheme={toggleTheme}
-        />
+        <>
+          <DemoRegistrationPage
+            onSuccess={refreshStatus}
+            onBack={() => setAccessView(isInstalledApp ? "login" : "landing")}
+            onExistingDemo={() => setAccessView("login")}
+            onLegal={(page) => setLegalPage(page)}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
+          {legalPage && (
+            <div className="legal-overlay">
+              {legalPage === "offer" ? (
+                <OfferPage
+                  onBack={() => setLegalPage("")}
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                />
+              ) : (
+                <PrivacyPolicyPage
+                  onBack={() => setLegalPage("")}
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                />
+              )}
+            </div>
+          )}
+        </>
       ) : null
     ) : user.role === "platform_admin" ? (
       <PlatformPage
@@ -1967,6 +1987,7 @@ function DemoRegistrationPage({
   onSuccess,
   onBack,
   onExistingDemo,
+  onLegal,
   theme,
   onToggleTheme,
 }) {
@@ -1975,6 +1996,10 @@ function DemoRegistrationPage({
   const [error, setError] = useState("");
 
   async function sendCode(form) {
+    if (form.get("consent") !== "on") {
+      setError("Davom etish uchun oferta va maxfiylik siyosatiga rozilik bildiring.");
+      return;
+    }
     const email = form.get("email");
     if (!email || typeof email !== "string") {
       setError("Emailni kiriting.");
@@ -2001,6 +2026,10 @@ function DemoRegistrationPage({
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
+    if (form.get("consent") !== "on") {
+      setError("Demo ochishdan oldin oferta va maxfiylik siyosatiga rozilik bildiring.");
+      return;
+    }
     if (form.get("password") !== form.get("confirmPassword")) {
       setError("Parollar bir xil emas.");
       return;
@@ -2126,6 +2155,31 @@ function DemoRegistrationPage({
               placeholder="Parolni qayta kiriting"
             />
           </Field>
+          <label className="demo-consent">
+            <input name="consent" type="checkbox" required />
+            <span>
+              <a
+                href="#offer"
+                onClick={(event) => {
+                  event.preventDefault();
+                  onLegal("offer");
+                }}
+              >
+                Ommaviy oferta
+              </a>{" "}
+              va{" "}
+              <a
+                href="#privacy"
+                onClick={(event) => {
+                  event.preventDefault();
+                  onLegal("privacy");
+                }}
+              >
+                maxfiylik siyosati
+              </a>{" "}
+              shartlariga rozilik bildiraman.
+            </span>
+          </label>
           {error && (
             <p className="form-error" role="alert">
               {error}

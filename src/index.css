@@ -10841,6 +10841,45 @@ html[data-theme="dark"] .mobile-tabbar {
   }
 }
 
+.demo-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 14px 0 4px;
+  color: #64746a;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.demo-consent input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin: 1px 0 0;
+  accent-color: var(--green);
+}
+
+.demo-consent a {
+  color: #286d43;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.demo-consent a:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--focus-border);
+  outline-offset: 2px;
+}
+
+html[data-theme="dark"] .demo-consent {
+  color: #bdcfc2;
+}
+
+html[data-theme="dark"] .demo-consent a {
+  color: #9cdbad;
+}
+
 .app-update-banner {
   position: fixed;
   z-index: 10000;
