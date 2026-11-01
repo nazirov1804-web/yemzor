@@ -1206,6 +1206,7 @@ const entries = [
   ["Chek bilan tasdiqlangan savdo", "Продажа подтверждена чеком", "Sale confirmed with a receipt"],
   ["Yangi versiya tayyor", "Доступна новая версия", "A new version is available"],
   ["Ilovani yangilash", "Обновить приложение", "Update the app"],
+  ["Yangilanmoqda...", "Обновление...", "Updating..."],
   ["Hozir yangilash", "Обновить сейчас", "Update now"],
   ["Bugungi tushum", "Выручка за сегодня", "Today's revenue"],
   ["Bugungi foyda", "Прибыль за сегодня", "Today's profit"],

@@ -285,7 +285,7 @@ function App() {
       new URLSearchParams(window.location.search).has("app"),
   );
   const [appUpdateAvailable, setAppUpdateAvailable] = useState(false);
-  const [appUpdateDismissed, setAppUpdateDismissed] = useState(false);
+  const [appRefreshing, setAppRefreshing] = useState(false);
   const [latestBuildId, setLatestBuildId] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -307,6 +307,21 @@ function App() {
     telegram: "naziroff1",
   });
   const user = status?.user;
+  const refreshInstalledApp = async () => {
+    setAppRefreshing(true);
+    try {
+      const registration = await navigator.serviceWorker?.getRegistration();
+      await registration?.update();
+    } catch (error) {
+      console.error("Yemzor ilova yangilanishini tekshirib bo‘lmadi.", error);
+    }
+    if (latestBuildId) {
+      window.localStorage.setItem(installedBuildStorageKey, latestBuildId);
+    }
+    const refreshUrl = new URL(window.location.href);
+    refreshUrl.searchParams.set("_yemzor_refresh", String(Date.now()));
+    window.location.replace(refreshUrl.toString());
+  };
   useEffect(() => {
     if (!isInstalledApp || import.meta.env.DEV) return undefined;
     let active = true;
@@ -695,26 +710,24 @@ function App() {
     );
   return (
     <>
-      {appUpdateAvailable && !appUpdateDismissed && (
+      {isInstalledApp && !import.meta.env.DEV && (
         <div className="app-update-banner" role="status">
-          <span>{translateText("Yangi versiya tayyor", currentLanguage())}</span>
+          <span>
+            {translateText(
+              appUpdateAvailable ? "Yangi versiya tayyor" : "Ilovani yangilash",
+              currentLanguage(),
+            )}
+          </span>
           <button
             type="button"
             className="button button-primary button-small"
-            onClick={() => {
-              window.localStorage.setItem(installedBuildStorageKey, latestBuildId);
-              window.location.reload();
-            }}
+            disabled={appRefreshing}
+            onClick={refreshInstalledApp}
           >
-            {translateText("Ilovani yangilash", currentLanguage())}
-          </button>
-          <button
-            type="button"
-            className="app-update-dismiss"
-            aria-label={translateText("Yopish", currentLanguage())}
-            onClick={() => setAppUpdateDismissed(true)}
-          >
-            <FiX aria-hidden="true" />
+            {translateText(
+              appRefreshing ? "Yangilanmoqda..." : "Ilovani yangilash",
+              currentLanguage(),
+            )}
           </button>
         </div>
       )}
