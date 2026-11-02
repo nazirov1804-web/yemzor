@@ -1574,6 +1574,8 @@ td strong {
   font-size: 10px;
   white-space: nowrap;
   align-self: end;
+  position: relative;
+  top: -8px;
 }
 
 .field-hint {
