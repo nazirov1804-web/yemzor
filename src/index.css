@@ -145,9 +145,9 @@ a {
 
 .brand-name-yemzor {
   color: #226b46;
-  font-family: "Trebuchet MS", "Arial Rounded MT Bold", sans-serif;
-  font-weight: 800;
-  letter-spacing: -.8px;
+  font-family: "Righteous", "Trebuchet MS", sans-serif;
+  font-weight: 400;
+  letter-spacing: -.3px;
 }
 
 .brand-name-domain {
@@ -8236,10 +8236,10 @@ html[data-theme="dark"] .search-box {
     transition: color 300ms ease;
   }
 
-  .landing-header>.landing-nav a::before {
+  .landing-header>.landing-nav a::after {
     position: absolute;
     right: 5px;
-    top: 3px;
+    bottom: 3px;
     left: 5px;
     height: 2px;
     border-radius: 2px;
@@ -8257,9 +8257,9 @@ html[data-theme="dark"] .search-box {
     outline: none;
   }
 
-  .landing-header>.landing-nav a:hover::before,
-  .landing-header>.landing-nav a:focus-visible::before,
-  .landing-header>.landing-nav a.active::before {
+  .landing-header>.landing-nav a:hover::after,
+  .landing-header>.landing-nav a:focus-visible::after,
+  .landing-header>.landing-nav a.active::after {
     transform: scaleX(1);
   }
 
