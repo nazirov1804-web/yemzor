@@ -145,10 +145,17 @@ a {
 
 .brand-name-yemzor {
   color: #226b46;
+  font-family: "Trebuchet MS", "Arial Rounded MT Bold", sans-serif;
+  font-weight: 800;
+  letter-spacing: -.8px;
 }
 
 .brand-name-domain {
   color: #d78a24;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: -.6px;
 }
 
 .brand small {
