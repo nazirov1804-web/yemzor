@@ -295,7 +295,10 @@ async function sendVerificationEmail(email, code) {
   } catch (error) {
     if (error.statusCode) throw error
     console.error(`[Yemzor.uz email] Verification mail failed. code=${error.code || 'unknown'} responseCode=${error.responseCode || 'none'} command=${error.command || 'unknown'}`)
-    fail(502, 'Tasdiqlash kodini emailga yuborib bo‘lmadi. Email manzilini tekshirib, qayta urinib ko‘ring.')
+    if (error.code === 'EAUTH' || error.responseCode === 535) {
+      fail(503, 'Email xizmati SMTP login ma’lumotlarini rad etdi. Administrator SMTP_USER va SMTP_PASS sozlamalarini tekshirishi kerak.')
+    }
+    fail(502, 'Tasdiqlash kodini emailga yuborib bo‘lmadi. Birozdan keyin qayta urinib ko‘ring yoki administratorga murojaat qiling.')
   }
 }
 
