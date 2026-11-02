@@ -2221,9 +2221,16 @@ function DemoRegistrationPage({
             </span>
           </label>
           {error && (
-            <p className="form-error" role="alert">
-              {error}
-            </p>
+            <div className="demo-error-banner" role="alert" aria-live="assertive">
+              <span>{error}</span>
+              <button
+                type="button"
+                aria-label="Xatoni yopish"
+                onClick={() => setError("")}
+              >
+                <FiX aria-hidden="true" />
+              </button>
+            </div>
           )}
           <button
             className="button button-primary button-wide"
