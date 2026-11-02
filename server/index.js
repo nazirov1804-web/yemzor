@@ -237,6 +237,8 @@ async function sendVerificationEmail(email, code) {
   const port = Number(process.env.SMTP_PORT || 587)
   const user = process.env.SMTP_USER
   const pass = process.env.SMTP_PASS
+  const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_FROM || user
+  const fromName = process.env.SMTP_FROM_NAME || 'Yemzor'
   if (!host || !user || !pass) fail(503, 'Email yuborish xizmati sozlanmagan. Administrator SMTP sozlamalarini to‘ldirishi kerak.')
   try {
     const logo = await readFile(resolve(serverDirectory, '../public/yemzor-logo.png'))
@@ -247,7 +249,7 @@ async function sendVerificationEmail(email, code) {
       auth: { user, pass },
     })
     const info = await transporter.sendMail({
-      from: process.env.SMTP_FROM || user,
+      from: { name: fromName, address: fromEmail },
       to: email,
       subject: `${code} — Yemzor.uz tasdiqlash kodi`,
       text: `Yemzor.uz demo akkauntingiz uchun tasdiqlash kodi (verification code):\n\n${code}\n\nKod 10 daqiqa amal qiladi va bir marta ishlatiladi. Agar siz demo ro‘yxatdan o‘tishni boshlamagan bo‘lsangiz, bu xatni e’tiborsiz qoldiring.\n\nYemzor.uz jamoasi`,
