@@ -2221,16 +2221,19 @@ function DemoRegistrationPage({
             </span>
           </label>
           {error && (
-            <div className="demo-error-banner" role="alert" aria-live="assertive">
-              <span>{error}</span>
-              <button
-                type="button"
-                aria-label="Xatoni yopish"
-                onClick={() => setError("")}
-              >
-                <FiX aria-hidden="true" />
-              </button>
-            </div>
+            createPortal(
+              <div className="demo-error-banner" role="alert" aria-live="assertive">
+                <span>{error}</span>
+                <button
+                  type="button"
+                  aria-label="Xatoni yopish"
+                  onClick={() => setError("")}
+                >
+                  <FiX aria-hidden="true" />
+                </button>
+              </div>,
+              document.body,
+            )
           )}
           <button
             className="button button-primary button-wide"

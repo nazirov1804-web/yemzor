@@ -1690,13 +1690,13 @@ td strong {
 .demo-error-banner {
   position: fixed;
   z-index: 10000;
-  top: max(16px, env(safe-area-inset-top));
+  top: max(12px, env(safe-area-inset-top));
   left: 50%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  width: min(920px, calc(100vw - 32px));
+  width: min(1600px, calc(100vw - 32px));
   min-height: 60px;
   padding: 10px 12px 10px 20px;
   transform: translateX(-50%);

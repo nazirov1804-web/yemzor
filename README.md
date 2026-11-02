@@ -10,7 +10,7 @@ Yem mahsulotlari do‘koni uchun savdo, umumiy ombor, cheklar, hodimlar va oylik
 4. Terminal ko‘rsatgan Vite manzilini oching. Birinchi kirishda platforma egasining login va parolini o‘zingiz yarating.
 5. Platforma panelidan do‘kon yarating. Boshliq login-parolini do‘kon egasiga bering; boshliq o‘z panelidan har bir hodim uchun alohida login ochadi.
 
-Demo uchun tasdiqlash kodi emailga yuborilishi uchun server muhitida `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM_NAME` va `SMTP_FROM_EMAIL` qiymatlarini email xizmat ko‘rsatuvchingiz ma’lumotlari bilan sozlang. `SMTP_FROM_EMAIL` yuboruvchi email, `SMTP_FROM_NAME` esa foydalanuvchiga ko‘rinadigan nomdir. Eski konfiguratsiyadagi `SMTP_FROM` ham qo‘llab-quvvatlanadi. SMTP sozlanmagan yoki jo‘natishda xato bo‘lsa, tasdiqlash kodi ko‘rsatilmaydi va server xatolik qaytaradi. Kod email manzili uchun 10 daqiqa amal qiladi.
+Demo uchun tasdiqlash kodi emailga yuborilishi uchun server muhitida `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` va `SMTP_FROM` qiymatlarini email xizmat ko‘rsatuvchingiz ma’lumotlari bilan sozlang. Yuboruvchi nomi va manzilini bitta qiymatda, masalan `SMTP_FROM="Yemzor <email@example.com>"`, kiriting. `SMTP_FROM` berilmasa, `SMTP_USER` yuboruvchi sifatida ishlatiladi. SMTP sozlanmagan yoki jo‘natishda xato bo‘lsa, tasdiqlash kodi ko‘rsatilmaydi va server xatolik qaytaradi. Kod email manzili uchun 10 daqiqa amal qiladi.
 
 ## Windows va Android ilovalari
 
