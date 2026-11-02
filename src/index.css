@@ -1575,7 +1575,7 @@ td strong {
   white-space: nowrap;
   align-self: end;
   position: relative;
-  top: -8px;
+  top: -11px;
 }
 
 .field-hint {
@@ -1687,51 +1687,6 @@ td strong {
   margin: 0;
   color: #b4433b;
   font-size: 11px;
-}
-
-.demo-error-banner {
-  position: fixed;
-  z-index: 10000;
-  top: max(12px, env(safe-area-inset-top));
-  left: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: min(1600px, calc(100vw - 32px));
-  min-height: 60px;
-  padding: 10px 12px 10px 20px;
-  transform: translateX(-50%);
-  border: 1px solid #8f1d16;
-  border-radius: 12px;
-  background: #b42318;
-  box-shadow: 0 14px 36px rgb(75 13 10 / 28%);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.demo-error-banner button {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  border: 1px solid rgb(255 255 255 / 45%);
-  border-radius: 9px;
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-}
-
-.demo-error-banner button:hover {
-  background: rgb(255 255 255 / 14%);
-}
-
-.demo-error-banner button:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 2px;
 }
 
 .lookup-row {

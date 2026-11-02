@@ -2051,20 +2051,18 @@ function DemoRegistrationPage({
 }) {
   const [saving, setSaving] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
-  const [error, setError] = useState("");
 
   async function sendCode(form) {
     if (form.get("consent") !== "on") {
-      setError("Davom etish uchun oferta va maxfiylik siyosatiga rozilik bildiring.");
+      toast.error("Davom etish uchun oferta va maxfiylik siyosatiga rozilik bildiring.");
       return;
     }
     const email = form.get("email");
     if (!email || typeof email !== "string") {
-      setError("Emailni kiriting.");
+      toast.error("Emailni kiriting.");
       return;
     }
     setSendingCode(true);
-    setError("");
     try {
       const result = await api("/api/demo/register/request", {
         method: "POST",
@@ -2074,7 +2072,7 @@ function DemoRegistrationPage({
         result.message || `Tasdiqlash kodi ${email} manziliga yuborildi.`,
       );
     } catch (cause) {
-      setError(cause.message);
+      toast.error(cause.message);
     } finally {
       setSendingCode(false);
     }
@@ -2085,11 +2083,10 @@ function DemoRegistrationPage({
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     if (form.get("consent") !== "on") {
-      setError("Demo ochishdan oldin oferta va maxfiylik siyosatiga rozilik bildiring.");
+      toast.error("Demo ochishdan oldin oferta va maxfiylik siyosatiga rozilik bildiring.");
       return;
     }
     setSaving(true);
-    setError("");
     try {
       await api("/api/demo/register", {
         method: "POST",
@@ -2103,7 +2100,7 @@ function DemoRegistrationPage({
       toast.success("Demo do‘kon ochildi · 48 soat foydalanishingiz mumkin");
       await onSuccess();
     } catch (cause) {
-      setError(cause.message);
+      toast.error(cause.message);
     } finally {
       setSaving(false);
     }
@@ -2220,21 +2217,6 @@ function DemoRegistrationPage({
               shartlariga rozilik bildiraman.
             </span>
           </label>
-          {error && (
-            createPortal(
-              <div className="demo-error-banner" role="alert" aria-live="assertive">
-                <span>{error}</span>
-                <button
-                  type="button"
-                  aria-label="Xatoni yopish"
-                  onClick={() => setError("")}
-                >
-                  <FiX aria-hidden="true" />
-                </button>
-              </div>,
-              document.body,
-            )
-          )}
           <button
             className="button button-primary button-wide"
             disabled={saving}
