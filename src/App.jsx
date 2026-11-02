@@ -1292,7 +1292,7 @@ function LandingPage({
         <a href="#" className="brand">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>Yemzor.uz</strong>
+            <strong><span className="brand-name-yemzor">Yemzor</span><span className="brand-name-domain">.uz</span></strong>
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
           </span>
         </a>
@@ -1363,7 +1363,7 @@ function LandingPage({
               <div className="landing-drawer-brand">
                 <img src="/yemzor-logo.png" alt="" />
                 <span>
-                  <strong>Yemzor.uz</strong>
+                  <strong><span className="brand-name-yemzor">Yemzor</span><span className="brand-name-domain">.uz</span></strong>
                   <small>SAVDO VA OMBOR BOSHQARUVI</small>
                 </span>
                 <button
@@ -1945,7 +1945,7 @@ function LandingPage({
         <a href="#" className="brand">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>Yemzor.uz</strong>
+            <strong><span className="brand-name-yemzor">Yemzor</span><span className="brand-name-domain">.uz</span></strong>
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
           </span>
         </a>
@@ -4139,7 +4139,7 @@ function Shell({
         >
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>Yemzor.uz</strong>
+            <strong><span className="brand-name-yemzor">Yemzor</span><span className="brand-name-domain">.uz</span></strong>
             <small>{platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI"}</small>
           </span>
         </a>
@@ -4230,7 +4230,7 @@ function Shell({
             >
               <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
               <span>
-                <strong>Yemzor.uz</strong>
+                <strong><span className="brand-name-yemzor">Yemzor</span><span className="brand-name-domain">.uz</span></strong>
                 <small>
                   {platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI"}
                 </small>

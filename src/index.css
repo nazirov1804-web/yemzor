@@ -143,6 +143,14 @@ a {
   letter-spacing: -.5px;
 }
 
+.brand-name-yemzor {
+  color: #226b46;
+}
+
+.brand-name-domain {
+  color: #d78a24;
+}
+
 .brand small {
   margin-top: 3px;
   color: #89968d;
@@ -2218,6 +2226,14 @@ html[data-theme="dark"] .receipt-qr-copy span {
 .brand-light {
   color: white;
   padding: 0;
+}
+
+.brand-light .brand-name-yemzor {
+  color: #fff;
+}
+
+.brand-light .brand-name-domain {
+  color: #f5c46f;
 }
 
 .brand-light small {
@@ -4778,6 +4794,22 @@ html[data-theme="dark"] .preview-metric>small,
 html[data-theme="dark"] .preview-sales-heading small,
 html[data-theme="dark"] .preview-sale-row small {
   color: #9eada2;
+}
+
+html[data-theme="dark"] .brand .brand-name-yemzor {
+  color: #72c890;
+}
+
+html[data-theme="dark"] .brand .brand-name-domain {
+  color: #f2bf61;
+}
+
+html[data-theme="dark"] .brand-light .brand-name-yemzor {
+  color: #fff;
+}
+
+html[data-theme="dark"] .brand-light .brand-name-domain {
+  color: #f5c46f;
 }
 
 html[data-theme="dark"] .page-heading h1,
