@@ -141,19 +141,21 @@ a {
 .brand strong {
   font-size: 18px;
   letter-spacing: -.5px;
+  color: #173d29;
+  font-family: "Righteous", "Trebuchet MS", sans-serif;
 }
 
 .brand-name-storage {
-  color: #0756a5;
+  color: #173d29;
   font-family: "Righteous", "Trebuchet MS", sans-serif;
   font-weight: 400;
   letter-spacing: -.3px;
 }
 
 .brand-name-domain {
-  color: #dd9410;
-  font-family: Georgia, "Times New Roman", serif;
-  font-style: italic;
+  color: #70a84a;
+  font-family: "Righteous", "Trebuchet MS", sans-serif;
+  font-style: normal;
   font-weight: 700;
   letter-spacing: -.6px;
 }
@@ -2237,12 +2239,16 @@ html[data-theme="dark"] .receipt-qr-copy span {
   padding: 0;
 }
 
+.brand-light strong {
+  color: #fff;
+}
+
 .brand-light .brand-name-storage {
   color: #fff;
 }
 
 .brand-light .brand-name-domain {
-  color: #f5c46f;
+  color: #b6de80;
 }
 
 .brand-light small {
@@ -4952,11 +4958,11 @@ html[data-theme="dark"] .preview-sale-row small {
 }
 
 html[data-theme="dark"] .brand .brand-name-storage {
-  color: #63a8ff;
+  color: #b9df9c;
 }
 
 html[data-theme="dark"] .brand .brand-name-domain {
-  color: #f3bb4d;
+  color: #86bd5d;
 }
 
 html[data-theme="dark"] .brand-light .brand-name-storage {
@@ -4964,7 +4970,7 @@ html[data-theme="dark"] .brand-light .brand-name-storage {
 }
 
 html[data-theme="dark"] .brand-light .brand-name-domain {
-  color: #f5c46f;
+  color: #b6de80;
 }
 
 html[data-theme="dark"] .page-heading h1,
