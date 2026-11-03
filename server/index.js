@@ -28,7 +28,9 @@ app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use((request, response, next) => {
   const limit =
     request.method === 'PATCH' &&
-    request.path === '/api/company/profile-picture'
+    ['/api/company/profile-picture', '/api/company/brand'].includes(
+      request.path
+    )
       ? '14mb'
       : '5mb';
   express.json({ limit })(request, response, next);
@@ -1030,6 +1032,18 @@ app.patch(
   requireCompanyOwner,
   async (request, response) => {
     const image = request.body?.image;
+    if (image === null) {
+      const user = await updateDatabase((database) => {
+        const account = database.users.find(
+          (entry) => entry.id === request.user.id && entry.active
+        );
+        if (!account) fail(404, 'Akkaunt topilmadi.');
+        delete account.profileImage;
+        return safeUser(account);
+      });
+      response.json({ user });
+      return;
+    }
     const match =
       typeof image === 'string'
         ? image.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/)
@@ -1054,6 +1068,43 @@ app.patch(
       return safeUser(account);
     });
     response.json({ user });
+  }
+);
+
+app.patch(
+  '/api/company/brand',
+  requireAuth,
+  requireCompanyOwner,
+  async (request, response) => {
+    const logo = request.body?.logo;
+    if (logo !== null) {
+      const match =
+        typeof logo === 'string'
+          ? logo.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/)
+          : null;
+      if (!match) fail(400, 'Do‘kon logotipi JPEG formatida bo‘lishi kerak.');
+      const imageBytes = Buffer.from(match[1], 'base64');
+      if (
+        imageBytes.length < 4 ||
+        imageBytes.length > 10 * 1024 * 1024 ||
+        imageBytes[0] !== 0xff ||
+        imageBytes[1] !== 0xd8 ||
+        imageBytes[2] !== 0xff
+      ) {
+        fail(400, 'Do‘kon logotipi yaroqsiz yoki 10 MB dan katta.');
+      }
+    }
+    const company = await updateDatabase((database) => {
+      const current = requireCompany(request, database);
+      if (logo === null) delete current.logo;
+      else current.logo = logo;
+      return {
+        id: current.id,
+        name: current.name,
+        logo: current.logo || null,
+      };
+    });
+    response.json({ company });
   }
 );
 
@@ -2288,6 +2339,7 @@ app.get(
       company: {
         id: company.id,
         name: company.name,
+        logo: company.logo || null,
         createdAt: company.createdAt,
         absentDeduction: Number(company.absentDeduction || 0),
         restDayWorkBonusEnabled: Boolean(company.restDayWorkBonusEnabled),
@@ -2369,6 +2421,7 @@ app.patch(
       return {
         id: current.id,
         name: current.name,
+        logo: current.logo || null,
         absentDeduction: current.absentDeduction,
         restDayWorkBonusEnabled: current.restDayWorkBonusEnabled,
         restDayWorkBonusAmount: current.restDayWorkBonusAmount,

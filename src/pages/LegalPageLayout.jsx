@@ -45,7 +45,8 @@ export default function LegalPageLayout({
           <h1>{translateText(title, language)}</h1>
           <p>{translateText(subtitle, language)}</p>
           <small>
-            {translateText("Oxirgi yangilanish", language)}: {updatedAt}
+            {translateText("Oxirgi yangilanish", language)}:{" "}
+            {translateText(updatedAt, language)}
           </small>
         </div>
         <div className="legal-page-sections">

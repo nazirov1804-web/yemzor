@@ -2269,30 +2269,6 @@ function LandingPage({
         </div>
       </section>
 
-      <section className="landing-legal" aria-label="Huquqiy ma’lumotlar">
-        <a
-          className="button button-secondary landing-footer-download"
-          href="#ilovani-yuklab-olish"
-        >
-          {translateText("Yuklab olish", currentLanguage())}
-          <FiDownload aria-hidden="true" />
-        </a>
-        <button
-          className="landing-legal-button"
-          type="button"
-          onClick={() => onLegal("offer")}
-        >
-          {translateText("Ommaviy oferta", currentLanguage())}
-        </button>
-        <button
-          className="landing-legal-button"
-          type="button"
-          onClick={() => onLegal("privacy")}
-        >
-          {translateText("Maxfiylik siyosati", currentLanguage())}
-        </button>
-      </section>
-
       <footer className="landing-footer">
         <div className="landing-footer-main">
           <div className="landing-footer-about">
@@ -2305,7 +2281,7 @@ function LandingPage({
             </a>
             <p>
               {translateText(
-                "Yem mahsulotlari do‘konlari uchun savdo va ombor boshqaruvi — bir joyda.",
+                "Umumiy ombor tizimi. Do‘konlar uchun savdo va ombor boshqaruvi bir joyda.",
                 currentLanguage(),
               )}
             </p>
@@ -2331,6 +2307,17 @@ function LandingPage({
               </button>
               <button type="button" onClick={onRegister}>
                 {translateText("Bepul ro‘yxatdan o‘tish", currentLanguage())}
+              </button>
+            </div>
+          </div>
+          <div className="landing-footer-column">
+            <h2>{translateText("XAVFSIZLIK", currentLanguage())}</h2>
+            <div className="landing-footer-links">
+              <button type="button" onClick={() => onLegal("privacy")}>
+                {translateText("Maxfiylik siyosati", currentLanguage())}
+              </button>
+              <button type="button" onClick={() => onLegal("offer")}>
+                {translateText("Ommaviy oferta", currentLanguage())}
               </button>
             </div>
           </div>
@@ -2365,14 +2352,6 @@ function LandingPage({
             © {now.getFullYear()} Yemzor.{" "}
             {translateText("Barcha huquqlar himoyalangan.", currentLanguage())}
           </span>
-          <div className="landing-footer-legal">
-            <button type="button" onClick={() => onLegal("offer")}>
-              {translateText("Ommaviy oferta", currentLanguage())}
-            </button>
-            <button type="button" onClick={() => onLegal("privacy")}>
-              {translateText("Maxfiylik siyosati", currentLanguage())}
-            </button>
-          </div>
         </div>
       </footer>
 
@@ -4253,11 +4232,33 @@ function AccountSettingsPage({
   const [savingCompany, setSavingCompany] = useState(false);
   const [savingProfileImage, setSavingProfileImage] = useState(false);
   const [profileImage, setProfileImage] = useState(user.profileImage || "");
+  const [brandLogo, setBrandLogo] = useState(company?.logo || "");
+  const [savingBrandLogo, setSavingBrandLogo] = useState(false);
   const [profileImageError, setProfileImageError] = useState("");
+  const [brandLogoError, setBrandLogoError] = useState("");
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState("");
   const [companyError, setCompanyError] = useState("");
   const [resetError, setResetError] = useState("");
+  async function removeProfileImage() {
+    setSavingProfileImage(true);
+    setProfileImageError("");
+    try {
+      const result = await api("/api/company/profile-picture", {
+        method: "PATCH",
+        body: { image: null },
+      });
+      setProfileImage("");
+      onUserUpdate(result.user);
+      toast.success(
+        translateText("Profil rasmi o‘chirildi.", currentLanguage()),
+      );
+    } catch (cause) {
+      setProfileImageError(translateText(cause.message, currentLanguage()));
+    } finally {
+      setSavingProfileImage(false);
+    }
+  }
   async function submitProfileImage(event) {
     event.preventDefault();
     const formElement = event.currentTarget;
@@ -4287,6 +4288,55 @@ function AccountSettingsPage({
       setProfileImageError(translateText(cause.message, currentLanguage()));
     } finally {
       setSavingProfileImage(false);
+    }
+  }
+  async function submitBrandLogo(event) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const file = new FormData(formElement).get("brandLogo");
+    if (!(file instanceof File) || !file.size) {
+      setBrandLogoError(
+        translateText("Do‘kon logotipini tanlang.", currentLanguage()),
+      );
+      return;
+    }
+    setSavingBrandLogo(true);
+    setBrandLogoError("");
+    try {
+      const logo = await encodeProfileImage(file);
+      const result = await api("/api/company/brand", {
+        method: "PATCH",
+        body: { logo },
+      });
+      setBrandLogo(result.company.logo || "");
+      onCompanyUpdate?.(result.company);
+      formElement.reset();
+      toast.success(
+        translateText("Do‘kon logotipi saqlandi.", currentLanguage()),
+      );
+    } catch (cause) {
+      setBrandLogoError(translateText(cause.message, currentLanguage()));
+    } finally {
+      setSavingBrandLogo(false);
+    }
+  }
+  async function removeBrandLogo() {
+    setSavingBrandLogo(true);
+    setBrandLogoError("");
+    try {
+      const result = await api("/api/company/brand", {
+        method: "PATCH",
+        body: { logo: null },
+      });
+      setBrandLogo("");
+      onCompanyUpdate?.(result.company);
+      toast.success(
+        translateText("Do‘kon logotipi o‘chirildi.", currentLanguage()),
+      );
+    } catch (cause) {
+      setBrandLogoError(translateText(cause.message, currentLanguage()));
+    } finally {
+      setSavingBrandLogo(false);
     }
   }
   async function submit(event) {
@@ -4442,6 +4492,79 @@ function AccountSettingsPage({
                 : translateText("Profil rasmini saqlash", currentLanguage())}
               <FiCheck />
             </button>
+            {profileImage && (
+              <button
+                type="button"
+                className="button button-danger"
+                disabled={savingProfileImage}
+                onClick={removeProfileImage}
+              >
+                {translateText("Profil rasmini o‘chirish", currentLanguage())}
+                <FiTrash2 />
+              </button>
+            )}
+          </div>
+        </form>
+      </section>
+      <section className="panel account-settings profile-image-panel">
+        <div className="panel-head">
+          <div>
+            <h2>{translateText("Do‘kon brendi", currentLanguage())}</h2>
+            <p>
+              {translateText(
+                "Do‘koningiz logotipi menyuda va sarlavhada ko‘rinadi.",
+                currentLanguage(),
+              )}
+            </p>
+          </div>
+        </div>
+        <form className="modal-form profile-image-form" onSubmit={submitBrandLogo}>
+          <div className="profile-image-preview">
+            {brandLogo ? (
+              <img src={brandLogo} alt={company?.name || ""} />
+            ) : (
+              (company?.name || "Y").trim().slice(0, 1).toLocaleUpperCase()
+            )}
+          </div>
+          <Field
+            label={translateText(
+              "Do‘kon logotipini tanlang",
+              currentLanguage(),
+            )}
+          >
+            <input
+              name="brandLogo"
+              type="file"
+              accept="image/*"
+              required={!brandLogo}
+            />
+          </Field>
+          {brandLogoError && (
+            <p className="form-error" role="alert">
+              {brandLogoError}
+            </p>
+          )}
+          <div className="modal-actions">
+            <button
+              className="button button-secondary"
+              disabled={savingBrandLogo}
+            >
+              {savingBrandLogo
+                ? translateText("Saqlanmoqda...", currentLanguage())
+                : translateText("Logotipni saqlash", currentLanguage())}
+              <FiCheck />
+            </button>
+            {brandLogo && (
+              <button
+                type="button"
+                className="button button-danger"
+                disabled={savingBrandLogo}
+                onClick={removeBrandLogo}
+              >
+                {translateText("Logotipni o‘chirish", currentLanguage())}
+                <FiTrash2 />
+              </button>
+            )}
           </div>
         </form>
       </section>
@@ -4664,6 +4787,8 @@ function Shell({
   const dockDragRef = useRef(null);
   const suppressTabClickRef = useRef(false);
   const now = useClock();
+  const storeBrandName = platform ? "Yemzor" : company?.name || "Yemzor";
+  const storeBrandLogo = platform ? "/yemzor-logo.png" : company?.logo;
   const supportTelegram =
     String(supportContacts?.telegram || "")
       .trim()
@@ -5014,14 +5139,28 @@ function Shell({
             if (setActivePage) setActivePage(platform ? undefined : "overview");
           }}
         >
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          {storeBrandLogo ? (
+            <img className="brand-symbol" src={storeBrandLogo} alt="" />
+          ) : (
+            <span
+              className="brand-symbol store-brand-mark"
+              aria-hidden="true"
+            >
+              {storeBrandName.trim().slice(0, 1).toLocaleUpperCase()}
+            </span>
+          )}
           <span>
-            <strong>Yemzor</strong>
-            <small>{platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI"}</small>
+            <strong>{storeBrandName}</strong>
+            <small>
+              {translateText(
+                platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI",
+                currentLanguage(),
+              )}
+            </small>
           </span>
         </a>
         <div className="side-caption">
-          {platform ? "BOSHQARUV" : "YEMZOR"}
+          {translateText(platform ? "BOSHQARUV" : storeBrandName, currentLanguage())}
         </div>
         {nav && (
           <nav className="side-nav" aria-label="Asosiy menyu">
@@ -5110,17 +5249,26 @@ function Shell({
                 setActivePage(platform ? undefined : "overview");
               }}
             >
-              <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+              {storeBrandLogo ? (
+                <img className="brand-symbol" src={storeBrandLogo} alt="" />
+              ) : (
+                <span className="brand-symbol store-brand-mark" aria-hidden="true">
+                  {storeBrandName.trim().slice(0, 1).toLocaleUpperCase()}
+                </span>
+              )}
               <span>
-                <strong>Yemzor</strong>
+                <strong>{storeBrandName}</strong>
                 <small>
-                  {platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI"}
+                  {translateText(
+                    platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI",
+                    currentLanguage(),
+                  )}
                 </small>
               </span>
             </a>
           </div>
           <div className="topbar-context">
-            <span>{platform ? "Yemzor" : company?.name}</span>
+            <span>{storeBrandName}</span>
             <FiChevronRight />
             <strong>
               {translateText(
