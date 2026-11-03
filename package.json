@@ -51,7 +51,7 @@
   "license": "ISC",
   "build": {
     "appId": "com.yemzor.desktop",
-    "productName": "Yemzor.uz",
+    "productName": "storages.uz",
     "directories": {
       "output": "release"
     },

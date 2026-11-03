@@ -1,4 +1,4 @@
-# Yemzor.uz
+# storages.uz
 
 Yem mahsulotlari do‘koni uchun savdo, umumiy ombor, cheklar, hodimlar va oylik hisob tizimi.
 
@@ -10,18 +10,18 @@ Yem mahsulotlari do‘koni uchun savdo, umumiy ombor, cheklar, hodimlar va oylik
 4. Terminal ko‘rsatgan Vite manzilini oching. Birinchi kirishda platforma egasining login va parolini o‘zingiz yarating.
 5. Platforma panelidan do‘kon yarating. Boshliq login-parolini do‘kon egasiga bering; boshliq o‘z panelidan har bir hodim uchun alohida login ochadi.
 
-Demo uchun tasdiqlash kodi emailga yuborilishi uchun server muhitida `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` va `SMTP_FROM` qiymatlarini email xizmat ko‘rsatuvchingiz ma’lumotlari bilan sozlang. Yuboruvchi nomi va manzilini bitta qiymatda, masalan `SMTP_FROM="Yemzor <email@example.com>"`, kiriting. `SMTP_FROM` berilmasa, `SMTP_USER` yuboruvchi sifatida ishlatiladi. SMTP sozlanmagan yoki jo‘natishda xato bo‘lsa, tasdiqlash kodi ko‘rsatilmaydi va server xatolik qaytaradi. Kod email manzili uchun 10 daqiqa amal qiladi.
+Demo uchun tasdiqlash kodi emailga yuborilishi uchun server muhitida `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` va `SMTP_FROM` qiymatlarini email xizmat ko‘rsatuvchingiz ma’lumotlari bilan sozlang. Yuboruvchi nomi va manzilini bitta qiymatda, masalan `SMTP_FROM="storages.uz <email@example.com>"`, kiriting. `SMTP_FROM` berilmasa, `SMTP_USER` yuboruvchi sifatida ishlatiladi. SMTP sozlanmagan yoki jo‘natishda xato bo‘lsa, tasdiqlash kodi ko‘rsatilmaydi va server xatolik qaytaradi. Kod email manzili uchun 10 daqiqa amal qiladi.
 
 ## Windows va Android ilovalari
 
-Native ilovalar `capacitor.config.json` va `electron/main.cjs` ichidagi `https://yemzor.duckdns.org` manziliga ulanadi. Ilova ochilganda landing emas, login oynasi ko‘rinadi. Domenni DuckDNS’da serveringizning ommaviy IP manziliga yo‘naltiring, VPS yoki doimiy ishlaydigan serverga frontend va API’ni joylang, HTTPS sertifikatini yoqing. Login va oylik obunani tekshirish uchun internet kerak.
+Native ilovalar `capacitor.config.json` va `electron/main.cjs` ichidagi `https://yemzor.duckdns.org` manziliga ulanadi. Ilova ochilganda landing emas, login oynasi ko‘rinadi. `storages.uz` domeni DNS orqali shu serverga yo‘naltirilib, HTTPS sertifikati tayyor bo‘lgach, ilovalarning server URL’ini ham yangilang. Login va oylik obunani tekshirish uchun internet kerak.
 
 Yuklab olingan Android va Windows ilovalaridagi tovarlar, kirimlar, cheklar, savdolar, davomat va boshqa ish ma’lumotlari shu qurilmaning IndexedDB xotirasida saqlanadi. Ular serverdagi eski ma’lumotlarni yuklamaydi va boshqa qurilma yoki brauzer bilan sinxronlanmaydi. Qurilma/browser ma’lumotlari o‘chirilsa, mahalliy yozuvlar yo‘qolishi mumkin; hozircha avtomatik zaxira va qurilmalararo ko‘chirish yo‘q. Login va parol xeshlari hamda obuna holati serverda qoladi. Oddiy brauzerdagi web ilova esa server ma’lumotlar bazasi bilan ishlashda davom etadi.
 
-- Windows o‘rnatuvchisi: Windows kompyuterda `npm run desktop:win`; natija `release/Yemzor-Setup.exe`.
+- Windows o‘rnatuvchisi: Windows kompyuterda `npm run desktop:win`; mahsulot nomi `storages.uz`.
 - Android APK: Android Studio, JDK va Android SDK o‘rnatilgan kompyuterda `npm run android:apk`; natija `release/Yemzor.apk`. Android platformasi hali yaratilmagan bo‘lsa, avval `npm run android:init` bajaring. Hozirgi APK sinov (debug) build bo‘ladi, Play Store uchun imzolanmagan.
 
-Yemzor.uz sayti serverga joylanmaguncha native ilovada login qilish imkoni bo‘lmaydi. Windows `.exe` faylini Linux muhitida yaratish uchun Windows yoki Wine kerak; Android build uchun Java va Android SDK talab qilinadi.
+storages.uz sayti serverga joylanmaguncha native ilovada login qilish imkoni bo‘lmaydi. Windows `.exe` faylini Linux muhitida yaratish uchun Windows yoki Wine kerak; Android build uchun Java va Android SDK talab qilinadi.
 
 ## Imkoniyatlar
 
