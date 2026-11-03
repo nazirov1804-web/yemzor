@@ -4369,10 +4369,6 @@ html[lang="en"] .landing-cta-bottom .cta-copy::before {
   gap: 10px;
 }
 
-.landing-header-trial {
-  white-space: nowrap;
-}
-
 .landing-hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -6217,10 +6213,6 @@ button {
 
   .landing-header-actions {
     gap: 5px;
-  }
-
-  .landing-header-trial {
-    display: none;
   }
 
   .landing-header-actions>.button {

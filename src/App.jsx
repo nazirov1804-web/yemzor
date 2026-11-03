@@ -1363,16 +1363,6 @@ function LandingPage({
         <div className="landing-header-actions">
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           <button
-            className="button button-primary landing-header-trial"
-            type="button"
-            onClick={() => {
-              setMobileNavigationOpen(false);
-              onRegister();
-            }}
-          >
-            1 oy bepul sinash <FiChevronRight />
-          </button>
-          <button
             className="button button-secondary landing-header-login"
             onClick={() => {
               setMobileNavigationOpen(false);
