@@ -2,7 +2,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import { FiChevronDown, FiMoon, FiSun } from "react-icons/fi";
 import { observeTranslations } from "../i18n";
 
-export default function ThemeToggle({ theme, onToggle }) {
+export default function ThemeToggle({
+  theme,
+  onToggle,
+  showLanguagePicker = true,
+}) {
   const dark = theme === "dark";
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [language, setLanguage] = useState(
@@ -71,53 +75,55 @@ export default function ThemeToggle({ theme, onToggle }) {
 
   return (
     <div className="theme-controls">
-      <div
-        className="language-picker"
-        data-language-picker
-        ref={languagePickerRef}
-      >
-        <button
-          ref={languageButtonRef}
-          className="language-picker-trigger"
-          type="button"
-          aria-label={languageLabel}
-          aria-expanded={languageMenuOpen}
-          aria-controls={languageMenuOpen ? languageMenuId : undefined}
-          onClick={() => setLanguageMenuOpen((open) => !open)}
+      {showLanguagePicker && (
+        <div
+          className="language-picker"
+          data-language-picker
+          ref={languagePickerRef}
         >
-          <span className="language-flag" aria-hidden="true">
-            {selectedLanguage.flag}
-          </span>
-          <span>{languageLabels[language] || "Uz"}</span>
-          <FiChevronDown
-            className="language-picker-chevron"
-            aria-hidden="true"
-          />
-        </button>
-        {languageMenuOpen && (
-          <div
-            className="language-picker-menu"
-            id={languageMenuId}
-            role="group"
+          <button
+            ref={languageButtonRef}
+            className="language-picker-trigger"
+            type="button"
             aria-label={languageLabel}
+            aria-expanded={languageMenuOpen}
+            aria-controls={languageMenuOpen ? languageMenuId : undefined}
+            onClick={() => setLanguageMenuOpen((open) => !open)}
           >
-            {languageOptions.map((option) => (
-              <button
-                className={`language-picker-option${language === option.value ? " selected" : ""}`}
-                key={option.value}
-                type="button"
-                aria-pressed={language === option.value}
-                onClick={() => selectLanguage(option.value)}
-              >
-                <span className="language-flag" aria-hidden="true">
-                  {option.flag}
-                </span>
-                {option.label}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+            <span className="language-flag" aria-hidden="true">
+              {selectedLanguage.flag}
+            </span>
+            <span>{languageLabels[language] || "Uz"}</span>
+            <FiChevronDown
+              className="language-picker-chevron"
+              aria-hidden="true"
+            />
+          </button>
+          {languageMenuOpen && (
+            <div
+              className="language-picker-menu"
+              id={languageMenuId}
+              role="group"
+              aria-label={languageLabel}
+            >
+              {languageOptions.map((option) => (
+                <button
+                  className={`language-picker-option${language === option.value ? " selected" : ""}`}
+                  key={option.value}
+                  type="button"
+                  aria-pressed={language === option.value}
+                  onClick={() => selectLanguage(option.value)}
+                >
+                  <span className="language-flag" aria-hidden="true">
+                    {option.flag}
+                  </span>
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <button
         className="theme-toggle"
         type="button"

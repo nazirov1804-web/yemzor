@@ -29,10 +29,12 @@ import {
   FiPhone,
   FiSmartphone,
   FiSearch,
+  FiSettings,
   FiShield,
   FiShoppingCart,
   FiStar,
   FiTrash2,
+  FiUpload,
   FiMenu,
   FiTrendingUp,
   FiUsers,
@@ -68,7 +70,12 @@ async function encodeProfileImage(file) {
   }
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   image.close();
-  return canvas.toDataURL("image/jpeg", 0.82);
+  const outputType = ["image/jpeg", "image/webp"].includes(file.type)
+    ? file.type
+    : "image/png";
+  return outputType === "image/png"
+    ? canvas.toDataURL(outputType)
+    : canvas.toDataURL(outputType, 0.82);
 }
 const weekdays = [
   { value: 1, label: "Dushanba" },
@@ -3658,7 +3665,7 @@ function StoreApp({
         ["products", "Tovarlar va kirim", FiBox],
         ["history", "Cheklar va hisobot", FiClock],
         ["staff", "Hodimlar va oylik", FiUsers],
-        ["account", "Hisob sozlamalari", FiShield],
+        ["account", "Hisob sozlamalari", FiSettings],
       ]
     : isManager
       ? [
@@ -4232,7 +4239,9 @@ function AccountSettingsPage({
   const [savingCompany, setSavingCompany] = useState(false);
   const [savingProfileImage, setSavingProfileImage] = useState(false);
   const [profileImage, setProfileImage] = useState(user.profileImage || "");
+  const [profileFileName, setProfileFileName] = useState("");
   const [brandLogo, setBrandLogo] = useState(company?.logo || "");
+  const [brandFileName, setBrandFileName] = useState("");
   const [savingBrandLogo, setSavingBrandLogo] = useState(false);
   const [profileImageError, setProfileImageError] = useState("");
   const [brandLogoError, setBrandLogoError] = useState("");
@@ -4279,6 +4288,7 @@ function AccountSettingsPage({
         body: { image },
       });
       setProfileImage(result.user.profileImage || "");
+      setProfileFileName("");
       onUserUpdate(result.user);
       formElement.reset();
       toast.success(
@@ -4309,6 +4319,7 @@ function AccountSettingsPage({
         body: { logo },
       });
       setBrandLogo(result.company.logo || "");
+      setBrandFileName("");
       onCompanyUpdate?.(result.company);
       formElement.reset();
       toast.success(
@@ -4463,20 +4474,35 @@ function AccountSettingsPage({
               (user.name || "Y").slice(0, 1).toUpperCase()
             )}
           </div>
-          <Field
-            label={translateText(
-              "Rasm tanlang yoki kameradan oling",
-              currentLanguage(),
-            )}
-          >
-            <input
-              name="profileImage"
-              type="file"
-              accept="image/*"
-              capture="user"
-              required
-            />
-          </Field>
+          <div className="field-label image-upload-field">
+            <span>{translateText("Rasm yuklash", currentLanguage())}</span>
+            <label className="image-upload-control">
+              <span className="image-upload-icon">
+                <FiUpload aria-hidden="true" />
+              </span>
+              <span className="image-upload-copy">
+                <strong>{translateText("Rasm yuklash", currentLanguage())}</strong>
+                <small>
+                  {profileFileName ||
+                    translateText(
+                      "Rasm tanlang yoki kameradan oling",
+                      currentLanguage(),
+                    )}
+                </small>
+              </span>
+              <input
+                name="profileImage"
+                type="file"
+                accept="image/*"
+                capture="user"
+                required
+                aria-label={translateText("Rasm yuklash", currentLanguage())}
+                onChange={(event) =>
+                  setProfileFileName(event.target.files?.[0]?.name || "")
+                }
+              />
+            </label>
+          </div>
           {profileImageError && (
             <p className="form-error" role="alert">
               {profileImageError}
@@ -4526,19 +4552,36 @@ function AccountSettingsPage({
               (company?.name || "Y").trim().slice(0, 1).toLocaleUpperCase()
             )}
           </div>
-          <Field
-            label={translateText(
-              "Do‘kon logotipini tanlang",
-              currentLanguage(),
-            )}
-          >
-            <input
-              name="brandLogo"
-              type="file"
-              accept="image/*"
-              required={!brandLogo}
-            />
-          </Field>
+          <div className="field-label image-upload-field">
+            <span>
+              {translateText("Do‘kon logotipini tanlang", currentLanguage())}
+            </span>
+            <label className="image-upload-control">
+              <span className="image-upload-icon">
+                <FiUpload aria-hidden="true" />
+              </span>
+              <span className="image-upload-copy">
+                <strong>{translateText("Rasm yuklash", currentLanguage())}</strong>
+                <small>
+                  {brandFileName ||
+                    translateText(
+                      "Do‘kon logotipini tanlang",
+                      currentLanguage(),
+                    )}
+                </small>
+              </span>
+              <input
+                name="brandLogo"
+                type="file"
+                accept="image/*"
+                required={!brandLogo}
+                aria-label={translateText("Rasm yuklash", currentLanguage())}
+                onChange={(event) =>
+                  setBrandFileName(event.target.files?.[0]?.name || "")
+                }
+              />
+            </label>
+          </div>
           {brandLogoError && (
             <p className="form-error" role="alert">
               {brandLogoError}
@@ -5195,6 +5238,13 @@ function Shell({
             <i /> Tizim faol
           </span>
         </div>
+        <div className="sidebar-theme-controls">
+          <ThemeToggle
+            theme={theme}
+            onToggle={onToggleTheme}
+            showLanguagePicker={false}
+          />
+        </div>
         <div className="sidebar-user">
           <div className="avatar">
             {user.profileImage ? (
@@ -5341,7 +5391,7 @@ function Shell({
             className="mobile-dock-indicator"
             aria-hidden="true"
           />
-          {nav.slice(0, 5).map(([id, label, Icon]) => (
+          {nav.slice(0, 6).map(([id, label, Icon]) => (
             <button
               key={id}
               type="button"

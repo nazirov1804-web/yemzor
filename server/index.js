@@ -1046,16 +1046,28 @@ app.patch(
     }
     const match =
       typeof image === 'string'
-        ? image.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/)
+        ? image.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/)
         : null;
-    if (!match) fail(400, 'Profil rasmi JPEG formatida bo‘lishi kerak.');
-    const imageBytes = Buffer.from(match[1], 'base64');
+    if (!match)
+      fail(400, 'Profil rasmi JPEG, PNG yoki WebP formatida bo‘lishi kerak.');
+    const imageBytes = Buffer.from(match[2], 'base64');
+    const imageType = match[1];
+    const validImage =
+      (imageType === 'jpeg' &&
+        imageBytes[0] === 0xff &&
+        imageBytes[1] === 0xd8 &&
+        imageBytes[2] === 0xff) ||
+      (imageType === 'png' &&
+        imageBytes.subarray(0, 8).equals(
+          Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+        )) ||
+      (imageType === 'webp' &&
+        imageBytes.toString('ascii', 0, 4) === 'RIFF' &&
+        imageBytes.toString('ascii', 8, 12) === 'WEBP');
     if (
       imageBytes.length < 4 ||
       imageBytes.length > 10 * 1024 * 1024 ||
-      imageBytes[0] !== 0xff ||
-      imageBytes[1] !== 0xd8 ||
-      imageBytes[2] !== 0xff
+      !validImage
     ) {
       fail(400, 'Profil rasmi yaroqsiz yoki 10 MB dan katta.');
     }
@@ -1080,16 +1092,28 @@ app.patch(
     if (logo !== null) {
       const match =
         typeof logo === 'string'
-          ? logo.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/)
+          ? logo.match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/]+={0,2})$/)
           : null;
-      if (!match) fail(400, 'Do‘kon logotipi JPEG formatida bo‘lishi kerak.');
-      const imageBytes = Buffer.from(match[1], 'base64');
+      if (!match)
+        fail(400, 'Do‘kon logotipi JPEG, PNG yoki WebP formatida bo‘lishi kerak.');
+      const imageBytes = Buffer.from(match[2], 'base64');
+      const imageType = match[1];
+      const validImage =
+        (imageType === 'jpeg' &&
+          imageBytes[0] === 0xff &&
+          imageBytes[1] === 0xd8 &&
+          imageBytes[2] === 0xff) ||
+        (imageType === 'png' &&
+          imageBytes.subarray(0, 8).equals(
+            Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+          )) ||
+        (imageType === 'webp' &&
+          imageBytes.toString('ascii', 0, 4) === 'RIFF' &&
+          imageBytes.toString('ascii', 8, 12) === 'WEBP');
       if (
         imageBytes.length < 4 ||
         imageBytes.length > 10 * 1024 * 1024 ||
-        imageBytes[0] !== 0xff ||
-        imageBytes[1] !== 0xd8 ||
-        imageBytes[2] !== 0xff
+        !validImage
       ) {
         fail(400, 'Do‘kon logotipi yaroqsiz yoki 10 MB dan katta.');
       }
