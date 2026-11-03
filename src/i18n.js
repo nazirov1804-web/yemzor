@@ -1367,6 +1367,7 @@ const entries = [
   ["Demo ro‘yxatdan o‘tish", "Регистрация демо-аккаунта", "Register for a demo"],
   ["Platforma egasini sozlash", "Настроить аккаунт владельца платформы", "Set up platform owner"],
   ["Do‘koningizni oching va bir oy bepul sinang", "Откройте магазин и пользуйтесь бесплатно целый месяц", "Open your store and try it free for one month"],
+  ["Do‘kon oching — 1 oy bepul", "Создайте магазин — 1 месяц бесплатно", "Open a store — 1 month free"],
   ["Do‘koningizni ro‘yxatdan o‘tkazing, ma’lumotlarni kiriting va 30 kun davomida bepul foydalaning.", "Зарегистрируйте магазин, заполните данные и пользуйтесь бесплатно 30 дней.", "Register your store, enter its details, and use it free for 30 days."],
   ["1 oy bepul boshlash", "Начать бесплатный месяц", "Start your free month"],
   ["1 oy bepul sinash", "Попробовать бесплатно в течение месяца", "Try it free for one month"],

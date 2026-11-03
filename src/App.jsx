@@ -82,8 +82,8 @@ const landingSectionNavigation = [
   ["#imkoniyatlar", "Imkoniyatlar"],
   ["#rollar", "Rollar"],
   ["#jarayon", "Ish jarayoni"],
-  ["#fikrlar", "Fikrlar"],
   ["#birliklar", "Birliklar"],
+  ["#fikrlar", "Fikrlar"],
   ["#boglanish", "Bog‘lanish"],
 ];
 const installedReleaseStorageKey = "yemzor:installed-release:v1";
@@ -1733,58 +1733,6 @@ function LandingPage({
         </div>
       </section>
 
-      <section className="landing-trust" aria-labelledby="landing-trust-title">
-        <div className="landing-trust-heading">
-          <span className="landing-kicker">
-            <i /> {translateText("RAQAMLARDA YEMZOR", currentLanguage())}
-          </span>
-          <h2 id="landing-trust-title">
-            {translateText("Bizga tobora ko‘proq do‘konlar ishonmoqda", currentLanguage())}
-          </h2>
-          <p>
-            {translateText(
-              "Platformada ro‘yxatdan o‘tgan foydalanuvchilar va do‘konlar soni.",
-              currentLanguage(),
-            )}
-          </p>
-        </div>
-        <div className="landing-trust-grid">
-          <article className="landing-trust-stat">
-            <span><FiUsers aria-hidden="true" /></span>
-            {landingStats ? (
-              <AnimatedCounter value={landingStats.registrationCount} ready suffix="+" />
-            ) : <strong>—</strong>}
-            <small>{translateText("Ro‘yxatdan o‘tgan foydalanuvchilar", currentLanguage())}</small>
-          </article>
-          <article className="landing-trust-stat">
-            <span><FiBriefcase aria-hidden="true" /></span>
-            {landingStats ? (
-              <AnimatedCounter value={landingStats.companyCount} ready suffix="+" />
-            ) : <strong>—</strong>}
-            <small>{translateText("Jami do‘konlar", currentLanguage())}</small>
-          </article>
-          <article className="landing-trust-stat">
-            <span><FiStar aria-hidden="true" /></span>
-            {landingStats?.reviewCount ? (
-              <AnimatedCounter value={landingStats.satisfactionPercent} ready suffix="%" />
-            ) : <strong>—</strong>}
-            <small>{translateText("Mijozlar mamnunligi", currentLanguage())}</small>
-          </article>
-          <article className="landing-trust-stat">
-            <span><FiCalendar aria-hidden="true" /></span>
-            <AnimatedCounter value={1} ready />
-            <small>{translateText("Yillik tajriba", currentLanguage())}</small>
-          </article>
-        </div>
-        {landingStatsError && (
-          <p className="landing-stats-error" role="status">
-            {translateText("Statistikani hozir yuklab bo‘lmadi.", currentLanguage())}
-          </p>
-        )}
-      </section>
-
-
-
       <section className="landing-features" id="imkoniyatlar">
         <div className="landing-section-head">
           <span className="landing-kicker">
@@ -1890,52 +1838,6 @@ function LandingPage({
         <div className="unit-pills" aria-label="Qo‘llab-quvvatlanadigan birliklar">
           <span>Qop</span><span>Kg / tonna</span><span>litr</span><span>millilitr</span><span>dona</span><span>blok</span>
         </div>
-      </section>
-
-      <section className="landing-reviews" id="fikrlar">
-        <div className="landing-section-head">
-          <span className="landing-kicker">
-            <i /> {translateText("MIJOZLAR FIKRI", currentLanguage())}
-          </span>
-          <h2>{translateText("Foydalanuvchilarimiz fikrlari", currentLanguage())}</h2>
-          <p>
-            {translateText(
-              "Tizimdan mamnun bo‘lgan foydalanuvchilarning ochiq fikrlari.",
-              currentLanguage(),
-            )}
-          </p>
-        </div>
-        {landingStats?.reviews?.length ? (
-          <div className="landing-review-grid">
-            {landingStats.reviews.map((review, index) => (
-              <article className="landing-review-card" key={`${review.authorName}-${index}`}>
-                <span className="landing-review-quote" aria-hidden="true">
-                  <FiMessageCircle />
-                </span>
-                <div className="landing-review-stars" aria-label={`${review.rating} / 5`}>
-                  {Array.from({ length: 5 }, (_, star) => (
-                    <FiStar key={star} aria-hidden="true" />
-                  ))}
-                </div>
-                <p>“{review.comment}”</p>
-                <div className="landing-review-author">
-                  <span>{review.authorName.trim().slice(0, 1).toLocaleUpperCase(currentLocale())}</span>
-                  <div>
-                    <strong>{review.authorName}</strong>
-                    <small>{translateText("Do‘kon boshlig‘i", currentLanguage())}</small>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        ) : (
-          <p className="landing-reviews-empty">
-            {translateText(
-              "Birinchi sharhlar kelgach, shu yerda ko‘rinadi.",
-              currentLanguage(),
-            )}
-          </p>
-        )}
       </section>
 
       <section className="landing-about" id="haqida">
@@ -2132,6 +2034,167 @@ function LandingPage({
           </a>
         </div>
       </section>
+
+      <div className="landing-proof-grid">
+        <section
+          className="landing-trust"
+          id="birliklar-statistikasi"
+          aria-labelledby="landing-trust-title"
+        >
+          <div className="landing-trust-heading">
+            <span className="landing-kicker">
+              <i /> {translateText("RAQAMLARDA YEMZOR", currentLanguage())}
+            </span>
+            <h2 id="landing-trust-title">
+              {translateText(
+                "Bizga tobora ko‘proq do‘konlar ishonmoqda",
+                currentLanguage(),
+              )}
+            </h2>
+            <p>
+              {translateText(
+                "Platformada ro‘yxatdan o‘tgan foydalanuvchilar va do‘konlar soni.",
+                currentLanguage(),
+              )}
+            </p>
+          </div>
+          <div className="landing-trust-grid">
+            <article className="landing-trust-stat">
+              <span>
+                <FiUsers aria-hidden="true" />
+              </span>
+              {landingStats ? (
+                <AnimatedCounter
+                  value={landingStats.registrationCount}
+                  ready
+                  suffix="+"
+                />
+              ) : (
+                <strong>—</strong>
+              )}
+              <small>
+                {translateText(
+                  "Ro‘yxatdan o‘tgan foydalanuvchilar",
+                  currentLanguage(),
+                )}
+              </small>
+            </article>
+            <article className="landing-trust-stat">
+              <span>
+                <FiBriefcase aria-hidden="true" />
+              </span>
+              {landingStats ? (
+                <AnimatedCounter
+                  value={landingStats.companyCount}
+                  ready
+                  suffix="+"
+                />
+              ) : (
+                <strong>—</strong>
+              )}
+              <small>
+                {translateText("Jami do‘konlar", currentLanguage())}
+              </small>
+            </article>
+            <article className="landing-trust-stat">
+              <span>
+                <FiStar aria-hidden="true" />
+              </span>
+              {landingStats?.reviewCount ? (
+                <AnimatedCounter
+                  value={landingStats.satisfactionPercent}
+                  ready
+                  suffix="%"
+                />
+              ) : (
+                <strong>—</strong>
+              )}
+              <small>
+                {translateText("Mijozlar mamnunligi", currentLanguage())}
+              </small>
+            </article>
+            <article className="landing-trust-stat">
+              <span>
+                <FiCalendar aria-hidden="true" />
+              </span>
+              <AnimatedCounter value={1} ready />
+              <small>{translateText("Yillik tajriba", currentLanguage())}</small>
+            </article>
+          </div>
+          {landingStatsError && (
+            <p className="landing-stats-error" role="status">
+              {translateText(
+                "Statistikani hozir yuklab bo‘lmadi.",
+                currentLanguage(),
+              )}
+            </p>
+          )}
+        </section>
+
+        <section className="landing-reviews" id="fikrlar">
+          <div className="landing-section-head">
+            <span className="landing-kicker">
+              <i /> {translateText("MIJOZLAR FIKRI", currentLanguage())}
+            </span>
+            <h2>
+              {translateText(
+                "Foydalanuvchilarimiz fikrlari",
+                currentLanguage(),
+              )}
+            </h2>
+            <p>
+              {translateText(
+                "Tizimdan mamnun bo‘lgan foydalanuvchilarning ochiq fikrlari.",
+                currentLanguage(),
+              )}
+            </p>
+          </div>
+          {landingStats?.reviews?.length ? (
+            <div className="landing-review-grid">
+              {landingStats.reviews.map((review, index) => (
+                <article
+                  className="landing-review-card"
+                  key={`${review.authorName}-${index}`}
+                >
+                  <span className="landing-review-quote" aria-hidden="true">
+                    <FiMessageCircle />
+                  </span>
+                  <div
+                    className="landing-review-stars"
+                    aria-label={`${review.rating} / 5`}
+                  >
+                    {Array.from({ length: 5 }, (_, star) => (
+                      <FiStar key={star} aria-hidden="true" />
+                    ))}
+                  </div>
+                  <p>“{review.comment}”</p>
+                  <div className="landing-review-author">
+                    <span>
+                      {review.authorName
+                        .trim()
+                        .slice(0, 1)
+                        .toLocaleUpperCase(currentLocale())}
+                    </span>
+                    <div>
+                      <strong>{review.authorName}</strong>
+                      <small>
+                        {translateText("Do‘kon boshlig‘i", currentLanguage())}
+                      </small>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="landing-reviews-empty">
+              {translateText(
+                "Birinchi sharhlar kelgach, shu yerda ko‘rinadi.",
+                currentLanguage(),
+              )}
+            </p>
+          )}
+        </section>
+      </div>
 
       <section
         className="landing-contact landing-contact-bottom"
@@ -2901,7 +2964,11 @@ function AccessPage({
               type="button"
               onClick={onRegister}
             >
-              Do‘kon oching — 1 oy bepul <FiChevronRight />
+              {translateText(
+                "Do‘kon oching — 1 oy bepul",
+                currentLanguage(),
+              )}{" "}
+              <FiChevronRight />
             </button>
           )}
         </form>

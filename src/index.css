@@ -12180,6 +12180,62 @@ html[data-theme="dark"] .store-review-rating button {
   }
 }
 
+.landing-proof-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: start;
+  gap: 20px;
+  width: min(100% - 48px, 1240px);
+  margin: 0 auto;
+}
+
+.landing-proof-grid > .landing-trust,
+.landing-proof-grid > .landing-reviews {
+  min-width: 0;
+  height: 100%;
+  padding: clamp(32px, 4vw, 54px) clamp(20px, 3vw, 34px);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--surface);
+}
+
+.landing-proof-grid .landing-trust-heading {
+  margin-bottom: 30px;
+}
+
+.landing-proof-grid .landing-trust-heading h2 {
+  font-size: clamp(24px, 2.7vw, 34px);
+}
+
+.landing-proof-grid .landing-trust-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 12px;
+}
+
+.landing-proof-grid .landing-review-grid {
+  grid-template-columns: 1fr;
+  width: 100%;
+  gap: 12px;
+}
+
+.landing-proof-grid .landing-review-card {
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .landing-proof-grid {
+    grid-template-columns: 1fr;
+    width: min(100% - 36px, 680px);
+  }
+}
+
+@media (max-width: 720px) {
+  .landing-proof-grid .landing-trust,
+  .landing-proof-grid .landing-reviews {
+    padding: 34px 20px;
+  }
+}
+
 html[data-theme="dark"] .company-card .muted {
   color: #b8c7bb;
 }
