@@ -731,6 +731,7 @@ function App() {
             phone={publicSettings.phone}
             telegram={publicSettings.telegram}
             onLogin={() => setAccessView("login")}
+            onRegister={() => setAccessView("register")}
             onDemo={() => setAccessView("demo")}
             onLegal={(page) => setLegalPage(page)}
             theme={theme}
@@ -760,9 +761,37 @@ function App() {
           onSuccess={refreshStatus}
           onBack={() => setAccessView(isInstalledApp ? "login" : "landing")}
           showBack={!isInstalledApp}
+          onRegister={() => setAccessView("register")}
           theme={theme}
           onToggleTheme={toggleTheme}
         />
+      ) : accessView === "register" ? (
+        <>
+          <StoreRegistrationPage
+            onSuccess={refreshStatus}
+            onBack={() => setAccessView(isInstalledApp ? "login" : "landing")}
+            onLegal={(page) => setLegalPage(page)}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+          />
+          {legalPage && (
+            <div className="legal-overlay">
+              {legalPage === "offer" ? (
+                <OfferPage
+                  onBack={() => setLegalPage("")}
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                />
+              ) : (
+                <PrivacyPolicyPage
+                  onBack={() => setLegalPage("")}
+                  theme={theme}
+                  onToggleTheme={toggleTheme}
+                />
+              )}
+            </div>
+          )}
+        </>
       ) : accessView === "demo" ? (
         <>
           <DemoRegistrationPage
@@ -907,6 +936,7 @@ function LandingPage({
   phone,
   telegram,
   onLogin,
+  onRegister,
   onDemo,
   onLegal,
   theme,
@@ -1904,17 +1934,27 @@ function LandingPage({
 
       <section className="landing-cta landing-cta-bottom" id="demo">
         <div className="cta-copy">
-          <h2>Yemzor.uz bilan ishni boshlang</h2>
+          <h2>Do‘koningizni oching va bir oy bepul sinang</h2>
           <p>
-            Demo akkaunt ochib, do‘kon boshqaruvi imkoniyatlarini sinab ko‘ring.
+            Do‘koningizni ro‘yxatdan o‘tkazing, ma’lumotlarni kiriting va 30 kun
+            davomida bepul foydalaning.
           </p>
         </div>
-        <button
-          className="button button-primary demo-cta-button"
-          onClick={onDemo}
-        >
-          Bepul demo oling <FiChevronRight />
-        </button>
+        <div className="landing-cta-actions">
+          <button
+            className="button button-primary demo-cta-button"
+            onClick={onRegister}
+          >
+            1 oy bepul boshlash <FiChevronRight />
+          </button>
+          <button
+            className="landing-cta-demo-link"
+            type="button"
+            onClick={onDemo}
+          >
+            48 soatlik demoni ko‘rish
+          </button>
+        </div>
       </section>
 
       <section className="landing-legal" aria-label="Huquqiy ma’lumotlar">
@@ -2242,11 +2282,307 @@ function DemoRegistrationPage({
   );
 }
 
+function StoreRegistrationPage({
+  onSuccess,
+  onBack,
+  onLegal,
+  theme,
+  onToggleTheme,
+}) {
+  const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState("email");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+
+  async function requestCode(event) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    if (form.get("consent") !== "on") {
+      toast.error("Davom etish uchun oferta va maxfiylik siyosatiga rozilik bildiring.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const result = await api("/api/company/register/request", {
+        method: "POST",
+        body: {
+          email: form.get("email"),
+          password: form.get("password"),
+          consent: form.get("consent") === "on",
+        },
+      });
+      setEmail(result.email);
+      setPassword(String(form.get("password") || ""));
+      setStep("verify");
+      toast.success(result.message);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function verifyEmail(event) {
+    event.preventDefault();
+    setSaving(true);
+    try {
+      await api("/api/company/register/verify", {
+        method: "POST",
+        body: { email, code },
+      });
+      setStep("store");
+      toast.success("Email manzilingiz tasdiqlandi.");
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function resendCode() {
+    setSaving(true);
+    try {
+      const result = await api("/api/company/register/request", {
+        method: "POST",
+        body: { email, password, consent: true },
+      });
+      setCode("");
+      toast.success(result.message);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function createStore(event) {
+    event.preventDefault();
+    setSaving(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      const result = await api("/api/company/register", {
+        method: "POST",
+        body: {
+          storeName: form.get("storeName"),
+          ownerName: form.get("ownerName"),
+          phone: form.get("phone"),
+        },
+      });
+      toast.success(
+        `${result.company.name} do‘koni yaratildi. 30 kun bepul foydalanishingiz mumkin.`,
+      );
+      await onSuccess();
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <main className="access-shell">
+      <div className="access-theme">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+      </div>
+      <section className="access-aside company-registration-aside">
+        <a className="brand brand-light" href="#">
+          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          <span>
+            <strong>Yemzor.uz</strong>
+            <small>1 OY BEPUL FOYDALANISH</small>
+          </span>
+        </a>
+        <div className="access-message">
+          <span className="eyebrow">DO‘KONINGIZNI BOSHQARING</span>
+          <h1>Hisobingizni oching va ishni boshlang.</h1>
+          <p>
+            Savdo, ombor va jamoa boshqaruvi bir joyda. Ro‘yxatdan o‘tgach,
+            do‘koningiz platforma egasining boshqaruv panelida ko‘rinadi.
+          </p>
+        </div>
+        <div className="access-foot">
+          30 kun bepul · Keyin oylik tarif asosida davom eting
+        </div>
+      </section>
+      <section className="access-main">
+        <form
+          className="access-card"
+          onSubmit={
+            step === "email"
+              ? requestCode
+              : step === "verify"
+                ? verifyEmail
+                : createStore
+          }
+        >
+          <button type="button" className="back-link" onClick={onBack}>
+            ← Qaytish
+          </button>
+          <span className="eyebrow">
+            {step === "store" ? "DO‘KON MA’LUMOTLARI" : "EMAILNI TASDIQLASH"}
+          </span>
+          <h2>
+            {step === "store"
+              ? "Do‘koningizni oching"
+              : "1 oy bepul foydalaning"}
+          </h2>
+          <p className="muted">
+            {step === "email"
+              ? "Emailingiz va Yemzor akkauntingiz uchun yangi parolni kiriting."
+              : step === "verify"
+                ? `${email} manziliga yuborilgan 6 xonali kodni kiriting.`
+                : "Email tasdiqlandi. Do‘kon yaratish uchun quyidagi ma’lumotlarni kiriting."}
+          </p>
+          {step === "email" && (
+            <>
+              <Field label="Email">
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  maxLength="254"
+                  autoComplete="email"
+                  placeholder="ali@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                />
+              </Field>
+              <Field label="Yemzor uchun parol">
+                <PasswordInput
+                  name="password"
+                  autoComplete="new-password"
+                  required
+                  minLength="10"
+                  maxLength="200"
+                  placeholder="Kamida 10 ta belgi"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+                <span className="field-hint">
+                  Bu email akkauntingiz paroli emas; emailga yuborilgan kod bilan manzilni tasdiqlaysiz.
+                </span>
+              </Field>
+              <label className="demo-consent">
+                <input name="consent" type="checkbox" required />
+                <span>
+                  <a
+                    href="#offer"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      onLegal("offer");
+                    }}
+                  >
+                    Ommaviy oferta
+                  </a>{" "}
+                  va{" "}
+                  <a
+                    href="#privacy"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      onLegal("privacy");
+                    }}
+                  >
+                    maxfiylik siyosati
+                  </a>{" "}
+                  shartlariga roziman.
+                </span>
+              </label>
+            </>
+          )}
+          {step === "verify" && (
+            <>
+              <Field label="Tasdiqlash kodi">
+                <input
+                  name="code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  required
+                  minLength="6"
+                  maxLength="6"
+                  pattern="[0-9]{6}"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  placeholder="6 xonali kod"
+                />
+              </Field>
+              <button
+                className="text-button"
+                type="button"
+                disabled={saving}
+                onClick={resendCode}
+              >
+                Kodni qayta yuborish
+              </button>
+            </>
+          )}
+          {step === "store" && (
+            <>
+              <Field label="Do‘kon nomi">
+                <input
+                  name="storeName"
+                  required
+                  minLength="2"
+                  maxLength="80"
+                  autoComplete="organization"
+                  placeholder="Masalan, Baraka Yem"
+                />
+              </Field>
+              <Field label="Ism-familiya">
+                <input
+                  name="ownerName"
+                  required
+                  minLength="2"
+                  maxLength="80"
+                  autoComplete="name"
+                  placeholder="Do‘kon egasining ism-familiyasi"
+                />
+              </Field>
+              <Field label="Telefon raqami">
+                <input
+                  name="phone"
+                  type="tel"
+                  required
+                  autoComplete="tel"
+                  maxLength="24"
+                  placeholder="+998 90 123 45 67"
+                />
+                <span className="field-hint">
+                  Bog‘lanish uchun saqlanadi; hozircha SMS yuborilmaydi.
+                </span>
+              </Field>
+            </>
+          )}
+          <button
+            className="button button-primary button-wide"
+            disabled={saving}
+          >
+            {saving
+              ? "Kuting..."
+              : step === "email"
+                ? "Tasdiqlash kodini yuborish"
+                : step === "verify"
+                  ? "Emailni tasdiqlash"
+                  : "Do‘konni ochish"}{" "}
+            <FiChevronRight />
+          </button>
+          {step === "store" && (
+            <p className="security-note">
+              Login sifatida tasdiqlangan emailingiz ishlatiladi. Parolingiz himoyalangan xesh ko‘rinishida saqlanadi.
+            </p>
+          )}
+        </form>
+      </section>
+    </main>
+  );
+}
+
 function AccessPage({
   setupRequired,
   onSuccess,
   onBack,
   showBack,
+  onRegister,
   theme,
   onToggleTheme,
 }) {
@@ -2435,6 +2771,15 @@ function AccessPage({
               Parol faqat himoyalangan xesh ko‘rinishida saqlanadi.
             </p>
           )}
+          {!setupRequired && (
+            <button
+              className="text-button owner-registration-link"
+              type="button"
+              onClick={onRegister}
+            >
+              Do‘kon oching — 1 oy bepul <FiChevronRight />
+            </button>
+          )}
         </form>
       </section>
     </main>
@@ -2478,15 +2823,23 @@ function SubscriptionGate({
         <span
           className={`status-pill ${subscription?.amountConfigured ? "status-pending" : "status-paid"}`}
         >
-          {subscription?.amountConfigured
+          {subscription?.trialExpired
+            ? subscription?.amountConfigured
+              ? "BEPUL SINOV TUGADI"
+              : "TARIF KUTILMOQDA"
+            : subscription?.amountConfigured
             ? "TO‘LOV QILISH KERAK"
             : "NARX BELGILANMAGAN"}
         </span>
-        <h1>{company?.name || "Do‘kon"} uchun oylik to‘lov</h1>
+        <h1>
+          {subscription?.trialExpired
+            ? `${company?.name || "Do‘kon"} bepul sinov muddati tugadi`
+            : `${company?.name || "Do‘kon"} uchun oylik to‘lov`}
+        </h1>
         <p>
-          Do‘kon ishlashini davom ettirish uchun platforma egasi belgilagan
-          oylik to‘lovni amalga oshiring. Tasdiqlangach, tizim avtomatik
-          ochiladi.
+          {subscription?.trialExpired
+            ? "30 kunlik bepul foydalanish yakunlandi. Platforma egasi oylik tarifni belgilagach, to‘lovni amalga oshirib do‘konni davom ettirishingiz mumkin."
+            : "Do‘kon ishlashini davom ettirish uchun platforma egasi belgilagan oylik to‘lovni amalga oshiring. Tasdiqlangach, tizim avtomatik ochiladi."}
         </p>
         <div className="subscription-amount">
           <span>{subscription?.period || "Joriy oy"} uchun to‘lov</span>
@@ -2776,10 +3129,22 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
         <Metric
           label="Shu oy to‘lagan"
           value={
-            companies.filter((item) => item.currentSubscription.active).length
+            companies.filter(
+              (item) =>
+                item.currentSubscription.active &&
+                !item.currentSubscription.trial,
+            ).length
           }
           detail={todayMonth}
           icon={FiCheck}
+        />
+        <Metric
+          label="Bepul sinovda"
+          value={
+            companies.filter((item) => item.currentSubscription.trial).length
+          }
+          detail="30 kunlik sinov"
+          icon={FiClock}
         />
         <Metric
           label="To‘lov kutilmoqda"
@@ -2812,8 +3177,13 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
         ) : filtered.length ? (
           <div className="company-grid">
             {filtered.map((company) => {
-              const paid = company.currentSubscription.active;
+              const trial = company.currentSubscription.trial;
+              const paid =
+                company.currentSubscription.active && !trial;
               const feeConfigured = Boolean(company.currentRate);
+              const trialEndDate = company.trialExpiresAt
+                ? dateTime(company.trialExpiresAt)
+                : "";
               return (
                 <article className="company-card" key={company.id}>
                   <div className="company-card-top">
@@ -2823,7 +3193,9 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
                     <span
                       className={`status-pill ${paid ? "status-paid" : "status-pending"}`}
                     >
-                      {paid
+                      {trial
+                        ? "Bepul sinov"
+                        : paid
                         ? "To‘langan"
                         : feeConfigured
                           ? "To‘lov kerak"
@@ -2834,20 +3206,31 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
                   <p className="muted">
                     Boshliq login: <strong>{company.ownerLogin}</strong>
                   </p>
+                  {company.ownerPhone && (
+                    <p className="muted">
+                      Telefon: <strong>{company.ownerPhone}</strong>
+                    </p>
+                  )}
                   <div className="company-facts">
                     <span>
                       <FiUsers /> {employeeCountLabel(company.employeeCount)}
                     </span>
                     <span>
-                      <FiCalendar /> {todayMonth} ·{" "}
-                      {feeConfigured
+                      <FiCalendar />{" "}
+                      {trial
+                        ? `Sinov ${trialEndDate} gacha`
+                        : `${todayMonth} · ${
+                            feeConfigured
                         ? money(company.currentRate.amount)
-                        : "Narx yo‘q"}
+                              : "Narx yo‘q"
+                          }`}
                     </span>
                   </div>
                   <div className="company-card-footer">
                     <span>
-                      {company.currentSubscription.paidAmount
+                      {trial
+                        ? `Bepul sinov ${trialEndDate} gacha`
+                        : company.currentSubscription.paidAmount
                         ? `Joriyga hisoblandi: ${money(company.currentSubscription.paidAmount)}`
                         : company.currentSubscription.creditBalance
                           ? `Keyingi oylar uchun avans: ${money(company.currentSubscription.creditBalance)}`
@@ -3837,6 +4220,8 @@ function Shell({
   }, []);
   const countdownTarget = company?.isDemo
     ? new Date(company.demoExpiresAt).getTime()
+    : subscription?.trial && subscription.expiresAt
+      ? new Date(subscription.expiresAt).getTime()
     : subscription?.active && /^\d{4}-\d{2}$/.test(subscription.period || "")
       ? (() => {
           const [year, month] = subscription.period.split("-").map(Number);

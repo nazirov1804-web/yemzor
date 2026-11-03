@@ -2328,6 +2328,10 @@ html[data-theme="dark"] .receipt-qr-copy span {
   margin-top: 7px;
 }
 
+.access-card .owner-registration-link {
+  margin-top: 12px;
+}
+
 .access-card .field-label {
   font-size: 12px;
 }
@@ -4234,6 +4238,26 @@ html[lang="en"] .landing-cta-bottom .cta-copy::before {
   background: #e4f4e8;
   box-shadow: 0 8px 20px rgb(0 0 0 / 14%);
   font-size: 12px;
+}
+
+.landing-cta-actions {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.landing-cta-demo-link {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 0;
+  color: #e4f4e8;
+  background: transparent;
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
 .landing-cta-bottom .button:hover:not(:disabled) {

@@ -16,6 +16,10 @@ const port = Number(process.env.PORT) || 4000
 const sessionSecret = process.env.SESSION_SECRET || randomBytes(48).toString('hex')
 const allowedOrigin = process.env.APP_ORIGIN || 'http://localhost:5173'
 const serverDirectory = dirname(fileURLToPath(import.meta.url))
+const ownerTrialDays = Number(process.env.OWNER_TRIAL_DAYS || 30);
+if (!Number.isInteger(ownerTrialDays) || ownerTrialDays < 1 || ownerTrialDays > 365) {
+  throw new Error('OWNER_TRIAL_DAYS 1–365 oralig‘idagi butun kun bo‘lishi kerak.');
+}
 
 app.disable('x-powered-by')
 app.set('trust proxy', 1)
@@ -50,6 +54,7 @@ const paymentRequestLimiter = rateLimit({
 })
 const paymentRequestRetentionMs = 24 * 60 * 60 * 1000
 const pendingDemoVerifications = new Map()
+const pendingOwnerVerifications = new Map()
 
 function fail(statusCode, message) {
   throw Object.assign(new Error(message), { statusCode })
@@ -177,18 +182,31 @@ function subscriptionStatus(database, company, period = currentBillingPeriod()) 
 }
 
 function companyAccessStatus(database, company) {
-  if (!company.isDemo) return subscriptionStatus(database, company)
-  const expiresAt = company.demoExpiresAt
-  const remainingMs = new Date(expiresAt).getTime() - Date.now()
+  if (company.isDemo) {
+    const expiresAt = company.demoExpiresAt;
+    const remainingMs = new Date(expiresAt).getTime() - Date.now();
+    return {
+      active: Number.isFinite(remainingMs) && remainingMs > 0,
+      demo: true,
+      expiresAt,
+      remainingMs: Math.max(remainingMs, 0),
+      expired: !Number.isFinite(remainingMs) || remainingMs <= 0,
+    };
+  }
+  const subscription = subscriptionStatus(database, company);
+  if (!company.trialExpiresAt) return subscription;
+  const expiresAt = company.trialExpiresAt;
+  const remainingMs = new Date(expiresAt).getTime() - Date.now();
+  const trial = Number.isFinite(remainingMs) && remainingMs > 0;
   return {
-    active: Number.isFinite(remainingMs) && remainingMs > 0,
-    demo: true,
+    ...subscription,
+    active: trial || subscription.active,
+    trial: trial && !subscription.active,
+    trialExpired: !trial && !subscription.active,
     expiresAt,
     remainingMs: Math.max(remainingMs, 0),
-    expired: !Number.isFinite(remainingMs) || remainingMs <= 0,
-  }
+  };
 }
-
 function requirePaidSubscription(request, _response, next) {
   try {
     const database = readDatabase()
@@ -445,6 +463,141 @@ app.post('/api/setup', registrationLimiter, async (request, response) => {
   response.status(201).json({ user })
 })
 
+app.post(
+  '/api/company/register/request',
+  registrationLimiter,
+  async (request, response) => {
+    if (request.body?.consent !== true)
+      fail(400, 'Davom etish uchun oferta va maxfiylik siyosatiga rozilik bering.');
+    const email = validateEmail(request.body?.email);
+    validatePassword(request.body?.password);
+    if (
+      readDatabase().users.some(
+        (user) => user.login === email || user.email === email
+      )
+    )
+      fail(409, 'Bu email bilan akkaunt allaqachon yaratilgan. Tizimga kiring.');
+    const passwordHash = await bcrypt.hash(request.body.password, 12);
+    const code = generateDemoCode();
+    await sendVerificationEmail(email, code);
+    pendingOwnerVerifications.set(email, {
+      code,
+      passwordHash,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      attempts: 0,
+    });
+    response.json({
+      email,
+      sent: true,
+      message: `Tasdiqlash kodi ${email} manziliga yuborildi.`,
+    });
+  }
+);
+
+app.post(
+  '/api/company/register/verify',
+  registrationLimiter,
+  async (request, response) => {
+    const email = validateEmail(request.body?.email);
+    const code =
+      typeof request.body?.code === 'string' ? request.body.code.trim() : '';
+    const pending = pendingOwnerVerifications.get(email);
+    if (!pending || pending.expiresAt <= Date.now()) {
+      pendingOwnerVerifications.delete(email);
+      fail(400, 'Kod topilmadi yoki muddati tugadi. Yangi kod so‘rang.');
+    }
+    if (pending.attempts >= 5) {
+      pendingOwnerVerifications.delete(email);
+      fail(429, 'Urinishlar tugadi. Yangi tasdiqlash kodi so‘rang.');
+    }
+    if (code !== pending.code) {
+      pending.attempts += 1;
+      fail(400, 'Emailga yuborilgan kod noto‘g‘ri.');
+    }
+    await new Promise((resolve, reject) =>
+      request.session.regenerate((error) =>
+        error ? reject(error) : resolve()
+      )
+    );
+    request.session.ownerRegistration = {
+      email,
+      passwordHash: pending.passwordHash,
+      consentAccepted: true,
+      expiresAt: Date.now() + 30 * 60 * 1000,
+    };
+    pendingOwnerVerifications.delete(email);
+    response.json({ verified: true, email });
+  }
+);
+
+app.post('/api/company/register', registrationLimiter, async (request, response) => {
+  const identity = request.session.ownerRegistration;
+  if (!identity || identity.expiresAt <= Date.now()) {
+    delete request.session.ownerRegistration;
+    fail(400, 'Avval email manzilingizni kod bilan tasdiqlang.');
+  }
+  if (!identity.consentAccepted)
+    fail(400, 'Ro‘yxatdan o‘tish uchun oferta va maxfiylik siyosatiga rozilik bering.');
+  const storeName = validateName(request.body?.storeName, 'Do‘kon nomi');
+  const ownerName = validateName(request.body?.ownerName, 'Boshliq ismi');
+  const phone = validatePhone(request.body?.phone ?? '');
+  if (!phone) fail(400, 'Do‘kon boshlig‘ining telefon raqamini kiriting.');
+  const result = await updateDatabase((database) => {
+    if (
+      database.users.some(
+        (user) =>
+          user.login === identity.email || user.email === identity.email
+      )
+    )
+      fail(409, 'Bu email bilan akkaunt allaqachon yaratilgan. Tizimga kiring.');
+    const now = new Date();
+    const createdAt = now.toISOString();
+    const trialExpiresAt = new Date(
+      now.getTime() + ownerTrialDays * 24 * 60 * 60 * 1000
+    ).toISOString();
+    const companyId = randomUUID();
+    const ownerId = randomUUID();
+    const company = {
+      id: companyId,
+      name: storeName,
+      ownerId,
+      nextReceiptNumber: 0,
+      absentDeduction: 0,
+      restDayWorkBonusEnabled: false,
+      restDayWorkBonusAmount: 0,
+      abedPaymentsEnabled: true,
+      trialExpiresAt,
+      createdAt,
+    };
+    const owner = {
+      id: ownerId,
+      name: ownerName,
+      login: identity.email,
+      email: identity.email,
+      phone,
+      passwordHash: identity.passwordHash,
+      role: 'company_owner',
+      companyId,
+      monthlySalary: 0,
+      active: true,
+      createdAt,
+    };
+    database.companies.push(company);
+    database.users.push(owner);
+    return {
+      user: safeUser(owner),
+      company: { id: company.id, name: company.name },
+      trialExpiresAt,
+    };
+  });
+  await new Promise((resolve, reject) =>
+    request.session.regenerate((error) => (error ? reject(error) : resolve()))
+  );
+  request.session.userId = result.user.id;
+  delete request.session.ownerRegistration;
+  response.status(201).json(result);
+});
+
 app.post('/api/auth/login', async (request, response) => {
   const login = normalizeLogin(request.body?.login)
   const password = request.body?.password
@@ -628,7 +781,8 @@ app.get('/api/platform/companies', requireAuth, requirePlatformAdmin, (_request,
       employeeCount: employees.length,
       latestSubscription,
       currentRate: database.subscriptionRates.find((item) => item.companyId === company.id && item.period === currentBillingPeriod()) || null,
-      currentSubscription: subscriptionStatus(database, company),
+      trialExpiresAt: company.trialExpiresAt || null,
+      currentSubscription: companyAccessStatus(database, company),
     }
   })
   response.json({ companies })
