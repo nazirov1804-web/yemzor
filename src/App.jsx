@@ -84,7 +84,6 @@ const landingSectionNavigation = [
   ["#jarayon", "Ish jarayoni"],
   ["#birliklar", "Birliklar"],
   ["#fikrlar", "Fikrlar"],
-  ["#boglanish", "Bog‘lanish"],
 ];
 const installedReleaseStorageKey = "yemzor:installed-release:v1";
 const previousInstalledBuildStorageKey = "yemzor:installed-build-id:v2";
@@ -1605,6 +1604,16 @@ function LandingPage({
                   </a>
                 ))}
               </nav>
+              <button
+                className="button button-primary landing-drawer-register"
+                type="button"
+                onClick={() => {
+                  setMobileNavigationOpen(false);
+                  onRegister();
+                }}
+              >
+                {translateText("Bepul ro‘yxatdan o‘tish", currentLanguage())}
+              </button>
             </aside>
           </div>,
           document.body,
@@ -2291,6 +2300,13 @@ function LandingPage({
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
           </span>
         </a>
+        <nav className="landing-footer-nav" aria-label="Sahifa bo‘limlari">
+          {landingSectionNavigation.map(([href, label]) => (
+            <a href={href} key={href}>
+              {label}
+            </a>
+          ))}
+        </nav>
         <span>
           © {now.getFullYear()} Yemzor.{" "}
           {translateText("Barcha huquqlar himoyalangan.", currentLanguage())}

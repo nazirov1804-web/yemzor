@@ -4146,12 +4146,30 @@ html[data-theme="dark"] .receipt-qr-copy span {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 20px;
   min-height: 72px;
   padding: 12px max(32px, calc((100% - 1196px) / 2));
   border-top: 1px solid #edf0ed;
   color: #89968d;
   font-size: 9px;
+}
+
+.landing-footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+}
+
+.landing-footer-nav a {
+  color: inherit;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.landing-footer-nav a:hover,
+.landing-footer-nav a:focus-visible {
+  color: var(--green);
 }
 
 .landing-footer .brand-symbol {
@@ -6541,9 +6559,15 @@ button {
     padding: 15px;
   }
 
-  .landing-footer>span:nth-child(2) {
+  .landing-footer-nav {
+    order: 2;
+    width: 100%;
+  }
+
+  .landing-footer>span:last-child {
     order: 3;
     width: 100%;
+    text-align: center;
   }
 
   .landing-header>.button {
@@ -11852,12 +11876,8 @@ button:not(:disabled):not(.password-visibility):active {
   position: relative;
   overflow: hidden;
   padding: clamp(52px, 7vw, 92px) 24px;
-  color: #f8fafc;
-  background-color: #171f33;
-  background-image:
-    linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
-  background-size: 45px 45px;
+  color: inherit;
+  background: transparent;
   text-align: center;
 }
 
@@ -11884,7 +11904,7 @@ button:not(:disabled):not(.password-visibility):active {
 .landing-trust-heading p,
 .landing-stats-error,
 .landing-trust-stat small {
-  color: #aab8cf;
+  color: var(--muted);
 }
 
 .landing-trust-grid {
@@ -11940,9 +11960,7 @@ button:not(:disabled):not(.password-visibility):active {
 
 .landing-reviews {
   padding: clamp(58px, 7vw, 96px) 24px;
-  background:
-    radial-gradient(ellipse at 0 50%, rgb(226 238 255 / 48%), transparent 38%),
-    #f8fafc;
+  background: transparent;
 }
 
 .landing-reviews .landing-section-head {
@@ -12146,10 +12164,6 @@ button:not(:disabled):not(.password-visibility):active {
   }
 }
 
-html[data-theme="dark"] .landing-reviews {
-  background: #111a14;
-}
-
 html[data-theme="dark"] .landing-review-card {
   border-color: #334438;
   background: #19251d;
@@ -12239,6 +12253,19 @@ html[data-theme="dark"] .help-contact-link {
 
   .help-contact-link span {
     display: none;
+  }
+}
+
+@media (max-width: 425px) {
+  .landing-header-register {
+    display: none;
+  }
+
+  .landing-drawer-register {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 16px;
   }
 }
 
