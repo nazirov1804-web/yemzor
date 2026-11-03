@@ -1,5 +1,9 @@
 const entries = [
   ["Bepul ro‘yxatdan o‘tish", "Бесплатная регистрация", "Sign up for free"],
+  ["PLATFORMA", "ПЛАТФОРМА", "PLATFORM"],
+  ["AKKAUNT", "АККАУНТ", "ACCOUNT"],
+  ["Yem mahsulotlari do‘konlari uchun savdo va ombor boshqaruvi — bir joyda.", "Управление продажами и складом для магазинов кормов — в одном месте.", "Sales and inventory management for feed stores, all in one place."],
+  ["Andijon, O‘zbekiston", "Андижан, Узбекистан", "Andijan, Uzbekistan"],
   ["Do‘koningizni bepul ro‘yxatdan o‘tkazing", "Зарегистрируйте магазин бесплатно", "Register your store for free"],
   ["Mavjud hisobingizga kiring yoki do‘koningiz uchun 30 kun bepul foydalanish bilan ro‘yxatdan o‘ting.", "Войдите в существующий аккаунт или зарегистрируйте магазин с 30-дневным бесплатным периодом.", "Sign in to your account or register your store with 30 days free."],
   ["RAQAMLARDA YEMZOR", "YEMZOR В ЦИФРАХ", "YEMZOR IN NUMBERS"],

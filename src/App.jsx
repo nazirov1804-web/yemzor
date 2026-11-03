@@ -25,6 +25,7 @@ import {
   FiEye,
   FiEyeOff,
   FiMessageCircle,
+  FiMapPin,
   FiPhone,
   FiSmartphone,
   FiSearch,
@@ -2293,24 +2294,86 @@ function LandingPage({
       </section>
 
       <footer className="landing-footer">
-        <a href="#" className="brand">
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-          <span>
-            <strong>Yemzor</strong>
-            <small>SAVDO VA OMBOR BOSHQARUVI</small>
-          </span>
-        </a>
-        <nav className="landing-footer-nav" aria-label="Sahifa bo‘limlari">
-          {landingSectionNavigation.map(([href, label]) => (
-            <a href={href} key={href}>
-              {label}
+        <div className="landing-footer-main">
+          <div className="landing-footer-about">
+            <a href="#" className="brand">
+              <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+              <span>
+                <strong>Yemzor</strong>
+                <small>SAVDO VA OMBOR BOSHQARUVI</small>
+              </span>
             </a>
-          ))}
-        </nav>
-        <span>
-          © {now.getFullYear()} Yemzor.{" "}
-          {translateText("Barcha huquqlar himoyalangan.", currentLanguage())}
-        </span>
+            <p>
+              {translateText(
+                "Yem mahsulotlari do‘konlari uchun savdo va ombor boshqaruvi — bir joyda.",
+                currentLanguage(),
+              )}
+            </p>
+          </div>
+          <div className="landing-footer-column">
+            <h2>{translateText("PLATFORMA", currentLanguage())}</h2>
+            <nav aria-label="Platforma bo‘limlari">
+              {landingSectionNavigation.map(([href, label]) => (
+                <a href={href} key={href}>
+                  {label}
+                </a>
+              ))}
+              <a href="#ilovani-yuklab-olish">
+                {translateText("Yuklab olish", currentLanguage())}
+              </a>
+            </nav>
+          </div>
+          <div className="landing-footer-column">
+            <h2>{translateText("AKKAUNT", currentLanguage())}</h2>
+            <div className="landing-footer-links">
+              <button type="button" onClick={onLogin}>
+                {translateText("Kirish", currentLanguage())}
+              </button>
+              <button type="button" onClick={onRegister}>
+                {translateText("Bepul ro‘yxatdan o‘tish", currentLanguage())}
+              </button>
+            </div>
+          </div>
+          <div className="landing-footer-column">
+            <h2>{translateText("ALOQA", currentLanguage())}</h2>
+            <div className="landing-footer-links landing-footer-contact">
+              <a
+                href={`https://t.me/${telegram || "naziroff1"}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <FiMessageCircle aria-hidden="true" />
+                <span>@{telegram || "naziroff1"}</span>
+              </a>
+              {phone && (
+                <a href={`tel:${phone.replace(/[^\d+]/g, "")}`}>
+                  <FiPhone aria-hidden="true" />
+                  <span>{phone}</span>
+                </a>
+              )}
+              <span className="landing-footer-location">
+                <FiMapPin aria-hidden="true" />
+                <span>
+                  {translateText("Andijon, O‘zbekiston", currentLanguage())}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="landing-footer-bottom">
+          <span>
+            © {now.getFullYear()} Yemzor.{" "}
+            {translateText("Barcha huquqlar himoyalangan.", currentLanguage())}
+          </span>
+          <div className="landing-footer-legal">
+            <button type="button" onClick={() => onLegal("offer")}>
+              {translateText("Ommaviy oferta", currentLanguage())}
+            </button>
+            <button type="button" onClick={() => onLegal("privacy")}>
+              {translateText("Maxfiylik siyosati", currentLanguage())}
+            </button>
+          </div>
+        </div>
       </footer>
 
       {selectedFeature && (
