@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { FiChevronDown, FiGlobe, FiMoon, FiSun } from "react-icons/fi";
+import { FiChevronDown, FiMoon, FiSun } from "react-icons/fi";
 import { observeTranslations } from "../i18n";
 
 export default function ThemeToggle({ theme, onToggle }) {
@@ -13,9 +13,9 @@ export default function ThemeToggle({ theme, onToggle }) {
   const languageButtonRef = useRef(null);
   const languageLabels = { uz: "Uz", ru: "Ru", en: "Eng" };
   const languageOptions = [
-    { value: "uz", label: "O‘zbekcha" },
-    { value: "ru", label: "Русский" },
-    { value: "en", label: "English" },
+    { value: "uz", label: "O‘zbekcha", flag: "🇺🇿" },
+    { value: "ru", label: "Русский", flag: "🇷🇺" },
+    { value: "en", label: "English", flag: "🇺🇸" },
   ];
 
   useEffect(() => {
@@ -65,6 +65,9 @@ export default function ThemeToggle({ theme, onToggle }) {
       : language === "en"
         ? "Website language"
         : "Sayt tili";
+  const selectedLanguage = languageOptions.find(
+    (option) => option.value === language,
+  ) || languageOptions[0];
 
   return (
     <div className="theme-controls">
@@ -82,7 +85,9 @@ export default function ThemeToggle({ theme, onToggle }) {
           aria-controls={languageMenuOpen ? languageMenuId : undefined}
           onClick={() => setLanguageMenuOpen((open) => !open)}
         >
-          <FiGlobe aria-hidden="true" />
+          <span className="language-flag" aria-hidden="true">
+            {selectedLanguage.flag}
+          </span>
           <span>{languageLabels[language] || "Uz"}</span>
           <FiChevronDown
             className="language-picker-chevron"
@@ -104,6 +109,9 @@ export default function ThemeToggle({ theme, onToggle }) {
                 aria-pressed={language === option.value}
                 onClick={() => selectLanguage(option.value)}
               >
+                <span className="language-flag" aria-hidden="true">
+                  {option.flag}
+                </span>
                 {option.label}
               </button>
             ))}

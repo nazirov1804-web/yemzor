@@ -30,6 +30,7 @@ import {
   FiSearch,
   FiShield,
   FiShoppingCart,
+  FiStar,
   FiTrash2,
   FiMenu,
   FiTrendingUp,
@@ -42,9 +43,6 @@ import { api, money, numberInput, readNumber } from "./api";
 import { translateText } from "./i18n";
 import salesReceiptImage from "./img/savdo.png";
 import employeeTeamImage from "./img/hodimlar.png";
-import feedGrainImage from "./assets/feed-grain.jpg";
-import farmCattleImage from "./assets/farm-cattle.jpg";
-import feedBranImage from "./assets/feed-bran.jpg";
 import ThemeToggle from "./components/ThemeToggle";
 import OfferPage from "./pages/OfferPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
@@ -66,8 +64,8 @@ const landingSectionNavigation = [
   ["#imkoniyatlar", "Imkoniyatlar"],
   ["#rollar", "Rollar"],
   ["#jarayon", "Ish jarayoni"],
-  ["#mahsulotlar", "Mahsulotlar"],
   ["#birliklar", "Birliklar"],
+  ["#fikrlar", "Fikrlar"],
   ["#boglanish", "Bog‘lanish"],
 ];
 const installedReleaseStorageKey = "yemzor:installed-release:v1";
@@ -342,7 +340,7 @@ function App() {
   const [data, setData] = useState(null);
   const [pageSelection, setPageSelection] = useState(null);
   const [accessView, setAccessView] = useState(() =>
-    isInstalledApp ? "login" : "landing",
+    isInstalledApp ? "access-choice" : "landing",
   );
   const [legalPage, setLegalPage] = useState("");
   const [modal, setModal] = useState("");
@@ -702,7 +700,7 @@ function App() {
       await api("/api/auth/logout", { method: "POST" });
       setStatus((current) => ({ ...current, user: null }));
       setData(null);
-      setAccessView(isInstalledApp ? "login" : "landing");
+      setAccessView(isInstalledApp ? "access-choice" : "landing");
     } catch (error) {
       toast.error(error.message);
     }
@@ -754,12 +752,21 @@ function App() {
             </div>
           )}
         </>
+      ) : accessView === "access-choice" ? (
+        <AccessChoicePage
+          setupRequired={status.setupRequired}
+          onLogin={() => setAccessView("login")}
+          onDemo={() => setAccessView("demo")}
+          onSetup={() => setAccessView("login")}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+        />
       ) : accessView === "login" ? (
         <AccessPage
           setupRequired={status.setupRequired}
           onSuccess={refreshStatus}
-          onBack={() => setAccessView(isInstalledApp ? "login" : "landing")}
-          showBack={!isInstalledApp}
+          onBack={() => setAccessView(isInstalledApp ? "access-choice" : "landing")}
+          showBack
           onRegister={() => setAccessView("register")}
           theme={theme}
           onToggleTheme={toggleTheme}
@@ -768,7 +775,7 @@ function App() {
         <>
           <StoreRegistrationPage
             onSuccess={refreshStatus}
-            onBack={() => setAccessView(isInstalledApp ? "login" : "landing")}
+            onBack={() => setAccessView(isInstalledApp ? "access-choice" : "landing")}
             onLegal={(page) => setLegalPage(page)}
             theme={theme}
             onToggleTheme={toggleTheme}
@@ -795,7 +802,7 @@ function App() {
         <>
           <DemoRegistrationPage
             onSuccess={refreshStatus}
-            onBack={() => setAccessView(isInstalledApp ? "login" : "landing")}
+            onBack={() => setAccessView(isInstalledApp ? "access-choice" : "landing")}
             onExistingDemo={() => setAccessView("login")}
             onLegal={(page) => setLegalPage(page)}
             theme={theme}
@@ -941,11 +948,35 @@ function LandingPage({
   onToggleTheme,
 }) {
   const now = useClock();
+  const [landingStats, setLandingStats] = useState(null);
+  const [landingStatsError, setLandingStatsError] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [mobileDrawerMounted, setMobileDrawerMounted] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const heroBannerRef = useRef(null);
+  const launchDate = new Date(2026, 9, 29);
+  const anniversary = new Date(now.getFullYear(), launchDate.getMonth(), launchDate.getDate());
+  const experienceYears = Math.max(
+    0,
+    now.getFullYear() -
+      launchDate.getFullYear() -
+      (now < anniversary ? 1 : 0),
+  );
+  useEffect(() => {
+    let active = true;
+    api("/api/public/landing")
+      .then((result) => {
+        if (active) setLandingStats(result);
+      })
+      .catch((error) => {
+        console.error("Landing statistikalarini yuklab bo‘lmadi.", error);
+        if (active) setLandingStatsError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   useEffect(() => {
     let frame = 0;
     let pointerX = window.innerWidth / 2;
@@ -1369,7 +1400,7 @@ function LandingPage({
               onLogin();
             }}
           >
-            Kirish <FiChevronRight />
+            {translateText("Kirish", currentLanguage())} <FiChevronRight />
           </button>
         </div>
       </header>
@@ -1463,14 +1494,16 @@ function LandingPage({
                   type="button"
                   onClick={onRegister}
                 >
-                  1 oy bepul sinash <FiChevronRight aria-hidden="true" />
+                  {translateText("1 oy bepul sinash", currentLanguage())}{" "}
+                  <FiChevronRight aria-hidden="true" />
                 </button>
                 <button
                   className="landing-hero-login"
                   type="button"
                   onClick={onLogin}
                 >
-                  Kirish <FiChevronRight aria-hidden="true" />
+                  {translateText("Kirish", currentLanguage())}{" "}
+                  <FiChevronRight aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -1544,6 +1577,50 @@ function LandingPage({
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="landing-trust" aria-labelledby="landing-trust-title">
+        <div className="landing-trust-heading">
+          <span className="landing-kicker">
+            <i /> {translateText("RAQAMLARDA STORAGES.UZ", currentLanguage())}
+          </span>
+          <h2 id="landing-trust-title">
+            {translateText("Bizga tobora ko‘proq do‘konlar ishonmoqda", currentLanguage())}
+          </h2>
+          <p>
+            {translateText(
+              "Platformada ro‘yxatdan o‘tgan foydalanuvchilar va do‘konlar soni.",
+              currentLanguage(),
+            )}
+          </p>
+        </div>
+        <div className="landing-trust-grid">
+          <article className="landing-trust-stat">
+            <span><FiUsers aria-hidden="true" /></span>
+            <strong>{landingStats?.registrationCount?.toLocaleString(currentLocale()) ?? "—"}<em>+</em></strong>
+            <small>{translateText("Ro‘yxatdan o‘tgan foydalanuvchilar", currentLanguage())}</small>
+          </article>
+          <article className="landing-trust-stat">
+            <span><FiBriefcase aria-hidden="true" /></span>
+            <strong>{landingStats?.companyCount?.toLocaleString(currentLocale()) ?? "—"}<em>+</em></strong>
+            <small>{translateText("Jami do‘konlar", currentLanguage())}</small>
+          </article>
+          <article className="landing-trust-stat">
+            <span><FiStar aria-hidden="true" /></span>
+            <strong>{landingStats?.reviewCount ? `${landingStats.satisfactionPercent}%` : "—"}</strong>
+            <small>{translateText("Mijozlar mamnunligi", currentLanguage())}</small>
+          </article>
+          <article className="landing-trust-stat">
+            <span><FiCalendar aria-hidden="true" /></span>
+            <strong>{experienceYears}</strong>
+            <small>{translateText("Yillik tajriba", currentLanguage())}</small>
+          </article>
+        </div>
+        {landingStatsError && (
+          <p className="landing-stats-error" role="status">
+            {translateText("Statistikani hozir yuklab bo‘lmadi.", currentLanguage())}
+          </p>
+        )}
       </section>
 
       <section className="landing-about" id="haqida">
@@ -1668,55 +1745,44 @@ function LandingPage({
         </div>
       </section>
 
-      <section
-        className="landing-showcase landing-showcase-gallery"
-        id="mahsulotlar"
-      >
-        <div className="showcase-copy">
+      <section className="landing-reviews" id="fikrlar">
+        <div className="landing-section-head">
           <span className="landing-kicker">
-            <i /> OZUQA DO‘KONLARI UCHUN
+            <i /> {translateText("MIJOZLAR FIKRI", currentLanguage())}
           </span>
-          <h2>Do‘koningizdagi mahsulotlar — aniq va tartibli hisobda</h2>
+          <h2>{translateText("Foydalanuvchilarimiz fikrlari", currentLanguage())}</h2>
           <p>
-            Don, yem va chorva uchun ozuqa turlarini yagona omborda yuriting.
-            Kirimni qo‘shing, qoldiqni kuzating va sotuvga kerakli miqdorni
-            doim bilib turing.
+            {translateText(
+              "Tizimdan mamnun bo‘lgan foydalanuvchilarning ochiq fikrlari.",
+              currentLanguage(),
+            )}
           </p>
-          <div className="showcase-tags">
-            <span>Don mahsulotlari</span>
-            <span>Chorva ozuqasi</span>
-            <span>Ombor nazorati</span>
+        </div>
+        {landingStats?.reviews?.length ? (
+          <div className="landing-review-grid">
+            {landingStats.reviews.map((review, index) => (
+              <article className="landing-review-card" key={`${review.authorName}-${index}`}>
+                <div className="landing-review-stars" aria-label={`${review.rating} / 5`}>
+                  {Array.from({ length: 5 }, (_, star) => (
+                    <FiStar key={star} aria-hidden="true" />
+                  ))}
+                </div>
+                <p>“{review.comment}”</p>
+                <div className="landing-review-author">
+                  <span>{review.authorName.trim().slice(0, 1).toLocaleUpperCase(currentLocale())}</span>
+                  <strong>{review.authorName}</strong>
+                </div>
+              </article>
+            ))}
           </div>
-        </div>
-        <div className="feed-photo-grid" aria-label="Don va chorva suratlari">
-          <figure className="feed-photo-main">
-            <img
-              src={feedGrainImage}
-              alt="Ozuqa uchun ishlatiladigan don mahsulotlari"
-              loading="lazy"
-              decoding="async"
-            />
-            <figcaption>Don mahsulotlari</figcaption>
-          </figure>
-          <figure>
-            <img
-              src={farmCattleImage}
-              alt="Yem bilan boqiladigan qoramollar"
-              loading="lazy"
-              decoding="async"
-            />
-            <figcaption>Chorva ozuqasi</figcaption>
-          </figure>
-          <figure>
-            <img
-              src={feedBranImage}
-              alt="Chorva uchun yem bilan boqilayotgan hayvon"
-              loading="lazy"
-              decoding="async"
-            />
-            <figcaption>Chorva ozuqasi</figcaption>
-          </figure>
-        </div>
+        ) : (
+          <p className="landing-reviews-empty">
+            {translateText(
+              "Birinchi sharhlar kelgach, shu yerda ko‘rinadi.",
+              currentLanguage(),
+            )}
+          </p>
+        )}
       </section>
 
       <section className="landing-showcase landing-showcase-ledger">
@@ -1857,37 +1923,38 @@ function LandingPage({
       <section className="landing-downloads" id="ilovani-yuklab-olish">
         <div className="landing-downloads-copy">
           <span className="landing-kicker">
-            <i /> KOMPYUTER VA TELEFONDA
+            <i /> {translateText("KOMPYUTER VA TELEFONDA", currentLanguage())}
           </span>
-          <h2>storages.uz’ni kompyuter yoki telefonga o‘rnating</h2>
+          <h2>{translateText("storages.uz’ni kompyuter yoki telefonga o‘rnating", currentLanguage())}</h2>
           <p>
-            Tugmani bosing — ilova fayli brauzerning Yuklab olinganlar
-            bo‘limiga tushadi. Tovar va savdo ma’lumotlari qurilmada saqlanadi;
-            login va oylik to‘lov tekshiruvi uchun internet kerak.
+            {translateText(
+              "Tugmani bosing — ilova fayli brauzerning Yuklab olinganlar bo‘limiga tushadi. Tovar va savdo ma’lumotlari qurilmada saqlanadi; login va oylik to‘lov tekshiruvi uchun internet kerak.",
+              currentLanguage(),
+            )}
           </p>
         </div>
         <div className="landing-download-options">
           <a
             className="landing-download-button"
             href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor-Setup.exe"
-            aria-label="Windows uchun storages.uz ilovasini yuklab olish"
+            aria-label={`${translateText("Windows uchun .exe", currentLanguage())} storages.uz`}
           >
             <FiMonitor aria-hidden="true" />
             <span>
-              <strong>Windows uchun .exe</strong>
-              <small>O‘rnatuvchi fayl · .exe</small>
+              <strong>{translateText("Windows uchun .exe", currentLanguage())}</strong>
+              <small>{translateText("O‘rnatuvchi fayl · .exe", currentLanguage())}</small>
             </span>
             <FiDownload aria-hidden="true" />
           </a>
           <a
             className="landing-download-button"
             href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor.apk"
-            aria-label="Android uchun storages.uz ilovasini yuklab olish"
+            aria-label={`${translateText("Android uchun .apk", currentLanguage())} storages.uz`}
           >
             <FiSmartphone aria-hidden="true" />
             <span>
-              <strong>Android uchun .apk</strong>
-              <small>O‘rnatuvchi fayl · .apk</small>
+              <strong>{translateText("Android uchun .apk", currentLanguage())}</strong>
+              <small>{translateText("O‘rnatuvchi fayl · .apk", currentLanguage())}</small>
             </span>
             <FiDownload aria-hidden="true" />
           </a>
@@ -1900,10 +1967,10 @@ function LandingPage({
       >
         <div>
           <span className="landing-kicker">
-            <i /> ALOQA
+            <i /> {translateText("ALOQA", currentLanguage())}
           </span>
-          <h2>Savolingiz bormi?</h2>
-          <p>Demo olishdan oldin storages.uz haqida bizdan so‘rashingiz mumkin.</p>
+          <h2>{translateText("Savolingiz bormi?", currentLanguage())}</h2>
+          <p>{translateText("Demo olishdan oldin storages.uz haqida bizdan so‘rashingiz mumkin.", currentLanguage())}</p>
         </div>
         <div className="contact-cards">
           <a
@@ -1941,10 +2008,12 @@ function LandingPage({
 
       <section className="landing-cta landing-cta-bottom" id="demo">
         <div className="cta-copy">
-          <h2>Do‘koningizni oching va bir oy bepul sinang</h2>
+          <h2>{translateText("Do‘koningizni oching va bir oy bepul sinang", currentLanguage())}</h2>
           <p>
-            Do‘koningizni ro‘yxatdan o‘tkazing, ma’lumotlarni kiriting va 30 kun
-            davomida bepul foydalaning.
+            {translateText(
+              "Do‘koningizni ro‘yxatdan o‘tkazing, ma’lumotlarni kiriting va 30 kun davomida bepul foydalaning.",
+              currentLanguage(),
+            )}
           </p>
         </div>
         <div className="landing-cta-actions">
@@ -1952,7 +2021,7 @@ function LandingPage({
             className="button button-primary demo-cta-button"
             onClick={onRegister}
           >
-            1 oy bepul boshlash <FiChevronRight />
+            {translateText("1 oy bepul boshlash", currentLanguage())} <FiChevronRight />
           </button>
         </div>
       </section>
@@ -1970,14 +2039,14 @@ function LandingPage({
           type="button"
           onClick={() => onLegal("offer")}
         >
-          Ommaviy oferta
+          {translateText("Ommaviy oferta", currentLanguage())}
         </button>
         <button
           className="landing-legal-button"
           type="button"
           onClick={() => onLegal("privacy")}
         >
-          Maxfiylik siyosati
+          {translateText("Maxfiylik siyosati", currentLanguage())}
         </button>
       </section>
 
@@ -1989,7 +2058,10 @@ function LandingPage({
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
           </span>
         </a>
-        <span>© {now.getFullYear()} storages.uz. Barcha huquqlar himoyalangan.</span>
+        <span>
+          © {now.getFullYear()} storages.uz.{" "}
+          {translateText("Barcha huquqlar himoyalangan.", currentLanguage())}
+        </span>
       </footer>
 
       {selectedFeature && (
@@ -2078,6 +2150,72 @@ function FeatureDetails({ feature }) {
         </ul>
       </div>
     </div>
+  );
+}
+
+function AccessChoicePage({
+  setupRequired,
+  onLogin,
+  onDemo,
+  onSetup,
+  theme,
+  onToggleTheme,
+}) {
+  return (
+    <main className="access-shell access-choice-shell">
+      <div className="access-theme">
+        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+      </div>
+      <section className="access-aside">
+        <a className="brand brand-light" href="#">
+          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          <span>
+            <strong>storages.uz</strong>
+            <small>{translateText("SAVDO VA OMBOR BOSHQARUVI", currentLanguage())}</small>
+          </span>
+        </a>
+        <div className="access-message">
+          <span className="eyebrow">{translateText("XUSH KELIBSIZ", currentLanguage())}</span>
+          <h1>{translateText("Qanday davom etishni tanlang.", currentLanguage())}</h1>
+          <p>
+            {translateText(
+              "Mavjud hisobingizga kiring yoki bepul demo hisobini yarating.",
+              currentLanguage(),
+            )}
+          </p>
+        </div>
+      </section>
+      <section className="access-main">
+        <div className="access-card access-choice-card">
+          <h2>{translateText("Davom etish usuli", currentLanguage())}</h2>
+          <button
+            type="button"
+            className="button button-primary button-wide"
+            onClick={onDemo}
+          >
+            {translateText("Demo ro‘yxatdan o‘tish", currentLanguage())}
+            <FiChevronRight />
+          </button>
+          <button
+            type="button"
+            className="button button-secondary button-wide"
+            onClick={onLogin}
+          >
+            {translateText("Kirish", currentLanguage())}
+            <FiChevronRight />
+          </button>
+          {setupRequired && (
+            <button
+              type="button"
+              className="text-button"
+              onClick={onSetup}
+            >
+              {translateText("Platforma egasini sozlash", currentLanguage())}
+            </button>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }
 
@@ -2174,7 +2312,7 @@ function DemoRegistrationPage({
       <section className="access-main">
         <form className="access-card" onSubmit={submit}>
           <button type="button" className="back-link" onClick={onBack}>
-            ← Qaytish
+            {translateText("← Qaytish", currentLanguage())}
           </button>
           <span className="eyebrow">YANGI DEMO HISOBI</span>
           <h2>48 soat bepul sinash</h2>
@@ -2189,7 +2327,7 @@ function DemoRegistrationPage({
             />
           </Field>
           <div className="field-row demo-email-row">
-            <Field label="Email">
+            <Field label={translateText("Email", currentLanguage())}>
               <input
                 name="email"
                 type="email"
@@ -2394,19 +2532,21 @@ function StoreRegistrationPage({
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
             <strong>storages.uz</strong>
-            <small>1 OY BEPUL FOYDALANISH</small>
+            <small>{translateText("1 OY BEPUL FOYDALANISH", currentLanguage())}</small>
           </span>
         </a>
         <div className="access-message">
-          <span className="eyebrow">DO‘KONINGIZNI BOSHQARING</span>
-          <h1>Hisobingizni oching va ishni boshlang.</h1>
+          <span className="eyebrow">{translateText("DO‘KONINGIZNI BOSHQARING", currentLanguage())}</span>
+          <h1>{translateText("Hisobingizni oching va ishni boshlang.", currentLanguage())}</h1>
           <p>
-            Savdo, ombor va jamoa boshqaruvi bir joyda. Ro‘yxatdan o‘tgach,
-            do‘koningiz platforma egasining boshqaruv panelida ko‘rinadi.
+            {translateText(
+              "Savdo, ombor va jamoa boshqaruvi bir joyda. Ro‘yxatdan o‘tgach, do‘koningiz platforma egasining boshqaruv panelida ko‘rinadi.",
+              currentLanguage(),
+            )}
           </p>
         </div>
         <div className="access-foot">
-          30 kun bepul · Keyin oylik tarif asosida davom eting
+          {translateText("30 kun bepul · Keyin oylik tarif asosida davom eting", currentLanguage())}
         </div>
       </section>
       <section className="access-main">
@@ -2421,22 +2561,25 @@ function StoreRegistrationPage({
           }
         >
           <button type="button" className="back-link" onClick={onBack}>
-            ← Qaytish
+            {translateText("← Qaytish", currentLanguage())}
           </button>
           <span className="eyebrow">
-            {step === "store" ? "DO‘KON MA’LUMOTLARI" : "EMAILNI TASDIQLASH"}
+            {translateText(
+              step === "store" ? "DO‘KON MA’LUMOTLARI" : "EMAILNI TASDIQLASH",
+              currentLanguage(),
+            )}
           </span>
           <h2>
             {step === "store"
-              ? "Do‘koningizni oching"
-              : "1 oy bepul foydalaning"}
+              ? translateText("Do‘koningizni oching", currentLanguage())
+              : translateText("1 oy bepul foydalaning", currentLanguage())}
           </h2>
           <p className="muted">
             {step === "email"
-              ? "Emailingiz va Yemzor akkauntingiz uchun yangi parolni kiriting."
+              ? translateText("Emailingiz va storages.uz akkauntingiz uchun yangi parolni kiriting.", currentLanguage())
               : step === "verify"
-                ? `${email} manziliga yuborilgan 6 xonali kodni kiriting.`
-                : "Email tasdiqlandi. Do‘kon yaratish uchun quyidagi ma’lumotlarni kiriting."}
+                ? `${email}${translateText(" manziliga yuborilgan 6 xonali kodni kiriting.", currentLanguage())}`
+                : translateText("Email tasdiqlandi. Do‘kon yaratish uchun quyidagi ma’lumotlarni kiriting.", currentLanguage())}
           </p>
           {step === "email" && (
             <>
@@ -2452,19 +2595,22 @@ function StoreRegistrationPage({
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </Field>
-              <Field label="Yemzor uchun parol">
+              <Field label={translateText("storages.uz uchun parol", currentLanguage())}>
                 <PasswordInput
                   name="password"
                   autoComplete="new-password"
                   required
                   minLength="10"
                   maxLength="200"
-                  placeholder="Kamida 10 ta belgi"
+                  placeholder={translateText("Kamida 10 ta belgi", currentLanguage())}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                 />
                 <span className="field-hint">
-                  Bu email akkauntingiz paroli emas; emailga yuborilgan kod bilan manzilni tasdiqlaysiz.
+                  {translateText(
+                    "Bu email akkauntingiz paroli emas; emailga yuborilgan kod bilan manzilni tasdiqlaysiz.",
+                    currentLanguage(),
+                  )}
                 </span>
               </Field>
               <label className="demo-consent">
@@ -2496,7 +2642,7 @@ function StoreRegistrationPage({
           )}
           {step === "verify" && (
             <>
-              <Field label="Tasdiqlash kodi">
+              <Field label={translateText("Tasdiqlash kodi", currentLanguage())}>
                 <input
                   name="code"
                   inputMode="numeric"
@@ -2507,7 +2653,7 @@ function StoreRegistrationPage({
                   pattern="[0-9]{6}"
                   value={code}
                   onChange={(event) => setCode(event.target.value)}
-                  placeholder="6 xonali kod"
+                  placeholder={translateText("6 xonali kod", currentLanguage())}
                 />
               </Field>
               <button
@@ -2516,13 +2662,13 @@ function StoreRegistrationPage({
                 disabled={saving}
                 onClick={resendCode}
               >
-                Kodni qayta yuborish
+                {translateText("Kodni qayta yuborish", currentLanguage())}
               </button>
             </>
           )}
           {step === "store" && (
             <>
-              <Field label="Do‘kon nomi">
+              <Field label={translateText("Do‘kon nomi", currentLanguage())}>
                 <input
                   name="storeName"
                   required
@@ -2532,17 +2678,17 @@ function StoreRegistrationPage({
                   placeholder="Masalan, Baraka Yem"
                 />
               </Field>
-              <Field label="Ism-familiya">
+              <Field label={translateText("Ism-familiya", currentLanguage())}>
                 <input
                   name="ownerName"
                   required
                   minLength="2"
                   maxLength="80"
                   autoComplete="name"
-                  placeholder="Do‘kon egasining ism-familiyasi"
+                  placeholder={translateText("Do‘kon egasining ism-familiyasi", currentLanguage())}
                 />
               </Field>
-              <Field label="Telefon raqami">
+              <Field label={translateText("Telefon raqami", currentLanguage())}>
                 <input
                   name="phone"
                   type="tel"
@@ -2552,7 +2698,7 @@ function StoreRegistrationPage({
                   placeholder="+998 90 123 45 67"
                 />
                 <span className="field-hint">
-                  Bog‘lanish uchun saqlanadi; hozircha SMS yuborilmaydi.
+                  {translateText("Bog‘lanish uchun saqlanadi; hozircha SMS yuborilmaydi.", currentLanguage())}
                 </span>
               </Field>
             </>
@@ -2562,17 +2708,20 @@ function StoreRegistrationPage({
             disabled={saving}
           >
             {saving
-              ? "Kuting..."
+              ? translateText("Kuting...", currentLanguage())
               : step === "email"
-                ? "Tasdiqlash kodini yuborish"
+                ? translateText("Tasdiqlash kodini yuborish", currentLanguage())
                 : step === "verify"
-                  ? "Emailni tasdiqlash"
-                  : "Do‘konni ochish"}{" "}
+                  ? translateText("Emailni tasdiqlash", currentLanguage())
+                  : translateText("Do‘konni ochish", currentLanguage())}{" "}
             <FiChevronRight />
           </button>
           {step === "store" && (
             <p className="security-note">
-              Login sifatida tasdiqlangan emailingiz ishlatiladi. Parolingiz himoyalangan xesh ko‘rinishida saqlanadi.
+              {translateText(
+                "Login sifatida tasdiqlangan emailingiz ishlatiladi. Parolingiz himoyalangan xesh ko‘rinishida saqlanadi.",
+                currentLanguage(),
+              )}
             </p>
           )}
         </form>
@@ -2953,13 +3102,13 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
   const [modal, setModal] = useState("");
   const [paymentCompany, setPaymentCompany] = useState(null);
   const [passwordCompany, setPasswordCompany] = useState(null);
-  const [feeCompany, setFeeCompany] = useState(null);
   const [deleteCompany, setDeleteCompany] = useState(null);
   const [platformSettings, setPlatformSettings] = useState({
     phone: "",
     telegram: "naziroff1",
     paymentCardNumber: "",
     paymentCardHolder: "",
+    monthlySubscriptionPrice: 0,
   });
   const [query, setQuery] = useState("");
   const todayMonth = monthKey(useClock());
@@ -2988,7 +3137,6 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
       .includes(query.toLocaleLowerCase("uz")),
   );
   async function createCompany(form) {
-    form.period = todayMonth;
     await api("/api/platform/companies", { method: "POST", body: form });
     toast.success(
       "Do‘kon yaratildi. Login va parolni xavfsiz yetkazib bering.",
@@ -3014,13 +3162,14 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
     setPasswordCompany(null);
     return result;
   }
-  async function setCompanyFee(form) {
-    await api(`/api/platform/companies/${feeCompany.id}/fee`, {
+  async function saveSubscriptionPrice(form) {
+    const settings = await api("/api/platform/subscription-price", {
       method: "PATCH",
       body: form,
     });
-    toast.success(`${form.period} oyi uchun narx belgilandi`);
-    setFeeCompany(null);
+    setPlatformSettings((current) => ({ ...current, ...settings }));
+    toast.success("Barcha do‘konlar uchun oylik narx saqlandi");
+    setModal("");
     await load();
   }
   async function saveContact(form) {
@@ -3087,9 +3236,15 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
       <PageHeading
         eyebrow="PLATFORMA BOSHQARUVI"
         title="Do‘konlar"
-        description="Brendlarni yarating, oylik tarif va tushgan to‘lovlarni boshqaring."
+        description="Do‘konlarni, barcha do‘konlarga bir xil qo‘llanadigan oylik narxni va tushgan to‘lovlarni boshqaring."
         action={
           <div className="heading-actions">
+            <button
+              className="button button-secondary"
+              onClick={() => setModal("price")}
+            >
+              <FiDollarSign /> Narx
+            </button>
             <button
               className="button button-secondary"
               onClick={() => setModal("card")}
@@ -3252,14 +3407,6 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
                         <FiShield /> Parolni almashtirish
                       </button>
                       <button
-                        className="button button-tertiary button-small"
-                        onClick={() => setFeeCompany(company)}
-                      >
-                        {feeConfigured
-                          ? "Oy narxini sozlash"
-                          : "Oy narxini belgilash"}
-                      </button>
-                      <button
                         className="button button-secondary button-small"
                         disabled={!feeConfigured}
                         onClick={() => setPaymentCompany(company)}
@@ -3281,17 +3428,29 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
         ) : (
           <Empty
             title="Do‘kon topilmadi"
-            text="Boshqa nom bilan qidirib ko‘ring yoki yangi do‘kon yarating."
+            text="Boshqa nom bilan qidirib ko‘ring yoki yangi do‘kon yarating. Sinov muddati bilan ro‘yxatdan o‘tgan do‘konlar ham shu ro‘yxatda ko‘rinadi."
           />
         )}
       </section>
       {modal === "company" && (
         <Modal
           title="Yangi do‘kon yaratish"
-          subtitle="Joriy oyga tarif belgilanadi. Keyingi oy uchun narx alohida kiritiladi."
+          subtitle="Barcha do‘konlar uchun umumiy oylik narx “Narx” tugmasi orqali belgilanadi."
           onClose={() => setModal("")}
         >
-          <CompanyForm month={todayMonth} onSubmit={createCompany} />
+          <CompanyForm onSubmit={createCompany} />
+        </Modal>
+      )}
+      {modal === "price" && (
+        <Modal
+          title="Umumiy oylik narx"
+          subtitle="Bu narx barcha do‘konlarga, jumladan bir oylik bepul sinovdan o‘tgan do‘konlarga qo‘llanadi."
+          onClose={() => setModal("")}
+        >
+          <SubscriptionPriceForm
+            amount={platformSettings.monthlySubscriptionPrice}
+            onSubmit={saveSubscriptionPrice}
+          />
         </Modal>
       )}
       {passwordCompany && (
@@ -3399,19 +3558,6 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
           onClose={() => setPaymentCompany(null)}
         >
           <PaymentForm onSubmit={recordPayment} month={todayMonth} />
-        </Modal>
-      )}
-      {feeCompany && (
-        <Modal
-          title={`${feeCompany.name} — oylik tarif`}
-          subtitle="Har bir tarif faqat tanlangan oy uchun amal qiladi."
-          onClose={() => setFeeCompany(null)}
-        >
-          <FeeForm
-            month={todayMonth}
-            rate={feeCompany.currentRate}
-            onSubmit={setCompanyFee}
-          />
         </Modal>
       )}
       {deleteCompany && (
@@ -3883,6 +4029,142 @@ function StoreApp({
   );
 }
 
+function StoreReviewPage({ companyName, embedded = false }) {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [publicConsent, setPublicConsent] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    api("/api/company/review")
+      .then(({ review }) => {
+        if (!active || !review) return;
+        setRating(review.rating);
+        setComment(review.comment);
+        setPublicConsent(review.publicConsent);
+      })
+      .catch((cause) => {
+        if (active) setError(cause.message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function submit(event) {
+    event.preventDefault();
+    setError("");
+    if (!rating) {
+      setError(translateText("Yulduzli bahoni tanlang.", currentLanguage()));
+      return;
+    }
+    setSaving(true);
+    try {
+      await api("/api/company/review", {
+        method: "PUT",
+        body: { rating, comment, publicConsent },
+      });
+      toast.success(
+        translateText("Bahoyingiz saqlandi. Rahmat!", currentLanguage()),
+      );
+    } catch (cause) {
+      setError(cause.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <>
+      {!embedded && (
+        <PageHeading
+          eyebrow={translateText("MIJOZLAR FIKRI", currentLanguage())}
+          title={translateText("Storages.uz’ni baholang", currentLanguage())}
+          description={translateText(
+            "Tajriba va takliflaringiz xizmatimizni yaxshilashga yordam beradi.",
+            currentLanguage(),
+          )}
+        />
+      )}
+      <section className="panel store-review-panel">
+        <div className="store-review-intro">
+          <h2>{translateText("Do‘koningizni baholang", currentLanguage())}</h2>
+          <p>{companyName}</p>
+        </div>
+        <form className="modal-form" onSubmit={submit}>
+          {loading ? (
+            <Loading />
+          ) : (
+            <>
+              <fieldset className="store-review-rating">
+                <legend>{translateText("Necha yulduz berasiz?", currentLanguage())}</legend>
+                <div role="radiogroup" aria-label={translateText("1 dan 5 gacha baho", currentLanguage())}>
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      type="button"
+                      key={value}
+                      className={value <= rating ? "selected" : ""}
+                      role="radio"
+                      aria-checked={rating === value}
+                      aria-label={translateText(`${value} yulduz`, currentLanguage())}
+                      onClick={() => setRating(value)}
+                    >
+                      <FiStar aria-hidden="true" />
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <Field label={translateText("Sharhingiz", currentLanguage())}>
+                <textarea
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
+                  minLength={10}
+                  maxLength={500}
+                  rows={5}
+                  required
+                  placeholder={translateText(
+                    "Tizimdan foydalanish tajribangizni yozing (10–500 belgi).",
+                    currentLanguage(),
+                  )}
+                />
+              </Field>
+              <label className="demo-consent">
+                <input
+                  type="checkbox"
+                  checked={publicConsent}
+                  onChange={(event) => setPublicConsent(event.target.checked)}
+                  required
+                />
+                <span>
+                  {translateText(
+                    "Ismim va sharhim landing sahifada ommaga ko‘rsatilishiga roziman.",
+                    currentLanguage(),
+                  )}
+                </span>
+              </label>
+              {error && <p className="form-error" role="alert">{error}</p>}
+              <div className="modal-actions">
+                <button className="button button-primary" disabled={saving}>
+                  {saving
+                    ? translateText("Saqlanmoqda...", currentLanguage())
+                    : translateText("Bahoni yuborish", currentLanguage())}
+                  <FiChevronRight />
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      </section>
+    </>
+  );
+}
+
 function AccountSettingsPage({
   user,
   company,
@@ -4141,6 +4423,7 @@ function AccountSettingsPage({
           </div>
         </form>
       </section>
+      <StoreReviewPage companyName={company?.name || ""} embedded />
     </>
   );
 }
@@ -4525,7 +4808,7 @@ function Shell({
           </span>
         </a>
         <div className="side-caption">
-          {platform ? "BOSHQARUV" : company?.name || "DO‘KON"}
+          {platform ? "BOSHQARUV" : "STORAGES"}
         </div>
         {nav && (
           <nav className="side-nav" aria-label="Asosiy menyu">
@@ -6994,7 +7277,7 @@ function AccessForm({ onSubmit, children, submitLabel = "Saqlash" }) {
   );
 }
 
-function CompanyForm({ month, onSubmit }) {
+function CompanyForm({ onSubmit }) {
   return (
     <AccessForm
       onSubmit={(form) =>
@@ -7004,7 +7287,6 @@ function CompanyForm({ month, onSubmit }) {
           phone: form.get("phone"),
           login: form.get("login"),
           password: form.get("password"),
-          monthlyFee: readNumber(form.get("monthlyFee")),
         })
       }
       submitLabel="Do‘kon yaratish"
@@ -7058,13 +7340,6 @@ function CompanyForm({ month, onSubmit }) {
           placeholder="Kamida 10 ta belgi"
         />
       </Field>
-      <Field label={`${month} oyi uchun tarif`}>
-        <MoneyField name="monthlyFee" required />
-        <span className="field-hint">
-          Tarif faqat shu oy amal qiladi. Keyingi oy uchun yangi tarif
-          belgilanadi.
-        </span>
-      </Field>
       <p className="security-note">
         Login va parol yaratilgach boshliqqa xavfsiz tarzda yetkazing. Xodimlar
         loginini shu do‘kon boshlig‘i yaratadi.
@@ -7073,34 +7348,23 @@ function CompanyForm({ month, onSubmit }) {
   );
 }
 
-function FeeForm({ month, rate, onSubmit }) {
-  const [period, setPeriod] = useState(month);
+function SubscriptionPriceForm({ amount, onSubmit }) {
   return (
     <AccessForm
-      onSubmit={(form) =>
-        onSubmit({ period, monthlyFee: readNumber(form.get("monthlyFee")) })
-      }
-      submitLabel="Tarifni saqlash"
+      onSubmit={(form) => onSubmit({ monthlyFee: readNumber(form.get("monthlyFee")) })}
+      submitLabel="Narxni saqlash"
     >
-      <Field label="Tarif amal qiladigan oy">
-        <input
-          type="month"
-          value={period}
-          onChange={(event) => setPeriod(event.target.value)}
-          required
-        />
-      </Field>
-      <Field label={`${period} oyi uchun narx`}>
+      <Field label="Barcha do‘konlar uchun oylik to‘lov">
         <MoneyField
-          key={`${period}-${rate?.amount || 0}`}
+          key={amount}
           name="monthlyFee"
-          defaultValue={rate?.period === period ? rate.amount : ""}
+          defaultValue={amount || ""}
           required
         />
       </Field>
       <p className="security-note">
-        Bu narx faqat tanlangan oy uchun. Keyingi oyga o‘tkazilmaydi, ammo
-        ortiqcha to‘langan pul balans sifatida saqlanib qoladi.
+        Narx barcha do‘konlarga bir xil qo‘llanadi. Bepul sinov muddati tugagach,
+        do‘kon egasi to‘lov chekini yuboradi va platforma egasi tasdiqlaydi.
       </p>
     </AccessForm>
   );
@@ -8537,7 +8801,13 @@ function PlatformPaymentReviewPanel() {
               <Loading />
             ) : paymentRequests.length ? (
               <div className="platform-payment-list">
-                {paymentRequests.map((paymentRequest) => (
+                {paymentRequests.map((paymentRequest) => {
+                  const reviewedAt = Date.parse(paymentRequest.reviewedAt || "");
+                  const decisionLocked =
+                    paymentRequest.status !== "pending" &&
+                    Number.isFinite(reviewedAt) &&
+                    Date.now() - reviewedAt >= 72 * 60 * 60 * 1000;
+                  return (
                   <article
                     className="platform-payment-request"
                     key={paymentRequest.id}
@@ -8592,7 +8862,7 @@ function PlatformPaymentReviewPanel() {
                             ? "button-primary"
                             : "button-secondary"
                         }`}
-                        disabled={saving}
+                        disabled={saving || decisionLocked}
                         onClick={() => void review(paymentRequest, "approve")}
                       >
                         {t("Tasdiqlash")}
@@ -8604,17 +8874,20 @@ function PlatformPaymentReviewPanel() {
                             ? "button-danger"
                             : "button-secondary"
                         }`}
-                        disabled={saving}
+                        disabled={saving || decisionLocked}
                         onClick={() => void review(paymentRequest, "reject")}
                       >
                         {t("Rad etish")}
                       </button>
                     </div>
                     <small className="platform-payment-edit-note">
-                      {t("To‘lov qarorini 24 soat ichida o‘zgartirish mumkin.")}
+                      {decisionLocked
+                        ? t("Qarorni o‘zgartirish muddati tugagan; chek arxivda saqlanadi.")
+                        : t("To‘lov qarorini 72 soat ichida o‘zgartirish mumkin.")}
                     </small>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <p className="muted">{t("Hozircha chek yuborilmagan.")}</p>

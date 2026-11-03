@@ -45,6 +45,10 @@ export async function initializeDatabase() {
       parsed.demoRegistrations = []
       changed = true
     }
+    if (!Array.isArray(parsed.customerReviews)) {
+      parsed.customerReviews = []
+      changed = true
+    }
     if (!Array.isArray(parsed.subscriptionRates)) {
       parsed.subscriptionRates = []
       changed = true
@@ -57,12 +61,26 @@ export async function initializeDatabase() {
       parsed.notifications = []
       changed = true
     }
+    if (!Array.isArray(parsed.telegramLinks)) {
+      parsed.telegramLinks = []
+      changed = true
+    }
+    if (!Array.isArray(parsed.telegramPreferences)) {
+      parsed.telegramPreferences = []
+      changed = true
+    }
+    if (!Array.isArray(parsed.telegramOutbox)) {
+      parsed.telegramOutbox = []
+      changed = true
+    }
     if (!parsed.platformSettings || typeof parsed.platformSettings !== 'object') {
       parsed.platformSettings = {
         phone: '',
         telegram: 'naziroff1',
         paymentCardNumber: '',
         paymentCardHolder: '',
+        monthlySubscriptionPrice: 0,
+        subscriptionPriceHistory: [],
       }
       changed = true
     } else {
@@ -80,6 +98,14 @@ export async function initializeDatabase() {
       }
       if (typeof parsed.platformSettings.paymentCardHolder !== 'string') {
         parsed.platformSettings.paymentCardHolder = ''
+        changed = true
+      }
+      if (!Array.isArray(parsed.platformSettings.subscriptionPriceHistory)) {
+        parsed.platformSettings.subscriptionPriceHistory = []
+        changed = true
+      }
+      if (!Number.isSafeInteger(parsed.platformSettings.monthlySubscriptionPrice)) {
+        parsed.platformSettings.monthlySubscriptionPrice = 0
         changed = true
       }
     }
@@ -149,12 +175,18 @@ export async function initializeDatabase() {
       subscriptionPaymentRequests: [],
       attendance: [],
       notifications: [],
+      telegramLinks: [],
+      telegramPreferences: [],
+      telegramOutbox: [],
       demoRegistrations: [],
+      customerReviews: [],
       platformSettings: {
         phone: '',
         telegram: 'naziroff1',
         paymentCardNumber: '',
         paymentCardHolder: '',
+        monthlySubscriptionPrice: 0,
+        subscriptionPriceHistory: [],
       },
     }
     await persist(database)
