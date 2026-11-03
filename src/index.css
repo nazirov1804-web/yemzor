@@ -12179,3 +12179,66 @@ html[data-theme="dark"] .store-review-rating button {
     transition-duration: 0.01ms !important;
   }
 }
+
+html[data-theme="dark"] .company-card .muted {
+  color: #b8c7bb;
+}
+
+html[data-theme="dark"] .company-card .muted strong {
+  color: #f0f7f1;
+}
+
+.help-contact-link {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--green);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 650;
+  text-decoration: none;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 180ms cubic-bezier(.2, .8, .2, 1);
+}
+
+.help-contact-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+.help-contact-link:hover {
+  border-color: var(--green);
+  color: var(--green);
+  transform: translateY(-1px);
+}
+
+html[data-theme="dark"] .help-contact-link {
+  border-color: #3a4b3f;
+  color: #b8e3c3;
+  background: #19251d;
+}
+
+@media (max-width: 520px) {
+  .help-contact-link {
+    width: 38px;
+    padding: 0;
+  }
+
+  .help-contact-link span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-contact-link {
+    transition: none;
+  }
+}

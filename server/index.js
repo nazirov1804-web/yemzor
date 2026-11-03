@@ -25,7 +25,14 @@ if (!Number.isInteger(ownerTrialDays) || ownerTrialDays < 1 || ownerTrialDays > 
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(cors({ origin: allowedOrigin, credentials: true }));
-app.use(express.json({ limit: '5mb' }));
+app.use((request, response, next) => {
+  const limit =
+    request.method === 'PATCH' &&
+    request.path === '/api/company/profile-picture'
+      ? '14mb'
+      : '5mb';
+  express.json({ limit })(request, response, next);
+});
 app.use(
   session({
     name: 'yemzor.sid',
@@ -1031,12 +1038,12 @@ app.patch(
     const imageBytes = Buffer.from(match[1], 'base64');
     if (
       imageBytes.length < 4 ||
-      imageBytes.length > 256 * 1024 ||
+      imageBytes.length > 10 * 1024 * 1024 ||
       imageBytes[0] !== 0xff ||
       imageBytes[1] !== 0xd8 ||
       imageBytes[2] !== 0xff
     ) {
-      fail(400, 'Profil rasmi yaroqsiz yoki 256 KB dan katta.');
+      fail(400, 'Profil rasmi yaroqsiz yoki 10 MB dan katta.');
     }
     const user = await updateDatabase((database) => {
       const account = database.users.find(

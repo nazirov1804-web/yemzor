@@ -53,7 +53,7 @@ const dayKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 async function encodeProfileImage(file) {
   if (file.size > 10 * 1024 * 1024) {
-    throw new Error("Rasm 10 MB dan kichik bo‘lishi kerak.");
+    throw new Error("Rasm hajmi 10 MB dan oshmasligi kerak.");
   }
   const image = await createImageBitmap(file);
   const scale = Math.min(1, 320 / Math.max(image.width, image.height));
@@ -67,14 +67,7 @@ async function encodeProfileImage(file) {
   }
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
   image.close();
-  const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-  const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
-  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
-  const imageBytes = (base64.length * 3) / 4 - padding;
-  if (imageBytes > 256 * 1024) {
-    throw new Error("Rasm 256 KB dan kichik bo‘lishi kerak.");
-  }
-  return dataUrl;
+  return canvas.toDataURL("image/jpeg", 0.82);
 }
 const weekdays = [
   { value: 1, label: "Dushanba" },
@@ -902,6 +895,7 @@ function App() {
           user={user}
           onLogout={logout}
           onContactSave={setPublicSettings}
+          supportContacts={publicSettings}
           theme={theme}
           onToggleTheme={toggleTheme}
         />
@@ -1106,6 +1100,7 @@ function LandingPage({
   theme,
   onToggleTheme,
 }) {
+  const now = useClock();
   const [landingStats, setLandingStats] = useState(null);
   const [landingStatsError, setLandingStatsError] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState(null);
@@ -3024,7 +3019,14 @@ function SubscriptionGate({
   );
 }
 
-function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
+function PlatformPage({
+  user,
+  onLogout,
+  onContactSave,
+  supportContacts,
+  theme,
+  onToggleTheme,
+}) {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState("");
@@ -3157,6 +3159,7 @@ function PlatformPage({ user, onLogout, onContactSave, theme, onToggleTheme }) {
     <Shell
       user={user}
       onLogout={onLogout}
+      supportContacts={supportContacts}
       platform
       theme={theme}
       onToggleTheme={onToggleTheme}
@@ -4511,6 +4514,10 @@ function Shell({
   const dockDragRef = useRef(null);
   const suppressTabClickRef = useRef(false);
   const now = useClock();
+  const supportTelegram =
+    String(supportContacts?.telegram || "")
+      .trim()
+      .replace(/^@/, "") || "naziroff1";
   useEffect(() => {
     const tabbar = mobileTabbarRef.current;
     const viewport = window.visualViewport;
@@ -4998,6 +5005,23 @@ function Shell({
                 now={now}
               />
             )}
+            <a
+              className="help-contact-link"
+              href={`https://t.me/${supportTelegram}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={translateText(
+                "Yordam olish uchun Telegram orqali bog‘laning",
+                currentLanguage(),
+              )}
+              title={translateText(
+                "Yordam olish uchun Telegram orqali bog‘laning",
+                currentLanguage(),
+              )}
+            >
+              <FiMessageCircle aria-hidden="true" />
+              <span>{translateText("Yordam", currentLanguage())}</span>
+            </a>
             <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           </div>
         </header>
@@ -8390,13 +8414,18 @@ function BootScreen({ progress, error, networkOffline, onRetry }) {
         <img src="/yemzor-logo.png" alt="" />
         <div>
           <strong>Yemzor</strong>
-          <span>OMBOR TIZIMI BOSHQARUVI</span>
+          <span>
+            {translateText("OMBOR TIZIMI BOSHQARUVI", currentLanguage())}
+          </span>
         </div>
       </header>
       <div
         className={`boot-building boot-building-stage-${visualStage}`}
         role="img"
-        aria-label="Ombor binosi bosqichma-bosqich qurilmoqda"
+        aria-label={translateText(
+          "Ombor binosi bosqichma-bosqich qurilmoqda",
+          currentLanguage(),
+        )}
       >
         {Array.from({ length: 9 }, (_, index) => index + 1).map((imageStage) => (
           <img
