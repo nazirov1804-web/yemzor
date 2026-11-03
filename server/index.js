@@ -680,7 +680,13 @@ app.get('/api/status', (request, response) => {
       (user) => user.role === 'platform_admin'
     ),
     user: user ? safeUser(user) : null,
-    company: company ? { id: company.id, name: company.name } : null,
+    company: company
+      ? {
+          id: company.id,
+          name: company.name,
+          createdAt: company.createdAt || null,
+        }
+      : null,
     subscription: company ? companyAccessStatus(database, company) : null,
   });
 });

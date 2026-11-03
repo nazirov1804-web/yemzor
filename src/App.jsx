@@ -345,11 +345,85 @@ function App() {
   const [legalPage, setLegalPage] = useState("");
   const [modal, setModal] = useState("");
   const [selected, setSelected] = useState(null);
+  const [reviewPrompt, setReviewPrompt] = useState("");
+  const [reviewReminderCheck, setReviewReminderCheck] = useState(0);
   const [publicSettings, setPublicSettings] = useState({
     phone: "",
     telegram: "naziroff1",
   });
   const user = status?.user;
+  const reminderCompany = status?.company;
+  useEffect(() => {
+    if (
+      user?.role !== "company_owner" ||
+      !reminderCompany?.id ||
+      !reminderCompany.createdAt ||
+      !status?.subscription?.active
+    ) {
+      setReviewPrompt("");
+      return undefined;
+    }
+
+    let active = true;
+    let timer;
+    const deferKey = `storages:review-reminder:${reminderCompany.id}`;
+    const openedAt = Date.parse(reminderCompany.createdAt);
+    if (!Number.isFinite(openedAt)) return undefined;
+    const firstPromptAt = openedAt + 24 * 60 * 60 * 1000;
+
+    const checkReminder = async () => {
+      try {
+        const { review } = await api("/api/company/review");
+        if (!active) return;
+        if (review) {
+          window.localStorage.removeItem(deferKey);
+          setReviewPrompt("");
+          return;
+        }
+        const deferredUntil =
+          Number(window.localStorage.getItem(deferKey)) || 0;
+        const promptAt = Math.max(firstPromptAt, deferredUntil);
+        const remaining = promptAt - Date.now();
+        if (remaining <= 0) {
+          setReviewPrompt((current) => current || "offer");
+          return;
+        }
+        timer = window.setTimeout(
+          () => setReviewReminderCheck((current) => current + 1),
+          Math.min(remaining, 2_147_000_000),
+        );
+      } catch (error) {
+        console.error("Baholash eslatmasini tekshirib bo‘lmadi.", error);
+        if (active) {
+          timer = window.setTimeout(
+            () => setReviewReminderCheck((current) => current + 1),
+            5 * 60 * 1000,
+          );
+        }
+      }
+    };
+
+    void checkReminder();
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [
+    reminderCompany?.createdAt,
+    reminderCompany?.id,
+    reviewReminderCheck,
+    status?.subscription?.active,
+    user?.role,
+  ]);
+  const deferReviewPrompt = () => {
+    if (!reminderCompany?.id) return;
+    window.localStorage.setItem(
+      `storages:review-reminder:${reminderCompany.id}`,
+      String(Date.now() + 3 * 60 * 60 * 1000),
+    );
+    setReviewPrompt("");
+    setReviewReminderCheck((current) => current + 1);
+  };
   const refreshInstalledApp = async () => {
     setAppRefreshing(true);
     try {
@@ -933,6 +1007,52 @@ function App() {
         </div>
       )}
       {content}
+      {reviewPrompt === "offer" &&
+        user?.role === "company_owner" &&
+        status?.subscription?.active && (
+          <Modal
+            title={translateText("Do‘koningizni baholang", currentLanguage())}
+            subtitle={translateText(
+              "Storages.uz’dan foydalanish tajribangiz haqida fikr bildiring.",
+              currentLanguage(),
+            )}
+            onClose={deferReviewPrompt}
+          >
+            <div className="review-reminder-actions">
+              <button
+                type="button"
+                className="button button-primary"
+                onClick={() => setReviewPrompt("form")}
+              >
+                <FiStar aria-hidden="true" />
+                {translateText("Baholash", currentLanguage())}
+              </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={deferReviewPrompt}
+              >
+                {translateText("Keyinroqqa surish", currentLanguage())}
+              </button>
+            </div>
+          </Modal>
+        )}
+      {reviewPrompt === "form" && (
+        <Modal
+          title={translateText("Storages.uz’ni baholang", currentLanguage())}
+          subtitle={translateText(
+            "Tajriba va takliflaringiz xizmatimizni yaxshilashga yordam beradi.",
+            currentLanguage(),
+          )}
+          onClose={() => setReviewPrompt("offer")}
+        >
+          <StoreReviewPage
+            companyName={reminderCompany?.name || ""}
+            embedded
+            onSaved={() => setReviewPrompt("")}
+          />
+        </Modal>
+      )}
       <Toaster position="top-center" richColors closeButton theme={theme} />
     </>
   );
@@ -4029,7 +4149,7 @@ function StoreApp({
   );
 }
 
-function StoreReviewPage({ companyName, embedded = false }) {
+function StoreReviewPage({ companyName, embedded = false, onSaved }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [publicConsent, setPublicConsent] = useState(false);
@@ -4073,6 +4193,7 @@ function StoreReviewPage({ companyName, embedded = false }) {
       toast.success(
         translateText("Bahoyingiz saqlandi. Rahmat!", currentLanguage()),
       );
+      onSaved?.();
     } catch (cause) {
       setError(cause.message);
     } finally {
@@ -4423,7 +4544,6 @@ function AccountSettingsPage({
           </div>
         </form>
       </section>
-      <StoreReviewPage companyName={company?.name || ""} embedded />
     </>
   );
 }

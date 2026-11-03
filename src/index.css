@@ -12054,6 +12054,14 @@ button:not(:disabled):not(.password-visibility):active {
   justify-self: center;
 }
 
+.review-reminder-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 10px;
+}
+
 @media (max-width: 720px) {
   .landing-trust-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -12069,6 +12077,11 @@ button:not(:disabled):not(.password-visibility):active {
   .landing-reviews {
     padding-right: 18px;
     padding-left: 18px;
+  }
+
+  .review-reminder-actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 }
 

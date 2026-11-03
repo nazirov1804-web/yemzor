@@ -1384,6 +1384,9 @@ const entries = [
   ["shartlariga roziman.", "условиями.", "terms."],
   ["Email manzilingiz tasdiqlandi.", "Ваш email подтверждён.", "Your email has been verified."],
   [" manziliga yuborilgan 6 xonali kodni kiriting.", " — введите 6-значный код из письма.", " — enter the 6-digit code we emailed you."],
+  ["Storages.uz’dan foydalanish tajribangiz haqida fikr bildiring.", "Поделитесь впечатлениями от использования Storages.uz.", "Tell us about your experience using Storages.uz."],
+  ["Baholash", "Оценить", "Rate now"],
+  ["Keyinroqqa surish", "Напомнить позже", "Remind me later"],
 ];
 
 const catalogs = Object.fromEntries(
