@@ -732,7 +732,6 @@ function App() {
             telegram={publicSettings.telegram}
             onLogin={() => setAccessView("login")}
             onRegister={() => setAccessView("register")}
-            onDemo={() => setAccessView("demo")}
             onLegal={(page) => setLegalPage(page)}
             theme={theme}
             onToggleTheme={toggleTheme}
@@ -937,7 +936,6 @@ function LandingPage({
   telegram,
   onLogin,
   onRegister,
-  onDemo,
   onLegal,
   theme,
   onToggleTheme,
@@ -1365,7 +1363,17 @@ function LandingPage({
         <div className="landing-header-actions">
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           <button
-            className="button button-secondary"
+            className="button button-primary landing-header-trial"
+            type="button"
+            onClick={() => {
+              setMobileNavigationOpen(false);
+              onRegister();
+            }}
+          >
+            1 oy bepul sinash <FiChevronRight />
+          </button>
+          <button
+            className="button button-secondary landing-header-login"
             onClick={() => {
               setMobileNavigationOpen(false);
               onLogin();
@@ -1459,13 +1467,22 @@ function LandingPage({
                   <span>Boshliq, menejer va xodim uchun alohida kirish</span>
                 </li>
               </ul>
-              <button
-                className="landing-hero-login"
-                type="button"
-                onClick={onLogin}
-              >
-                Kirish <FiChevronRight aria-hidden="true" />
-              </button>
+              <div className="landing-hero-actions">
+                <button
+                  className="landing-hero-register"
+                  type="button"
+                  onClick={onRegister}
+                >
+                  1 oy bepul sinash <FiChevronRight aria-hidden="true" />
+                </button>
+                <button
+                  className="landing-hero-login"
+                  type="button"
+                  onClick={onLogin}
+                >
+                  Kirish <FiChevronRight aria-hidden="true" />
+                </button>
+              </div>
             </div>
             <div
               className="landing-preview"
@@ -1947,13 +1964,6 @@ function LandingPage({
           >
             1 oy bepul boshlash <FiChevronRight />
           </button>
-          <button
-            className="landing-cta-demo-link"
-            type="button"
-            onClick={onDemo}
-          >
-            48 soatlik demoni ko‘rish
-          </button>
         </div>
       </section>
 
@@ -2317,7 +2327,11 @@ function StoreRegistrationPage({
       setStep("verify");
       toast.success(result.message);
     } catch (error) {
-      toast.error(error.message);
+      toast.error(
+        error.status === 404
+          ? "Serverdagi ro‘yxatdan o‘tish API yangilanmagan. AWS’da Git pull qilib, yemzor xizmatini qayta ishga tushiring."
+          : error.message,
+      );
     } finally {
       setSaving(false);
     }

@@ -4248,18 +4248,6 @@ html[lang="en"] .landing-cta-bottom .cta-copy::before {
   gap: 8px;
 }
 
-.landing-cta-demo-link {
-  min-height: 36px;
-  padding: 6px 10px;
-  border: 0;
-  color: #e4f4e8;
-  background: transparent;
-  font-size: 11px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
 .landing-cta-bottom .button:hover:not(:disabled) {
   border-color: #fff;
   color: #153c26;
@@ -4379,6 +4367,48 @@ html[lang="en"] .landing-cta-bottom .cta-copy::before {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.landing-header-trial {
+  white-space: nowrap;
+}
+
+.landing-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 21px;
+}
+
+.landing-hero-actions .landing-hero-login {
+  margin: 0;
+}
+
+.landing-hero-register {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #1e6c45;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #258653, #17633c);
+  box-shadow: 0 10px 24px rgb(37 91 55 / 18%);
+  font-weight: 650;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.landing-hero-register:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgb(37 91 55 / 24%);
+}
+
+.landing-hero-register svg {
+  width: 16px;
+  height: 16px;
 }
 
 .theme-toggle {
@@ -6187,6 +6217,10 @@ button {
 
   .landing-header-actions {
     gap: 5px;
+  }
+
+  .landing-header-trial {
+    display: none;
   }
 
   .landing-header-actions>.button {
