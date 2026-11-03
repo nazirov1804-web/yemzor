@@ -14,6 +14,7 @@ const entries = [
   ["OMBOR TIZIMI BOSHQARUVI", "УПРАВЛЕНИЕ СКЛАДОМ", "INVENTORY MANAGEMENT SYSTEM"],
   ["Do‘kon boshlig‘i profiliga rasm yuklang.", "Загрузите фото в профиль руководителя магазина.", "Upload a photo for the store owner's profile."],
   ["Rasm tanlang", "Выберите изображение", "Choose an image"],
+  ["Rasm tanlang yoki kameradan oling", "Выберите изображение или сделайте снимок", "Choose an image or take a photo"],
   ["Rasmni qayta ishlashning imkoni bo‘lmadi.", "Не удалось обработать изображение.", "The image could not be processed."],
   ["Yangi parollar bir xil emas.", "Новые пароли не совпадают.", "The new passwords do not match."],
   ["Kirish ma’lumotlari xavfsiz saqlandi", "Данные для входа безопасно сохранены", "Login details saved securely"],

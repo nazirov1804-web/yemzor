@@ -11852,8 +11852,12 @@ button:not(:disabled):not(.password-visibility):active {
   position: relative;
   overflow: hidden;
   padding: clamp(52px, 7vw, 92px) 24px;
-  color: inherit;
-  background: inherit;
+  color: #f8fafc;
+  background-color: #171f33;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 5%) 1px, transparent 1px);
+  background-size: 45px 45px;
   text-align: center;
 }
 
@@ -11878,8 +11882,9 @@ button:not(:disabled):not(.password-visibility):active {
 }
 
 .landing-trust-heading p,
-.landing-stats-error {
-  color: var(--muted);
+.landing-stats-error,
+.landing-trust-stat small {
+  color: #aab8cf;
 }
 
 .landing-trust-grid {
@@ -12180,62 +12185,6 @@ html[data-theme="dark"] .store-review-rating button {
   }
 }
 
-.landing-proof-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  align-items: start;
-  gap: 20px;
-  width: min(100% - 48px, 1240px);
-  margin: 0 auto;
-}
-
-.landing-proof-grid > .landing-trust,
-.landing-proof-grid > .landing-reviews {
-  min-width: 0;
-  height: 100%;
-  padding: clamp(32px, 4vw, 54px) clamp(20px, 3vw, 34px);
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: var(--surface);
-}
-
-.landing-proof-grid .landing-trust-heading {
-  margin-bottom: 30px;
-}
-
-.landing-proof-grid .landing-trust-heading h2 {
-  font-size: clamp(24px, 2.7vw, 34px);
-}
-
-.landing-proof-grid .landing-trust-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px 12px;
-}
-
-.landing-proof-grid .landing-review-grid {
-  grid-template-columns: 1fr;
-  width: 100%;
-  gap: 12px;
-}
-
-.landing-proof-grid .landing-review-card {
-  min-height: 0;
-}
-
-@media (max-width: 900px) {
-  .landing-proof-grid {
-    grid-template-columns: 1fr;
-    width: min(100% - 36px, 680px);
-  }
-}
-
-@media (max-width: 720px) {
-  .landing-proof-grid .landing-trust,
-  .landing-proof-grid .landing-reviews {
-    padding: 34px 20px;
-  }
-}
-
 html[data-theme="dark"] .company-card .muted {
   color: #b8c7bb;
 }
@@ -12297,4 +12246,21 @@ html[data-theme="dark"] .help-contact-link {
   .help-contact-link {
     transition: none;
   }
+}
+
+.button,
+button,
+.icon-button,
+.password-visibility,
+.notification-trigger,
+.theme-toggle,
+.landing-menu-trigger,
+.mobile-menu-trigger,
+.back-link,
+.legal-back-button,
+.landing-legal-button,
+.role-switch button,
+.logout-button {
+  transform: none !important;
+  transition-property: background-color, background-image, border-color, box-shadow, color, opacity;
 }

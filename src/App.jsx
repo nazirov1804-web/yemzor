@@ -2035,12 +2035,11 @@ function LandingPage({
         </div>
       </section>
 
-      <div className="landing-proof-grid">
-        <section
-          className="landing-trust"
-          id="birliklar-statistikasi"
-          aria-labelledby="landing-trust-title"
-        >
+      <section
+        className="landing-trust"
+        id="birliklar-statistikasi"
+        aria-labelledby="landing-trust-title"
+      >
           <div className="landing-trust-heading">
             <span className="landing-kicker">
               <i /> {translateText("RAQAMLARDA YEMZOR", currentLanguage())}
@@ -2129,9 +2128,9 @@ function LandingPage({
               )}
             </p>
           )}
-        </section>
+      </section>
 
-        <section className="landing-reviews" id="fikrlar">
+      <section className="landing-reviews" id="fikrlar">
           <div className="landing-section-head">
             <span className="landing-kicker">
               <i /> {translateText("MIJOZLAR FIKRI", currentLanguage())}
@@ -2193,8 +2192,7 @@ function LandingPage({
               )}
             </p>
           )}
-        </section>
-      </div>
+      </section>
 
       <section
         className="landing-contact landing-contact-bottom"
@@ -4336,11 +4334,17 @@ function AccountSettingsPage({
               (user.name || "Y").slice(0, 1).toUpperCase()
             )}
           </div>
-          <Field label={translateText("Rasm tanlang", currentLanguage())}>
+          <Field
+            label={translateText(
+              "Rasm tanlang yoki kameradan oling",
+              currentLanguage(),
+            )}
+          >
             <input
               name="profileImage"
               type="file"
               accept="image/*"
+              capture="user"
               required
             />
           </Field>
