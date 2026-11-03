@@ -142,6 +142,22 @@ export async function initializeDatabase() {
       }
     }
     for (const company of parsed.companies) {
+      if (company.isDemo) {
+        const createdAt = Date.parse(company.createdAt);
+        const trialExpiresAt =
+          company.demoExpiresAt ||
+          new Date(
+            (Number.isFinite(createdAt) ? createdAt : Date.now()) +
+              30 * 24 * 60 * 60 * 1000
+          ).toISOString();
+        company.trialExpiresAt ||= trialExpiresAt;
+        if (company.name?.startsWith('Demo do‘kon · ')) {
+          company.name = company.name.slice('Demo do‘kon · '.length);
+        }
+        delete company.isDemo;
+        delete company.demoExpiresAt;
+        changed = true;
+      }
       if (!Number.isSafeInteger(company.monthlyFee)) {
         company.monthlyFee = 0
         changed = true

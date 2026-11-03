@@ -62,8 +62,20 @@ const paymentRequestLimiter = rateLimit({
   },
 });
 const paymentRequestRetentionMs = 72 * 60 * 60 * 1000;
-const pendingDemoVerifications = new Map();
 const pendingOwnerVerifications = new Map();
+const resetConfirmations = new Set([
+  'hisobni tozalash',
+  'очистить учётные данные',
+  'clear account records',
+  '0 ga tushurish',
+]);
+
+function isResetConfirmation(value) {
+  return (
+    typeof value === 'string' &&
+    resetConfirmations.has(value.trim().toLocaleLowerCase())
+  );
+}
 
 function fail(statusCode, message) {
   throw Object.assign(new Error(message), { statusCode });
@@ -279,7 +291,6 @@ function companyBillingStartPeriod(company) {
 }
 
 function subscriptionRateForPeriod(database, company, period) {
-  if (company.isDemo) return null;
   const startPeriod = companyBillingStartPeriod(company);
   const globalPrice = globalPriceForPeriod(database, period);
   if (
@@ -372,17 +383,6 @@ function subscriptionStatus(
 }
 
 function companyAccessStatus(database, company) {
-  if (company.isDemo) {
-    const expiresAt = company.demoExpiresAt;
-    const remainingMs = new Date(expiresAt).getTime() - Date.now();
-    return {
-      active: Number.isFinite(remainingMs) && remainingMs > 0,
-      demo: true,
-      expiresAt,
-      remainingMs: Math.max(remainingMs, 0),
-      expired: !Number.isFinite(remainingMs) || remainingMs <= 0,
-    };
-  }
   const subscription = subscriptionStatus(database, company);
   if (!company.trialExpiresAt) return subscription;
   const expiresAt = company.trialExpiresAt;
@@ -407,9 +407,7 @@ function requirePaidSubscription(request, _response, next) {
       return next(
         Object.assign(
           new Error(
-            company.isDemo
-              ? 'Demo muddati tugadi. Yangi demo uchun boshqa email bilan ro‘yxatdan o‘ting.'
-              : 'Joriy oy uchun obuna to‘lovi tasdiqlanishi kerak.'
+            'Joriy oy uchun obuna to‘lovi tasdiqlanishi kerak.'
           ),
           {
             statusCode: 423,
@@ -449,7 +447,7 @@ function validateTelegram(value) {
   return normalized;
 }
 
-function generateDemoCode() {
+function generateVerificationCode() {
   return String((randomBytes(4).readUInt32BE(0) % 900000) + 100000);
 }
 
@@ -463,7 +461,7 @@ async function sendVerificationEmail(email, code) {
     configuredFrom.match(/<([^>]+)>/)?.[1] ||
     configuredFrom.trim() ||
     user;
-  const from = { name: 'Storage', address: fromAddress };
+  const from = { name: 'Yemzor', address: fromAddress };
   if (!host || !user || !pass)
     fail(
       503,
@@ -482,23 +480,23 @@ async function sendVerificationEmail(email, code) {
     const info = await transporter.sendMail({
       from,
       to: email,
-      subject: `${code} — Storage tasdiqlash kodi`,
-      text: `Storage demo akkauntingiz uchun tasdiqlash kodi (verification code):\n\n${code}\n\nKod 10 daqiqa amal qiladi va bir marta ishlatiladi. Agar siz demo ro‘yxatdan o‘tishni boshlamagan bo‘lsangiz, bu xatni e’tiborsiz qoldiring.\n\nStorage jamoasi`,
+      subject: `${code} — Yemzor tasdiqlash kodi`,
+      text: `Yemzor akkauntingizni tasdiqlash kodi (verification code):\n\n${code}\n\nKod 10 daqiqa amal qiladi va bir marta ishlatiladi. Agar siz ro‘yxatdan o‘tishni boshlamagan bo‘lsangiz, bu xatni e’tiborsiz qoldiring.\n\nYemzor jamoasi`,
       html: `<!doctype html>
 <html lang="uz">
-  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Storage tasdiqlash kodi</title></head>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>Yemzor tasdiqlash kodi</title></head>
   <body style="margin:0;padding:32px 12px;background:#f3f6f4;font-family:Arial,Helvetica,sans-serif;color:#26372c;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4ebe5;border-radius:18px;overflow:hidden;">
       <tr><td style="padding:25px 30px;background:#174b30;">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr>
-          <td style="padding-right:11px;vertical-align:middle;"><img src="cid:yemzor-logo" width="44" height="44" alt="Storage logosi" style="display:block;width:44px;height:44px;object-fit:contain;background:transparent;"></td>
-          <td style="vertical-align:middle;color:#fff;"><strong style="display:block;font-size:19px;line-height:1.3;">Storage</strong><span style="display:block;margin-top:3px;color:#c5ddcd;font-size:10px;font-weight:bold;letter-spacing:1px;">SAVDO VA OMBOR BOSHQARUVI</span></td>
+          <td style="padding-right:11px;vertical-align:middle;"><img src="cid:yemzor-logo" width="44" height="44" alt="Yemzor logosi" style="display:block;width:44px;height:44px;object-fit:contain;background:transparent;"></td>
+          <td style="vertical-align:middle;color:#fff;"><strong style="display:block;font-size:19px;line-height:1.3;">Yemzor</strong><span style="display:block;margin-top:3px;color:#c5ddcd;font-size:10px;font-weight:bold;letter-spacing:1px;">SAVDO VA OMBOR BOSHQARUVI</span></td>
         </tr></table>
       </td></tr>
       <tr><td style="padding:32px 30px 12px;">
         <p style="margin:0 0 9px;color:#46815a;font-size:11px;font-weight:bold;letter-spacing:1.2px;">EMAILNI TASDIQLASH</p>
-        <h1 style="margin:0;color:#24382b;font-size:25px;line-height:1.3;">Demo akkauntingizni tasdiqlang</h1>
-        <p style="margin:12px 0 0;color:#68776d;font-size:14px;line-height:1.65;">Storage demo akkauntini ochishni so‘radingiz. Email manzilingizni tasdiqlash uchun quyidagi kodni kiriting:</p>
+        <h1 style="margin:0;color:#24382b;font-size:25px;line-height:1.3;">Yemzor akkauntingizni tasdiqlang</h1>
+        <p style="margin:12px 0 0;color:#68776d;font-size:14px;line-height:1.65;">Yemzor’da ro‘yxatdan o‘tishni boshladingiz. Email manzilingizni tasdiqlash uchun quyidagi kodni kiriting:</p>
       </td></tr>
       <tr><td style="padding:20px 30px 22px;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f1f5fb;border-radius:12px;">
@@ -510,10 +508,10 @@ async function sendVerificationEmail(email, code) {
         </table>
       </td></tr>
       <tr><td style="padding:0 30px 30px;">
-        <p style="margin:0;color:#68776d;font-size:13px;line-height:1.65;"><strong>Kod 10 daqiqa amal qiladi.</strong> Uni hech kimga bermang — Storage xodimlari sizdan tasdiqlash kodini so‘ramaydi.</p>
-        <p style="margin:18px 0 0;color:#87938a;font-size:12px;line-height:1.6;">Agar siz demo akkaunt ochishni so‘ramagan bo‘lsangiz, ushbu xatni e’tiborsiz qoldiring.</p>
+        <p style="margin:0;color:#68776d;font-size:13px;line-height:1.65;"><strong>Kod 10 daqiqa amal qiladi.</strong> Uni hech kimga bermang — Yemzor xodimlari sizdan tasdiqlash kodini so‘ramaydi.</p>
+        <p style="margin:18px 0 0;color:#87938a;font-size:12px;line-height:1.6;">Agar siz ro‘yxatdan o‘tishni boshlamagan bo‘lsangiz, ushbu xatni e’tiborsiz qoldiring.</p>
       </td></tr>
-      <tr><td style="padding:17px 30px;border-top:1px solid #e9eeea;color:#87938a;font-size:11px;">© Storage · Do‘kon savdosi va ombor boshqaruvi</td></tr>
+      <tr><td style="padding:17px 30px;border-top:1px solid #e9eeea;color:#87938a;font-size:11px;">© Yemzor · Do‘kon savdosi va ombor boshqaruvi</td></tr>
     </table>
   </body>
 </html>`,
@@ -531,7 +529,7 @@ async function sendVerificationEmail(email, code) {
     );
     if (!accepted) {
       console.error(
-        `[storages.uz email] SMTP recipient not accepted. responseCode=${info.responseCode || 'unknown'}`
+        `[Yemzor email] SMTP recipient not accepted. responseCode=${info.responseCode || 'unknown'}`
       );
       fail(
         502,
@@ -542,7 +540,7 @@ async function sendVerificationEmail(email, code) {
   } catch (error) {
     if (error.statusCode) throw error;
     console.error(
-      `[storages.uz email] Verification mail failed. code=${error.code || 'unknown'} responseCode=${error.responseCode || 'none'} command=${error.command || 'unknown'}`
+      `[Yemzor email] Verification mail failed. code=${error.code || 'unknown'} responseCode=${error.responseCode || 'none'} command=${error.command || 'unknown'}`
     );
     if (error.code === 'EAUTH' || error.responseCode === 535) {
       fail(
@@ -645,6 +643,7 @@ function safeUser(user) {
     login: user.login,
     role: user.role,
     companyId: user.companyId,
+    profileImage: user.profileImage || null,
     monthlySalary: user.monthlySalary || 0,
     restDay: Number.isInteger(user.restDay) ? user.restDay : null,
     startDate: user.startDate || user.createdAt?.slice(0, 10) || null,
@@ -701,15 +700,10 @@ app.get('/api/public/landing', (_request, response) => {
   const ratings = database.customerReviews.filter(
     (review) => Number.isInteger(review.rating) && review.rating >= 1 && review.rating <= 5
   );
-  const demoCompanyIds = new Set(
-    database.companies
-      .filter((company) => company.isDemo)
-      .map((company) => company.id)
-  );
   const activeBrands = database.companies
     .filter(
       (company) =>
-        !company.isDemo && subscriptionStatus(database, company).active
+        subscriptionStatus(database, company).active
     )
     .map((company) => ({
       name: company.name,
@@ -723,7 +717,7 @@ app.get('/api/public/landing', (_request, response) => {
     .slice(0, 3)
     .map(({ name }) => name);
   response.json({
-    brandCount: database.companies.filter((company) => !company.isDemo).length,
+    brandCount: database.companies.length,
     companyCount: database.companies.length,
     registrationCount: database.users.filter(
       (user) => user.role !== 'platform_admin'
@@ -756,9 +750,7 @@ app.get('/api/public/landing', (_request, response) => {
         comment,
         authorName,
       })),
-    verifiedReceiptCount: database.sales.filter(
-      (sale) => !demoCompanyIds.has(sale.companyId)
-    ).length,
+    verifiedReceiptCount: database.sales.length,
     activeBrands,
   });
 });
@@ -808,7 +800,7 @@ app.post(
     )
       fail(409, 'Bu email bilan akkaunt allaqachon yaratilgan. Tizimga kiring.');
     const passwordHash = await bcrypt.hash(request.body.password, 12);
-    const code = generateDemoCode();
+    const code = generateVerificationCode();
     await sendVerificationEmail(email, code);
     pendingOwnerVerifications.set(email, {
       code,
@@ -1025,6 +1017,39 @@ app.patch(
   }
 );
 
+app.patch(
+  '/api/company/profile-picture',
+  requireAuth,
+  requireCompanyOwner,
+  async (request, response) => {
+    const image = request.body?.image;
+    const match =
+      typeof image === 'string'
+        ? image.match(/^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/)
+        : null;
+    if (!match) fail(400, 'Profil rasmi JPEG formatida bo‘lishi kerak.');
+    const imageBytes = Buffer.from(match[1], 'base64');
+    if (
+      imageBytes.length < 4 ||
+      imageBytes.length > 256 * 1024 ||
+      imageBytes[0] !== 0xff ||
+      imageBytes[1] !== 0xd8 ||
+      imageBytes[2] !== 0xff
+    ) {
+      fail(400, 'Profil rasmi yaroqsiz yoki 256 KB dan katta.');
+    }
+    const user = await updateDatabase((database) => {
+      const account = database.users.find(
+        (entry) => entry.id === request.user.id && entry.active
+      );
+      if (!account) fail(404, 'Akkaunt topilmadi.');
+      account.profileImage = image;
+      return safeUser(account);
+    });
+    response.json({ user });
+  }
+);
+
 app.post(
   '/api/company/reset',
   requireAuth,
@@ -1034,8 +1059,8 @@ app.post(
     const currentPassword = request.body?.currentPassword;
     if (typeof currentPassword !== 'string' || !currentPassword)
       fail(400, 'Amalni tasdiqlash uchun joriy parolni kiriting.');
-    if (request.body?.confirmation !== '0 ga tushurish')
-      fail(400, 'Tasdiqlash uchun “0 ga tushurish” iborasini aynan kiriting.');
+    if (!isResetConfirmation(request.body?.confirmation))
+      fail(400, 'Tasdiqlash uchun “hisobni tozalash” iborasini aynan kiriting.');
     const result = await updateDatabase(async (database) => {
       const account = database.users.find(
         (entry) => entry.id === request.user.id && entry.active
@@ -1263,8 +1288,6 @@ app.post(
         database,
         telegramUserId
       );
-      if (company.isDemo)
-        fail(403, 'Demo akkaunt uchun to‘lov yuborib bo‘lmaydi.');
       const subscription = subscriptionStatus(database, company);
       if (subscription.active) fail(409, 'Joriy oy uchun to‘lov tasdiqlangan.');
       const amount = Math.max(
@@ -1314,7 +1337,7 @@ app.post(
 
 app.post('/api/internal/telegram/reset', async (request, response) => {
   const telegramUserId = String(request.body?.telegramUserId || '');
-  if (request.body?.confirmation !== '0 ga tushurish')
+  if (!isResetConfirmation(request.body?.confirmation))
     fail(400, 'Reset confirmation is missing.');
   const result = await updateDatabase((database) => {
     const { user, company } = requireTelegramCompanyOwner(
@@ -1670,7 +1693,7 @@ app.post(
           id: randomUUID(),
           companyId,
           kind: 'broadcast',
-          title: 'storages.uz xabari',
+          title: 'Yemzor xabari',
           message,
           date: now.slice(0, 10),
           createdAt: now,
@@ -1679,140 +1702,6 @@ app.post(
       return { subscribers: links.length };
     });
     response.json({ ...result, sentBy: telegramUserId });
-  }
-);
-
-app.post(
-  '/api/demo/register/request',
-  registrationLimiter,
-  async (request, response) => {
-    const email = validateEmail(request.body?.email);
-    if (
-      readDatabase().demoRegistrations.some((entry) => entry.email === email)
-    ) {
-      fail(
-        409,
-        'Bu email bilan demo oldin ro‘yxatdan o‘tgan. Mavjud email va parol bilan kiring.'
-      );
-    }
-    if (
-      readDatabase().users.some(
-        (entry) => entry.login === email || entry.email === email
-      )
-    ) {
-      fail(409, 'Bu email allaqachon ishlatilgan.');
-    }
-    const code = generateDemoCode();
-    await sendVerificationEmail(email, code);
-    pendingDemoVerifications.set(email, {
-      code,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-      attempts: 0,
-    });
-    response.json({
-      email,
-      sent: true,
-      message: `Tasdiqlash kodi ${email} manziliga yuborildi.`,
-    });
-  }
-);
-
-app.post(
-  '/api/demo/register',
-  registrationLimiter,
-  async (request, response) => {
-    const name = validateName(request.body?.name, 'Ism-familiya');
-    const email = validateEmail(request.body?.email);
-    const verificationCode =
-      typeof request.body?.verificationCode === 'string'
-        ? request.body.verificationCode.trim()
-        : '';
-    const pendingVerification = pendingDemoVerifications.get(email);
-    if (!pendingVerification || pendingVerification.expiresAt <= Date.now()) {
-      pendingDemoVerifications.delete(email);
-      fail(
-        400,
-        'Tasdiqlash kodi topilmadi yoki muddati tugadi. Yangi kod so‘rang.'
-      );
-    }
-    if (pendingVerification.attempts >= 5) {
-      pendingDemoVerifications.delete(email);
-      fail(
-        429,
-        'Tasdiqlash kodini kiritish urinishlari tugadi. Yangi kod so‘rang.'
-      );
-    }
-    if (verificationCode !== pendingVerification.code) {
-      pendingVerification.attempts += 1;
-      fail(400, 'Email tasdiqlash kodi noto‘g‘ri.');
-    }
-    validatePassword(request.body?.password);
-    const passwordHash = await bcrypt.hash(request.body.password, 12);
-    const result = await updateDatabase((database) => {
-      if (database.demoRegistrations.some((entry) => entry.email === email)) {
-        fail(
-          409,
-          'Bu email bilan demo oldin ro‘yxatdan o‘tgan. Mavjud email va parol bilan kiring.'
-        );
-      }
-      if (
-        database.users.some(
-          (entry) => entry.login === email || entry.email === email
-        )
-      ) {
-        fail(409, 'Bu email allaqachon ishlatilgan.');
-      }
-      const now = new Date();
-      const createdAt = now.toISOString();
-      const demoExpiresAt = new Date(
-        now.getTime() + 48 * 60 * 60 * 1000
-      ).toISOString();
-      const companyId = randomUUID();
-      const user = {
-        id: randomUUID(),
-        name,
-        login: email,
-        email,
-        passwordHash,
-        role: 'company_owner',
-        companyId,
-        monthlySalary: 0,
-        active: true,
-        createdAt,
-      };
-      const company = {
-        id: companyId,
-        name: `Demo do‘kon · ${name}`,
-        ownerId: user.id,
-        nextReceiptNumber: 0,
-        isDemo: true,
-        absentDeduction: 0,
-        restDayWorkBonusEnabled: false,
-        restDayWorkBonusAmount: 0,
-        abedPaymentsEnabled: true,
-        demoExpiresAt,
-        createdAt,
-      };
-      database.users.push(user);
-      database.companies.push(company);
-      database.demoRegistrations.push({
-        id: randomUUID(),
-        email,
-        createdAt,
-        expiresAt: demoExpiresAt,
-      });
-      return {
-        user: safeUser(user),
-        company: { id: company.id, name: company.name },
-        demoExpiresAt,
-      };
-    });
-    pendingDemoVerifications.delete(email);
-    await new Promise((resolve, reject) =>
-      request.session.regenerate((error) => (error ? reject(error) : resolve()))
-    );
-    request.session.userId = result.user.id;
-    response.status(201).json(result);
   }
 );
 
@@ -1835,7 +1724,6 @@ app.get(
   (_request, response) => {
     const database = readDatabase();
     const companies = database.companies
-      .filter((company) => !company.isDemo)
       .map((company) => {
         const owner = database.users.find(
           (user) => user.id === company.ownerId
@@ -1927,7 +1815,7 @@ app.patch(
     const passwordHash = await bcrypt.hash(request.body.password, 12);
     const owner = await updateDatabase((database) => {
       const company = database.companies.find(
-        (item) => item.id === request.params.companyId && !item.isDemo
+        (item) => item.id === request.params.companyId
       );
       if (!company) fail(404, 'Do‘kon topilmadi.');
       const account = database.users.find(
@@ -2071,8 +1959,6 @@ app.get(
   async (request, response) => {
     const database = readDatabase();
     const company = requireCompany(request, database);
-    if (company.isDemo)
-      fail(403, 'Demo akkaunt uchun obuna to‘lovi talab qilinmaydi.');
     const subscription = subscriptionStatus(database, company);
     const period = subscription.period;
     const paymentRequest =
@@ -2118,8 +2004,6 @@ app.post(
     }
     const paymentRequest = await updateDatabase((database) => {
       const company = requireCompany(request, database);
-      if (company.isDemo)
-        fail(403, 'Demo akkaunt uchun to‘lov yuborib bo‘lmaydi.');
       if (request.user.role !== 'company_owner')
         fail(403, 'To‘lov tasdig‘ini faqat do‘kon egasi yuborishi mumkin.');
       const subscription = subscriptionStatus(database, company);
@@ -2398,8 +2282,6 @@ app.get(
         id: company.id,
         name: company.name,
         createdAt: company.createdAt,
-        isDemo: Boolean(company.isDemo),
-        demoExpiresAt: company.demoExpiresAt || null,
         absentDeduction: Number(company.absentDeduction || 0),
         restDayWorkBonusEnabled: Boolean(company.restDayWorkBonusEnabled),
         restDayWorkBonusAmount: Number(company.restDayWorkBonusAmount || 0),
@@ -3316,7 +3198,7 @@ app.use((error, _request, response, _next) => {
 initializeDatabase()
   .then(() => {
     app.listen(port, process.env.HOST || '0.0.0.0', () =>
-      console.log(`storages.uz API http://localhost:${port}  database.json - index.js:3067`)
+      console.log(`Yemzor API http://localhost:${port}  database.json - index.js:3067`)
     );
   })
   .catch((error) => {

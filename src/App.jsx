@@ -51,6 +51,31 @@ const monthKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 const dayKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+async function encodeProfileImage(file) {
+  if (file.size > 10 * 1024 * 1024) {
+    throw new Error("Rasm 10 MB dan kichik bo‘lishi kerak.");
+  }
+  const image = await createImageBitmap(file);
+  const scale = Math.min(1, 320 / Math.max(image.width, image.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+  const context = canvas.getContext("2d");
+  if (!context) {
+    image.close();
+    throw new Error("Rasmni qayta ishlashning imkoni bo‘lmadi.");
+  }
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  image.close();
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+  const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
+  const padding = base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0;
+  const imageBytes = (base64.length * 3) / 4 - padding;
+  if (imageBytes > 256 * 1024) {
+    throw new Error("Rasm 256 KB dan kichik bo‘lishi kerak.");
+  }
+  return dataUrl;
+}
 const weekdays = [
   { value: 1, label: "Dushanba" },
   { value: 2, label: "Seshanba" },
@@ -64,8 +89,8 @@ const landingSectionNavigation = [
   ["#imkoniyatlar", "Imkoniyatlar"],
   ["#rollar", "Rollar"],
   ["#jarayon", "Ish jarayoni"],
-  ["#birliklar", "Birliklar"],
   ["#fikrlar", "Fikrlar"],
+  ["#birliklar", "Birliklar"],
   ["#boglanish", "Bog‘lanish"],
 ];
 const installedReleaseStorageKey = "yemzor:installed-release:v1";
@@ -186,7 +211,7 @@ const receiptDateTime = (value) =>
 const productUpdates = [
   {
     id: "release-2026-10-store-tools",
-    title: "storages.uz boshqaruviga yangi imkoniyatlar",
+    title: "Yemzor boshqaruviga yangi imkoniyatlar",
     message:
       "Dam olish kuni bonusi va tushlik to‘lovlari sozlanadi, mahsulot tarixini saqlagan holda arxivlanadi, har bir oy hisoboti alohida ko‘riladi va hisobni tozalash do‘konning operatsion ma’lumotlarini yangidan boshlashga imkon beradi.",
     date: "2026-10-29",
@@ -214,7 +239,7 @@ const productUpdates = [
   },
   {
     id: "release-2026-10-landing",
-    title: "storages.uz landing sahifasi yangilandi",
+    title: "Yemzor landing sahifasi yangilandi",
     message:
       "Do‘kon ish jarayoni, xodim rollari, tez-tez so‘raladigan savollar va huquqiy sahifalar aniqroq ko‘rinishda.",
     date: "2026-10-05",
@@ -256,10 +281,10 @@ function getBillingReminder(company, subscription, now, supportContacts) {
     id: `billing-${subscription.period}-${dueDate}-${dayKey(now)}`,
     title:
       daysLeft < 0
-        ? "storages.uz oylik obunangiz tugadi"
+        ? "Yemzor oylik obunangiz tugadi"
         : daysLeft === 0
-          ? "storages.uz oylik obunangiz bugun tugaydi"
-          : `storages.uz oylik obunangiz tugashiga ${daysLeft} kun qoldi`,
+          ? "Yemzor oylik obunangiz bugun tugaydi"
+          : `Yemzor oylik obunangiz tugashiga ${daysLeft} kun qoldi`,
     message:
       daysLeft < 0
         ? `Obuna muddati tugagan. Davom ettirish uchun ${money(subscription.requiredAmount)} to‘lovni amalga oshiring.${helpContacts ? ` Yordam: ${helpContacts}.` : ""}`
@@ -430,7 +455,7 @@ function App() {
       const registration = await navigator.serviceWorker?.getRegistration();
       await registration?.update();
     } catch (error) {
-      console.error("storages.uz ilova yangilanishini tekshirib bo‘lmadi.", error);
+      console.error("Yemzor ilova yangilanishini tekshirib bo‘lmadi.", error);
     }
     if (latestBuildId && latestAppVersion) {
       window.localStorage.setItem(
@@ -482,7 +507,7 @@ function App() {
         }
       } catch (error) {
         if (active && navigator.onLine) {
-          console.error("storages.uz yangilanishini tekshirib bo‘lmadi.", error);
+          console.error("Yemzor yangilanishini tekshirib bo‘lmadi.", error);
         }
       }
     };
@@ -532,8 +557,6 @@ function App() {
         ? {
             id: company.id,
             name: company.name,
-            isDemo: Boolean(company.isDemo),
-            demoExpiresAt: company.demoExpiresAt || null,
             absentDeduction: 0,
           }
         : { name: "Do‘kon" },
@@ -830,7 +853,7 @@ function App() {
         <AccessChoicePage
           setupRequired={status.setupRequired}
           onLogin={() => setAccessView("login")}
-          onDemo={() => setAccessView("demo")}
+          onRegister={() => setAccessView("register")}
           onSetup={() => setAccessView("login")}
           theme={theme}
           onToggleTheme={toggleTheme}
@@ -872,34 +895,6 @@ function App() {
             </div>
           )}
         </>
-      ) : accessView === "demo" ? (
-        <>
-          <DemoRegistrationPage
-            onSuccess={refreshStatus}
-            onBack={() => setAccessView(isInstalledApp ? "access-choice" : "landing")}
-            onExistingDemo={() => setAccessView("login")}
-            onLegal={(page) => setLegalPage(page)}
-            theme={theme}
-            onToggleTheme={toggleTheme}
-          />
-          {legalPage && (
-            <div className="legal-overlay">
-              {legalPage === "offer" ? (
-                <OfferPage
-                  onBack={() => setLegalPage("")}
-                  theme={theme}
-                  onToggleTheme={toggleTheme}
-                />
-              ) : (
-                <PrivacyPolicyPage
-                  onBack={() => setLegalPage("")}
-                  theme={theme}
-                  onToggleTheme={toggleTheme}
-                />
-              )}
-            </div>
-          )}
-        </>
       ) : null
     ) : user.role === "platform_admin" ? (
       <>
@@ -912,16 +907,6 @@ function App() {
         />
         <PlatformPaymentReviewPanel />
       </>
-    ) : status.subscription?.demo && !status.subscription.active ? (
-      <DemoExpiredGate
-        onLogout={logout}
-        onRestart={async () => {
-          await logout();
-          setAccessView("demo");
-        }}
-        theme={theme}
-        onToggleTheme={toggleTheme}
-      />
     ) : status.subscription && !status.subscription.active ? (
       <SubscriptionPaymentGate
         onLogout={logout}
@@ -966,7 +951,7 @@ function App() {
     ) : (
       <main className="boot-screen">
         <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-        <strong>storages.uz</strong>
+        <strong>Yemzor</strong>
         <span>Do‘kon ma’lumotlari yuklanmadi. Qayta urining.</span>
         <button
           className="button button-secondary"
@@ -1013,7 +998,7 @@ function App() {
           <Modal
             title={translateText("Do‘koningizni baholang", currentLanguage())}
             subtitle={translateText(
-              "Storages.uz’dan foydalanish tajribangiz haqida fikr bildiring.",
+              "Yemzor’dan foydalanish tajribangiz haqida fikr bildiring.",
               currentLanguage(),
             )}
             onClose={deferReviewPrompt}
@@ -1039,7 +1024,7 @@ function App() {
         )}
       {reviewPrompt === "form" && (
         <Modal
-          title={translateText("Storages.uz’ni baholang", currentLanguage())}
+          title={translateText("Yemzor’ni baholang", currentLanguage())}
           subtitle={translateText(
             "Tajriba va takliflaringiz xizmatimizni yaxshilashga yordam beradi.",
             currentLanguage(),
@@ -1058,6 +1043,60 @@ function App() {
   );
 }
 
+function AnimatedCounter({ value, ready, suffix = "" }) {
+  const counterRef = useRef(null);
+  const startedRef = useRef(false);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!ready || startedRef.current) return undefined;
+    const element = counterRef.current;
+    if (!element) return undefined;
+
+    let frame = 0;
+    const target = Math.max(0, Number(value) || 0);
+    const start = () => {
+      if (startedRef.current) return;
+      startedRef.current = true;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setCount(target);
+        return;
+      }
+
+      const startTime = performance.now();
+      const animate = (time) => {
+        const progress = Math.min((time - startTime) / 1800, 1);
+        setCount(Math.round(target * (1 - (1 - progress) ** 3)));
+        if (progress < 1) frame = window.requestAnimationFrame(animate);
+      };
+      frame = window.requestAnimationFrame(animate);
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      start();
+      return () => window.cancelAnimationFrame(frame);
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      observer.disconnect();
+      start();
+    }, { threshold: 0.3 });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
+    };
+  }, [ready, value]);
+
+  return (
+    <strong ref={counterRef}>
+      {count.toLocaleString(currentLocale())}
+      {suffix && <em>{suffix}</em>}
+    </strong>
+  );
+}
+
 function LandingPage({
   phone,
   telegram,
@@ -1067,7 +1106,6 @@ function LandingPage({
   theme,
   onToggleTheme,
 }) {
-  const now = useClock();
   const [landingStats, setLandingStats] = useState(null);
   const [landingStatsError, setLandingStatsError] = useState(false);
   const [selectedFeature, setSelectedFeature] = useState(null);
@@ -1075,14 +1113,6 @@ function LandingPage({
   const [mobileDrawerMounted, setMobileDrawerMounted] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const heroBannerRef = useRef(null);
-  const launchDate = new Date(2026, 9, 29);
-  const anniversary = new Date(now.getFullYear(), launchDate.getMonth(), launchDate.getDate());
-  const experienceYears = Math.max(
-    0,
-    now.getFullYear() -
-      launchDate.getFullYear() -
-      (now < anniversary ? 1 : 0),
-  );
   useEffect(() => {
     let active = true;
     api("/api/public/landing")
@@ -1471,7 +1501,7 @@ function LandingPage({
         <a href="#" className="brand">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong><span className="brand-name-storage">storages</span><span className="brand-name-domain">.uz</span></strong>
+            <strong>Yemzor</strong>
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
           </span>
         </a>
@@ -1514,6 +1544,15 @@ function LandingPage({
         <div className="landing-header-actions">
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
           <button
+            className="button button-primary landing-header-register"
+            onClick={() => {
+              setMobileNavigationOpen(false);
+              onRegister();
+            }}
+          >
+            {translateText("Bepul ro‘yxatdan o‘tish", currentLanguage())}
+          </button>
+          <button
             className="button button-secondary landing-header-login"
             onClick={() => {
               setMobileNavigationOpen(false);
@@ -1542,7 +1581,7 @@ function LandingPage({
               <div className="landing-drawer-brand">
                 <img src="/yemzor-logo.png" alt="" />
                 <span>
-                  <strong><span className="brand-name-storage">storages</span><span className="brand-name-domain">.uz</span></strong>
+                  <strong>Yemzor</strong>
                   <small>SAVDO VA OMBOR BOSHQARUVI</small>
                 </span>
                 <button
@@ -1590,7 +1629,7 @@ function LandingPage({
               </span>
               <h1>Ombor, savdo va xodimlar hisobi — bitta joyda.</h1>
               <p>
-                storages.uz hayvonlar uchun ozuqa savdosini tartibli yuritishga
+                Yemzor hayvonlar uchun ozuqa savdosini tartibli yuritishga
                 yordam beradi: kirim va qoldiqni kuzating, savdoni chek bilan
                 qayd eting, jamoa va oylik hisobini boshqaring.
               </p>
@@ -1614,7 +1653,7 @@ function LandingPage({
                   type="button"
                   onClick={onRegister}
                 >
-                  {translateText("1 oy bepul sinash", currentLanguage())}{" "}
+                  {translateText("Bepul ro‘yxatdan o‘tish", currentLanguage())}{" "}
                   <FiChevronRight aria-hidden="true" />
                 </button>
                 <button
@@ -1629,12 +1668,12 @@ function LandingPage({
             </div>
             <div
               className="landing-preview"
-              aria-label="storages.uz savdo boshqaruv paneli namunasi"
+              aria-label="Yemzor savdo boshqaruv paneli namunasi"
             >
               <div className="preview-window">
                 <div className="preview-topbar">
                   <span className="preview-brand">
-                    <img src="/yemzor-logo.png" alt="" /> storages.uz
+                    <img src="/yemzor-logo.png" alt="" /> Yemzor
                   </span>
                   <span className="preview-online">
                     <i /> Jonli ko‘rinish
@@ -1702,7 +1741,7 @@ function LandingPage({
       <section className="landing-trust" aria-labelledby="landing-trust-title">
         <div className="landing-trust-heading">
           <span className="landing-kicker">
-            <i /> {translateText("RAQAMLARDA STORAGES.UZ", currentLanguage())}
+            <i /> {translateText("RAQAMLARDA YEMZOR", currentLanguage())}
           </span>
           <h2 id="landing-trust-title">
             {translateText("Bizga tobora ko‘proq do‘konlar ishonmoqda", currentLanguage())}
@@ -1717,22 +1756,28 @@ function LandingPage({
         <div className="landing-trust-grid">
           <article className="landing-trust-stat">
             <span><FiUsers aria-hidden="true" /></span>
-            <strong>{landingStats?.registrationCount?.toLocaleString(currentLocale()) ?? "—"}<em>+</em></strong>
+            {landingStats ? (
+              <AnimatedCounter value={landingStats.registrationCount} ready suffix="+" />
+            ) : <strong>—</strong>}
             <small>{translateText("Ro‘yxatdan o‘tgan foydalanuvchilar", currentLanguage())}</small>
           </article>
           <article className="landing-trust-stat">
             <span><FiBriefcase aria-hidden="true" /></span>
-            <strong>{landingStats?.companyCount?.toLocaleString(currentLocale()) ?? "—"}<em>+</em></strong>
+            {landingStats ? (
+              <AnimatedCounter value={landingStats.companyCount} ready suffix="+" />
+            ) : <strong>—</strong>}
             <small>{translateText("Jami do‘konlar", currentLanguage())}</small>
           </article>
           <article className="landing-trust-stat">
             <span><FiStar aria-hidden="true" /></span>
-            <strong>{landingStats?.reviewCount ? `${landingStats.satisfactionPercent}%` : "—"}</strong>
+            {landingStats?.reviewCount ? (
+              <AnimatedCounter value={landingStats.satisfactionPercent} ready suffix="%" />
+            ) : <strong>—</strong>}
             <small>{translateText("Mijozlar mamnunligi", currentLanguage())}</small>
           </article>
           <article className="landing-trust-stat">
             <span><FiCalendar aria-hidden="true" /></span>
-            <strong>{experienceYears}</strong>
+            <AnimatedCounter value={1} ready />
             <small>{translateText("Yillik tajriba", currentLanguage())}</small>
           </article>
         </div>
@@ -1743,33 +1788,7 @@ function LandingPage({
         )}
       </section>
 
-      <section className="landing-about" id="haqida">
-        <div className="landing-about-head">
-          <span className="landing-kicker">
-            <i /> YEM MAHSULOTLARI HISOBI
-          </span>
-          <h2>Har xil yem mahsulotlari — bitta tartibli hisobda</h2>
-          <p>
-            Kepak, arpa yormasi, bug‘doy, kombikorm va chorva uchun boshqa
-            ozuqalarni mahsulotma-mahsulot yuriting. Qop yoki kilogrammda kirim
-            qo‘shing, savdoni qayd eting va omborda qancha yem qolganini
-            tekshiring — barcha ma’lumot bir joyda saqlanadi.
-          </p>
-        </div>
-        <div className="landing-about-highlights">
-          {aboutHighlights.map(({ title, text, icon: Icon }) => (
-            <article className="landing-about-highlight" key={title}>
-              <span>
-                <Icon aria-hidden="true" />
-              </span>
-              <div>
-                <h3>{title}</h3>
-                <p>{text}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+
 
       <section className="landing-features" id="imkoniyatlar">
         <div className="landing-section-head">
@@ -1865,6 +1884,19 @@ function LandingPage({
         </div>
       </section>
 
+
+
+      <section className="landing-mini-section landing-mini-units" id="birliklar">
+        <div>
+          <span className="landing-kicker"><i /> MOSLASHUVCHAN HISOB</span>
+          <h2>Mahsulotingizni o‘z birligida kiriting</h2>
+          <p>Har bir tovar uchun mos birlikni tanlang; suyuqliklarda litr yoki millilitr ishlating.</p>
+        </div>
+        <div className="unit-pills" aria-label="Qo‘llab-quvvatlanadigan birliklar">
+          <span>Qop</span><span>Kg / tonna</span><span>litr</span><span>millilitr</span><span>dona</span><span>blok</span>
+        </div>
+      </section>
+
       <section className="landing-reviews" id="fikrlar">
         <div className="landing-section-head">
           <span className="landing-kicker">
@@ -1882,6 +1914,9 @@ function LandingPage({
           <div className="landing-review-grid">
             {landingStats.reviews.map((review, index) => (
               <article className="landing-review-card" key={`${review.authorName}-${index}`}>
+                <span className="landing-review-quote" aria-hidden="true">
+                  <FiMessageCircle />
+                </span>
                 <div className="landing-review-stars" aria-label={`${review.rating} / 5`}>
                   {Array.from({ length: 5 }, (_, star) => (
                     <FiStar key={star} aria-hidden="true" />
@@ -1890,7 +1925,10 @@ function LandingPage({
                 <p>“{review.comment}”</p>
                 <div className="landing-review-author">
                   <span>{review.authorName.trim().slice(0, 1).toLocaleUpperCase(currentLocale())}</span>
-                  <strong>{review.authorName}</strong>
+                  <div>
+                    <strong>{review.authorName}</strong>
+                    <small>{translateText("Do‘kon boshlig‘i", currentLanguage())}</small>
+                  </div>
                 </div>
               </article>
             ))}
@@ -1903,6 +1941,34 @@ function LandingPage({
             )}
           </p>
         )}
+      </section>
+
+      <section className="landing-about" id="haqida">
+        <div className="landing-about-head">
+          <span className="landing-kicker">
+            <i /> YEM MAHSULOTLARI HISOBI
+          </span>
+          <h2>Har xil yem mahsulotlari — bitta tartibli hisobda</h2>
+          <p>
+            Kepak, arpa yormasi, bug‘doy, kombikorm va chorva uchun boshqa
+            ozuqalarni mahsulotma-mahsulot yuriting. Qop yoki kilogrammda kirim
+            qo‘shing, savdoni qayd eting va omborda qancha yem qolganini
+            tekshiring — barcha ma’lumot bir joyda saqlanadi.
+          </p>
+        </div>
+        <div className="landing-about-highlights">
+          {aboutHighlights.map(({ title, text, icon: Icon }) => (
+            <article className="landing-about-highlight" key={title}>
+              <span>
+                <Icon aria-hidden="true" />
+              </span>
+              <div>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="landing-showcase landing-showcase-ledger">
@@ -2008,23 +2074,14 @@ function LandingPage({
         </div>
       </section>
 
-      <section className="landing-mini-section landing-mini-units" id="birliklar">
-        <div>
-          <span className="landing-kicker"><i /> MOSLASHUVCHAN HISOB</span>
-          <h2>Mahsulotingizni o‘z birligida kiriting</h2>
-          <p>Har bir tovar uchun mos birlikni tanlang; suyuqliklarda litr yoki millilitr ishlating.</p>
-        </div>
-        <div className="unit-pills" aria-label="Qo‘llab-quvvatlanadigan birliklar">
-          <span>Qop</span><span>Kg / tonna</span><span>litr</span><span>millilitr</span><span>dona</span><span>blok</span>
-        </div>
-      </section>
+
 
       <section className="landing-faq">
         <div className="landing-faq-heading">
           <span className="landing-kicker">
             <i /> KO‘P SO‘RALADIGAN SAVOLLAR
           </span>
-          <h2>storages.uz haqida qisqacha</h2>
+          <h2>Yemzor haqida qisqacha</h2>
           <p>Do‘konning kundalik hisobiga oid muhim savollarga javoblar.</p>
         </div>
         <div className="landing-faq-list">
@@ -2045,7 +2102,7 @@ function LandingPage({
           <span className="landing-kicker">
             <i /> {translateText("KOMPYUTER VA TELEFONDA", currentLanguage())}
           </span>
-          <h2>{translateText("storages.uz’ni kompyuter yoki telefonga o‘rnating", currentLanguage())}</h2>
+          <h2>{translateText("Yemzor’ni kompyuter yoki telefonga o‘rnating", currentLanguage())}</h2>
           <p>
             {translateText(
               "Tugmani bosing — ilova fayli brauzerning Yuklab olinganlar bo‘limiga tushadi. Tovar va savdo ma’lumotlari qurilmada saqlanadi; login va oylik to‘lov tekshiruvi uchun internet kerak.",
@@ -2057,7 +2114,7 @@ function LandingPage({
           <a
             className="landing-download-button"
             href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor-Setup.exe"
-            aria-label={`${translateText("Windows uchun .exe", currentLanguage())} storages.uz`}
+            aria-label={`${translateText("Windows uchun .exe", currentLanguage())} Yemzor`}
           >
             <FiMonitor aria-hidden="true" />
             <span>
@@ -2069,7 +2126,7 @@ function LandingPage({
           <a
             className="landing-download-button"
             href="https://github.com/nazirov1804-web/yemzor/releases/latest/download/Yemzor.apk"
-            aria-label={`${translateText("Android uchun .apk", currentLanguage())} storages.uz`}
+            aria-label={`${translateText("Android uchun .apk", currentLanguage())} Yemzor`}
           >
             <FiSmartphone aria-hidden="true" />
             <span>
@@ -2090,7 +2147,7 @@ function LandingPage({
             <i /> {translateText("ALOQA", currentLanguage())}
           </span>
           <h2>{translateText("Savolingiz bormi?", currentLanguage())}</h2>
-          <p>{translateText("Demo olishdan oldin storages.uz haqida bizdan so‘rashingiz mumkin.", currentLanguage())}</p>
+          <p>{translateText("Ro‘yxatdan o‘tishdan oldin Yemzor haqida bizdan so‘rashingiz mumkin.", currentLanguage())}</p>
         </div>
         <div className="contact-cards">
           <a
@@ -2126,9 +2183,9 @@ function LandingPage({
         </div>
       </section>
 
-      <section className="landing-cta landing-cta-bottom" id="demo">
+      <section className="landing-cta landing-cta-bottom" id="royxatdan-otish">
         <div className="cta-copy">
-          <h2>{translateText("Do‘koningizni oching va bir oy bepul sinang", currentLanguage())}</h2>
+          <h2>{translateText("Do‘koningizni bepul ro‘yxatdan o‘tkazing", currentLanguage())}</h2>
           <p>
             {translateText(
               "Do‘koningizni ro‘yxatdan o‘tkazing, ma’lumotlarni kiriting va 30 kun davomida bepul foydalaning.",
@@ -2138,10 +2195,10 @@ function LandingPage({
         </div>
         <div className="landing-cta-actions">
           <button
-            className="button button-primary demo-cta-button"
+            className="button button-primary"
             onClick={onRegister}
           >
-            {translateText("1 oy bepul boshlash", currentLanguage())} <FiChevronRight />
+            {translateText("Bepul ro‘yxatdan o‘tish", currentLanguage())} <FiChevronRight />
           </button>
         </div>
       </section>
@@ -2174,12 +2231,12 @@ function LandingPage({
         <a href="#" className="brand">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong><span className="brand-name-storage">storages</span><span className="brand-name-domain">.uz</span></strong>
+            <strong>Yemzor</strong>
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
           </span>
         </a>
         <span>
-          © {now.getFullYear()} storages.uz.{" "}
+          © {now.getFullYear()} Yemzor.{" "}
           {translateText("Barcha huquqlar himoyalangan.", currentLanguage())}
         </span>
       </footer>
@@ -2276,7 +2333,7 @@ function FeatureDetails({ feature }) {
 function AccessChoicePage({
   setupRequired,
   onLogin,
-  onDemo,
+  onRegister,
   onSetup,
   theme,
   onToggleTheme,
@@ -2290,7 +2347,7 @@ function AccessChoicePage({
         <a className="brand brand-light" href="#">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>storages.uz</strong>
+            <strong>Yemzor</strong>
             <small>{translateText("SAVDO VA OMBOR BOSHQARUVI", currentLanguage())}</small>
           </span>
         </a>
@@ -2299,7 +2356,7 @@ function AccessChoicePage({
           <h1>{translateText("Qanday davom etishni tanlang.", currentLanguage())}</h1>
           <p>
             {translateText(
-              "Mavjud hisobingizga kiring yoki bepul demo hisobini yarating.",
+              "Mavjud hisobingizga kiring yoki do‘koningiz uchun 30 kun bepul foydalanish bilan ro‘yxatdan o‘ting.",
               currentLanguage(),
             )}
           </p>
@@ -2311,9 +2368,9 @@ function AccessChoicePage({
           <button
             type="button"
             className="button button-primary button-wide"
-            onClick={onDemo}
+            onClick={onRegister}
           >
-            {translateText("Demo ro‘yxatdan o‘tish", currentLanguage())}
+            {translateText("Bepul ro‘yxatdan o‘tish", currentLanguage())}
             <FiChevronRight />
           </button>
           <button
@@ -2334,207 +2391,6 @@ function AccessChoicePage({
             </button>
           )}
         </div>
-      </section>
-    </main>
-  );
-}
-
-function DemoRegistrationPage({
-  onSuccess,
-  onBack,
-  onExistingDemo,
-  onLegal,
-  theme,
-  onToggleTheme,
-}) {
-  const [saving, setSaving] = useState(false);
-  const [sendingCode, setSendingCode] = useState(false);
-
-  async function sendCode(form) {
-    if (form.get("consent") !== "on") {
-      toast.error("Davom etish uchun oferta va maxfiylik siyosatiga rozilik bildiring.");
-      return;
-    }
-    const email = form.get("email");
-    if (!email || typeof email !== "string") {
-      toast.error("Emailni kiriting.");
-      return;
-    }
-    setSendingCode(true);
-    try {
-      const result = await api("/api/demo/register/request", {
-        method: "POST",
-        body: { email },
-      });
-      toast.success(
-        result.message || `Tasdiqlash kodi ${email} manziliga yuborildi.`,
-      );
-    } catch (cause) {
-      toast.error(cause.message);
-    } finally {
-      setSendingCode(false);
-    }
-  }
-
-  async function submit(event) {
-    event.preventDefault();
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    if (form.get("consent") !== "on") {
-      toast.error("Demo ochishdan oldin oferta va maxfiylik siyosatiga rozilik bildiring.");
-      return;
-    }
-    setSaving(true);
-    try {
-      await api("/api/demo/register", {
-        method: "POST",
-        body: {
-          name: form.get("name"),
-          email: form.get("email"),
-          password: form.get("password"),
-          verificationCode: String(form.get("verificationCode") || ""),
-        },
-      });
-      toast.success("Demo do‘kon ochildi · 48 soat foydalanishingiz mumkin");
-      await onSuccess();
-    } catch (cause) {
-      toast.error(cause.message);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <main className="access-shell">
-      <div className="access-theme">
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-      </div>
-      <section className="access-aside">
-        <a className="brand brand-light" href="#">
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-          <span>
-            <strong>storages.uz</strong>
-            <small>48 SOATLIK DEMO</small>
-          </span>
-        </a>
-        <div className="access-message">
-          <span className="eyebrow">BEPUL SINAB KO‘RING</span>
-          <h1>Do‘kon ishini to‘liq sinab ko‘ring.</h1>
-          <p>
-            Demo do‘konda tovar, savdo, hisobot va xodimlarni boshqarish
-            imkoniyatlari bor. Demo 48 soatdan keyin avtomatik yopiladi.
-          </p>
-        </div>
-        <div className="access-foot">
-          Email orqali ro‘yxatdan o‘ting · Tasdiqlash kodi yuboriladi
-        </div>
-      </section>
-      <section className="access-main">
-        <form className="access-card" onSubmit={submit}>
-          <button type="button" className="back-link" onClick={onBack}>
-            {translateText("← Qaytish", currentLanguage())}
-          </button>
-          <span className="eyebrow">YANGI DEMO HISOBI</span>
-          <h2>48 soat bepul sinash</h2>
-          <Field label="Ism-familiya">
-            <input
-              name="name"
-              autoComplete="name"
-              required
-              minLength="2"
-              maxLength="80"
-              placeholder="Masalan, Ali Valiyev"
-            />
-          </Field>
-          <div className="field-row demo-email-row">
-            <Field label={translateText("Email", currentLanguage())}>
-              <input
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                maxLength="254"
-                placeholder="ali@example.com"
-              />
-            </Field>
-            <button
-              type="button"
-              className="button button-secondary demo-send-code"
-              disabled={sendingCode}
-              onClick={(event) => {
-                const form = new FormData(event.currentTarget.form);
-                sendCode(form);
-              }}
-            >
-              {sendingCode ? "Kodni yuborish..." : "Kodni yuborish"}
-            </button>
-          </div>
-          <Field label="Tasdiqlash kodi">
-            <input
-              name="verificationCode"
-              inputMode="numeric"
-              minLength="6"
-              maxLength="6"
-              pattern="[0-9]*"
-              placeholder="6 xonali kod"
-              required
-            />
-          </Field>
-          <Field label="Parol">
-            <PasswordInput
-              name="password"
-              autoComplete="new-password"
-              required
-              minLength="10"
-              maxLength="200"
-              placeholder="Kamida 10 ta belgi"
-            />
-          </Field>
-          <label className="demo-consent">
-            <input name="consent" type="checkbox" required />
-            <span>
-              <a
-                href="#offer"
-                onClick={(event) => {
-                  event.preventDefault();
-                  onLegal("offer");
-                }}
-              >
-                Ommaviy oferta
-              </a>{" "}
-              va{" "}
-              <a
-                href="#privacy"
-                onClick={(event) => {
-                  event.preventDefault();
-                  onLegal("privacy");
-                }}
-              >
-                maxfiylik siyosati
-              </a>{" "}
-              shartlariga rozilik bildiraman.
-            </span>
-          </label>
-          <button
-            className="button button-primary button-wide"
-            disabled={saving}
-          >
-            {saving ? "Hisob yaratilmoqda..." : "Demo do‘konni ochish"}{" "}
-            <FiChevronRight />
-          </button>
-          <p className="security-note">
-            Har bir email uchun bitta demo beriladi. Demo tugagach,
-            ma’lumotlarga kirish yopiladi.
-          </p>
-          <button
-            type="button"
-            className="text-button demo-existing-login"
-            onClick={onExistingDemo}
-          >
-            Demo akkauntingiz bormi? Email va parol bilan kiring{" "}
-            <FiChevronRight />
-          </button>
-        </form>
       </section>
     </main>
   );
@@ -2651,7 +2507,7 @@ function StoreRegistrationPage({
         <a className="brand brand-light" href="#">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>storages.uz</strong>
+            <strong>Yemzor</strong>
             <small>{translateText("1 OY BEPUL FOYDALANISH", currentLanguage())}</small>
           </span>
         </a>
@@ -2696,7 +2552,7 @@ function StoreRegistrationPage({
           </h2>
           <p className="muted">
             {step === "email"
-              ? translateText("Emailingiz va storages.uz akkauntingiz uchun yangi parolni kiriting.", currentLanguage())
+              ? translateText("Emailingiz va Yemzor akkauntingiz uchun yangi parolni kiriting.", currentLanguage())
               : step === "verify"
                 ? `${email}${translateText(" manziliga yuborilgan 6 xonali kodni kiriting.", currentLanguage())}`
                 : translateText("Email tasdiqlandi. Do‘kon yaratish uchun quyidagi ma’lumotlarni kiriting.", currentLanguage())}
@@ -2715,7 +2571,7 @@ function StoreRegistrationPage({
                   onChange={(event) => setEmail(event.target.value)}
                 />
               </Field>
-              <Field label={translateText("storages.uz uchun parol", currentLanguage())}>
+              <Field label={translateText("Yemzor uchun parol", currentLanguage())}>
                 <PasswordInput
                   name="password"
                   autoComplete="new-password"
@@ -2733,7 +2589,7 @@ function StoreRegistrationPage({
                   )}
                 </span>
               </Field>
-              <label className="demo-consent">
+              <label className="registration-consent">
                 <input name="consent" type="checkbox" required />
                 <span>
                   <a
@@ -2896,7 +2752,7 @@ function AccessPage({
         <a className="brand brand-light" href="#">
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong>storages.uz</strong>
+            <strong>Yemzor</strong>
             <small>YEM SAVDOSI NAZORATI</small>
           </span>
         </a>
@@ -3085,7 +2941,7 @@ function SubscriptionGate({
       <a className="brand" href="#">
         <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
         <span>
-          <strong>storages.uz</strong>
+          <strong>Yemzor</strong>
           <small>OBUNA HOLATI</small>
         </span>
       </a>
@@ -3143,7 +2999,7 @@ function SubscriptionGate({
           </button>
         </div>
         <div className="subscription-support">
-          <strong>storages.uz bilan bog‘lanish</strong>
+          <strong>Yemzor bilan bog‘lanish</strong>
           {supportContacts?.phone && (
             <a href={`tel:${supportContacts.phone.replace(/[^\d+]/g, "")}`}>
               {supportContacts.phone}
@@ -3162,54 +3018,6 @@ function SubscriptionGate({
         <small className="subscription-note">
           To‘lov platforma egasi tomonidan tasdiqlanadi. Sahifa holati avtomatik
           yangilanadi.
-        </small>
-      </section>
-    </main>
-  );
-}
-
-function DemoExpiredGate({ onLogout, onRestart, theme, onToggleTheme }) {
-  return (
-    <main className="subscription-shell">
-      <div className="access-theme">
-        <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-      </div>
-      <a className="brand" href="#">
-        <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-        <span>
-          <strong>storages.uz</strong>
-          <small>DEMO HOLATI</small>
-        </span>
-      </a>
-      <section className="subscription-card">
-        <span className="subscription-icon">
-          <FiClock />
-        </span>
-        <span className="status-pill status-pending">
-          48 SOATLIK DEMO YAKUNLANDI
-        </span>
-        <h1>Demo muddati tugadi</h1>
-        <p>
-          Demo hisobingiz 48 soat ishladi. Yangi demo ochish uchun boshqa email
-          bilan ro‘yxatdan o‘ting.
-        </p>
-        <div className="subscription-actions">
-          <button
-            className="button button-primary button-wide"
-            onClick={onRestart}
-          >
-            Yangi demo ro‘yxatdan o‘tkazish <FiChevronRight />
-          </button>
-          <button
-            className="button button-secondary button-wide"
-            onClick={onLogout}
-          >
-            <FiLogOut /> Chiqish
-          </button>
-        </div>
-        <small className="subscription-note">
-          Avvalgi demo ma’lumotlari hisob tarixida saqlanadi, ammo do‘kon
-          paneliga kirish yopilgan.
         </small>
       </section>
     </main>
@@ -3943,6 +3751,7 @@ function StoreApp({
           products={products}
           companyName={data.company?.name}
           owner={owner}
+          canViewProfit={isOwner}
           employees={employees}
         />
       )}
@@ -4206,7 +4015,7 @@ function StoreReviewPage({ companyName, embedded = false, onSaved }) {
       {!embedded && (
         <PageHeading
           eyebrow={translateText("MIJOZLAR FIKRI", currentLanguage())}
-          title={translateText("Storages.uz’ni baholang", currentLanguage())}
+          title={translateText("Yemzor’ni baholang", currentLanguage())}
           description={translateText(
             "Tajriba va takliflaringiz xizmatimizni yaxshilashga yordam beradi.",
             currentLanguage(),
@@ -4255,7 +4064,7 @@ function StoreReviewPage({ companyName, embedded = false, onSaved }) {
                   )}
                 />
               </Field>
-              <label className="demo-consent">
+              <label className="registration-consent">
                 <input
                   type="checkbox"
                   checked={publicConsent}
@@ -4295,17 +4104,53 @@ function AccountSettingsPage({
 }) {
   const [saving, setSaving] = useState(false);
   const [savingCompany, setSavingCompany] = useState(false);
+  const [savingProfileImage, setSavingProfileImage] = useState(false);
+  const [profileImage, setProfileImage] = useState(user.profileImage || "");
+  const [profileImageError, setProfileImageError] = useState("");
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState("");
   const [companyError, setCompanyError] = useState("");
   const [resetError, setResetError] = useState("");
+  async function submitProfileImage(event) {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const file = form.get("profileImage");
+    if (!(file instanceof File) || !file.size) {
+      setProfileImageError(
+        translateText("Profil rasmini tanlang.", currentLanguage()),
+      );
+      return;
+    }
+    setSavingProfileImage(true);
+    setProfileImageError("");
+    try {
+      const image = await encodeProfileImage(file);
+      const result = await api("/api/company/profile-picture", {
+        method: "PATCH",
+        body: { image },
+      });
+      setProfileImage(result.user.profileImage || "");
+      onUserUpdate(result.user);
+      formElement.reset();
+      toast.success(
+        translateText("Profil rasmi saqlandi.", currentLanguage()),
+      );
+    } catch (cause) {
+      setProfileImageError(translateText(cause.message, currentLanguage()));
+    } finally {
+      setSavingProfileImage(false);
+    }
+  }
   async function submit(event) {
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const newPassword = form.get("newPassword");
     if (newPassword && newPassword !== form.get("confirmPassword")) {
-      setError("Yangi parollar bir xil emas.");
+      setError(
+        translateText("Yangi parollar bir xil emas.", currentLanguage()),
+      );
       return;
     }
     setSaving(true);
@@ -4322,7 +4167,12 @@ function AccountSettingsPage({
       onUserUpdate(result.user);
       formElement.reset();
       formElement.elements.login.value = result.user.login;
-      toast.success("Kirish ma’lumotlari xavfsiz saqlandi");
+      toast.success(
+        translateText(
+          "Kirish ma’lumotlari xavfsiz saqlandi",
+          currentLanguage(),
+        ),
+      );
     } catch (cause) {
       setError(cause.message);
     } finally {
@@ -4346,7 +4196,7 @@ function AccountSettingsPage({
       });
       onCompanyUpdate?.(result.company);
       toast.success(
-        "Do‘kon sozlamalari saqlandi",
+        translateText("Do‘kon sozlamalari saqlandi", currentLanguage()),
       );
     } catch (cause) {
       setCompanyError(cause.message);
@@ -4358,9 +4208,15 @@ function AccountSettingsPage({
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    if (form.get("confirmation") !== "0 ga tushurish") {
+    if (
+      String(form.get("confirmation") || "").trim() !==
+      translateText("hisobni tozalash", currentLanguage())
+    ) {
       setResetError(
-        "Tasdiqlash uchun “0 ga tushurish” iborasini aynan kiriting.",
+        translateText(
+          "Tasdiqlash uchun “hisobni tozalash” deb yozing",
+          currentLanguage(),
+        ),
       );
       return;
     }
@@ -4376,7 +4232,7 @@ function AccountSettingsPage({
       });
       formElement.reset();
       await onResetData();
-      toast.success(result.message);
+      toast.success(translateText(result.message, currentLanguage()));
     } catch (cause) {
       setResetError(cause.message);
     } finally {
@@ -4390,6 +4246,52 @@ function AccountSettingsPage({
         title="Hisob sozlamalari"
         description="Kirish ma’lumotlari, ish haqi va to‘lov sozlamalarini boshqaring."
       />
+      <section className="panel account-settings profile-image-panel">
+        <div className="panel-head">
+          <div>
+            <h2>{translateText("Profil rasmi", currentLanguage())}</h2>
+            <p>
+              {translateText(
+                "Do‘kon boshlig‘i profiliga rasm yuklang.",
+                currentLanguage(),
+              )}
+            </p>
+          </div>
+        </div>
+        <form className="modal-form profile-image-form" onSubmit={submitProfileImage}>
+          <div className="profile-image-preview">
+            {profileImage ? (
+              <img src={profileImage} alt="" />
+            ) : (
+              (user.name || "Y").slice(0, 1).toUpperCase()
+            )}
+          </div>
+          <Field label={translateText("Rasm tanlang", currentLanguage())}>
+            <input
+              name="profileImage"
+              type="file"
+              accept="image/*"
+              required
+            />
+          </Field>
+          {profileImageError && (
+            <p className="form-error" role="alert">
+              {profileImageError}
+            </p>
+          )}
+          <div className="modal-actions">
+            <button
+              className="button button-secondary"
+              disabled={savingProfileImage}
+            >
+              {savingProfileImage
+                ? translateText("Saqlanmoqda...", currentLanguage())
+                : translateText("Profil rasmini saqlash", currentLanguage())}
+              <FiCheck />
+            </button>
+          </div>
+        </form>
+      </section>
       <section className="panel account-settings">
         <form className="modal-form" onSubmit={submit}>
           <Field label="Yangi login yoki email">
@@ -4417,7 +4319,10 @@ function AccountSettingsPage({
                 autoComplete="new-password"
                 minLength="10"
                 maxLength="200"
-                placeholder="O‘zgartirmasangiz bo‘sh qoldiring"
+                placeholder={translateText(
+                  "O‘zgartirmasangiz bo‘sh qoldiring",
+                  currentLanguage(),
+                )}
               />
             </Field>
             <Field label="Yangi parolni takrorlang">
@@ -4435,12 +4340,17 @@ function AccountSettingsPage({
             </p>
           )}
           <div className="security-note">
-            Parol ochiq matn ko‘rinishida saqlanmaydi. Yangisi himoyalangan xesh
-            ko‘rinishida bazaga yoziladi.
+            {translateText(
+              "Parol ochiq matn ko‘rinishida saqlanmaydi. Yangisi himoyalangan xesh ko‘rinishida bazaga yoziladi.",
+              currentLanguage(),
+            )}
           </div>
           <div className="modal-actions">
             <button className="button button-primary" disabled={saving}>
-              {saving ? "Saqlanmoqda..." : "O‘zgarishlarni saqlash"} <FiCheck />
+              {saving
+                ? translateText("Saqlanmoqda...", currentLanguage())
+                : translateText("O‘zgarishlarni saqlash", currentLanguage())}{" "}
+              <FiCheck />
             </button>
           </div>
         </form>
@@ -4451,7 +4361,9 @@ function AccountSettingsPage({
           className="modal-form"
           onSubmit={submitCompanySettings}
         >
-          <h2>Ish haqi va to‘lov sozlamalari</h2>
+          <h2>
+            {translateText("Ish haqi va to‘lov sozlamalari", currentLanguage())}
+          </h2>
           <Field label="Har bir kelmagan kun uchun jarima">
             <MoneyField
               name="absentDeduction"
@@ -4465,7 +4377,12 @@ function AccountSettingsPage({
               type="checkbox"
               defaultChecked={company?.restDayWorkBonusEnabled || false}
             />
-            <span>Haftalik dam olish kunida ishlagan xodimga bonus berish</span>
+            <span>
+              {translateText(
+                "Haftalik dam olish kunida ishlagan xodimga bonus berish",
+                currentLanguage(),
+              )}
+            </span>
           </label>
           <Field label="Dam olish kunidagi ish bonusi (har bir kelgan kun uchun)">
             <MoneyField
@@ -4480,14 +4397,18 @@ function AccountSettingsPage({
               type="checkbox"
               defaultChecked={company?.abedPaymentsEnabled !== false}
             />
-            <span>Tushlik/Abed to‘lovlarini yoqish</span>
+            <span>
+              {translateText(
+                "Tushlik/Abed to‘lovlarini yoqish",
+                currentLanguage(),
+              )}
+            </span>
           </label>
           <p className="security-note">
-            Bu miqdor bir marta kiritilganda, har bir kelmagan kun uchun jarima
-            yig‘ilib boradi va oylikdan ayriladi. Dam olish kunidagi bonus
-            faqat xodim dam olish kunida kelgan deb belgilansa qo‘shiladi.
-            Tushlik to‘lovini o‘chirish yangi Abed to‘lovlarini bloklaydi;
-            avvalgi yozuvlar tarixda saqlanadi.
+            {translateText(
+              "Bu miqdor bir marta kiritilganda, har bir kelmagan kun uchun jarima yig‘ilib boradi va oylikdan ayriladi. Dam olish kunidagi bonus faqat xodim dam olish kunida kelgan deb belgilansa qo‘shiladi. Tushlik to‘lovini o‘chirish yangi Abed to‘lovlarini bloklaydi; avvalgi yozuvlar tarixda saqlanadi.",
+              currentLanguage(),
+            )}
           </p>
           {companyError && (
             <p className="form-error" role="alert">
@@ -4499,7 +4420,9 @@ function AccountSettingsPage({
               className="button button-secondary"
               disabled={savingCompany}
             >
-              {savingCompany ? "Saqlanmoqda..." : "Sozlamalarni saqlash"}{" "}
+              {savingCompany
+                ? translateText("Saqlanmoqda...", currentLanguage())
+                : translateText("Sozlamalarni saqlash", currentLanguage())}{" "}
               <FiCheck />
             </button>
           </div>
@@ -4508,10 +4431,12 @@ function AccountSettingsPage({
       <section className="panel account-settings account-reset-panel">
         <div className="panel-head">
           <div>
-            <h2>Hisobni 0 ga tushurish</h2>
+            <h2>{translateText("Hisobni tozalash", currentLanguage())}</h2>
             <p>
-              Tovarlar, xodimlar va menejerlar hamda savdo, kirim, davomat va
-              to‘lov yozuvlari o‘chadi.
+              {translateText(
+                "Tovarlar, xodimlar va menejerlar hamda savdo, kirim, davomat va to‘lov yozuvlari o‘chadi.",
+                currentLanguage(),
+              )}
             </p>
           </div>
         </div>
@@ -4523,13 +4448,24 @@ function AccountSettingsPage({
               required
             />
           </Field>
-          <Field label="Tasdiqlash uchun “0 ga tushurish” deb yozing">
-            <input name="confirmation" required autoComplete="off" />
+          <Field
+            label={translateText(
+              "Tasdiqlash uchun “hisobni tozalash” deb yozing",
+              currentLanguage(),
+            )}
+          >
+            <input
+              name="confirmation"
+              required
+              autoComplete="off"
+              placeholder={translateText("hisobni tozalash", currentLanguage())}
+            />
           </Field>
           <p className="security-note">
-            Egasi akkaunti, do‘kon nomi va obuna/to‘lov yozuvlari saqlanadi.
-            Operatsion sozlamalar xavfsiz standart qiymatlarga qaytadi.
-            O‘chirilgan ma’lumotlarni tiklab bo‘lmaydi.
+            {translateText(
+              "Egasi akkaunti, do‘kon nomi va obuna/to‘lov yozuvlari saqlanadi. Operatsion sozlamalar xavfsiz standart qiymatlarga qaytadi. O‘chirilgan ma’lumotlarni tiklab bo‘lmaydi.",
+              currentLanguage(),
+            )}
           </p>
           {resetError && (
             <p className="form-error" role="alert">
@@ -4538,7 +4474,9 @@ function AccountSettingsPage({
           )}
           <div className="modal-actions">
             <button className="button button-danger" disabled={resetting}>
-              {resetting ? "Hisob tozalanmoqda..." : "Hisobni 0 ga tushurish"}{" "}
+              {resetting
+                ? translateText("Hisob tozalanmoqda...", currentLanguage())
+                : translateText("Hisobni tozalash", currentLanguage())}{" "}
               <FiTrash2 />
             </button>
           </div>
@@ -4625,10 +4563,8 @@ function Shell({
       tabbar.style.removeProperty("--keyboard-offset");
     };
   }, []);
-  const countdownTarget = company?.isDemo
-    ? new Date(company.demoExpiresAt).getTime()
-    : subscription?.trial && subscription.expiresAt
-      ? new Date(subscription.expiresAt).getTime()
+  const countdownTarget = subscription?.trial && subscription.expiresAt
+    ? new Date(subscription.expiresAt).getTime()
     : subscription?.active && /^\d{4}-\d{2}$/.test(subscription.period || "")
       ? (() => {
           const [year, month] = subscription.period.split("-").map(Number);
@@ -4923,12 +4859,12 @@ function Shell({
         >
           <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
           <span>
-            <strong><span className="brand-name-storage">storages</span><span className="brand-name-domain">.uz</span></strong>
+            <strong>Yemzor</strong>
             <small>{platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI"}</small>
           </span>
         </a>
         <div className="side-caption">
-          {platform ? "BOSHQARUV" : "STORAGES"}
+          {platform ? "BOSHQARUV" : "YEMZOR"}
         </div>
         {nav && (
           <nav className="side-nav" aria-label="Asosiy menyu">
@@ -4942,7 +4878,7 @@ function Shell({
                 }}
               >
                 <Icon />
-                <span>{label}</span>
+                <span>{translateText(label, currentLanguage())}</span>
                 <FiChevronRight className="nav-chevron" />
               </button>
             ))}
@@ -4958,27 +4894,32 @@ function Shell({
           </div>
         )}
         <div className="sidebar-spacer" />
-        {!company?.isDemo && (
-          <div className="sidebar-system-state">
-            <span className="online-state">
-              <i /> Tizim faol
-            </span>
-          </div>
-        )}
+        <div className="sidebar-system-state">
+          <span className="online-state">
+            <i /> Tizim faol
+          </span>
+        </div>
         <div className="sidebar-user">
           <div className="avatar">
-            {(user.name || "Y").slice(0, 1).toUpperCase()}
+            {user.profileImage ? (
+              <img src={user.profileImage} alt="" />
+            ) : (
+              (user.name || "Y").slice(0, 1).toUpperCase()
+            )}
           </div>
           <div>
             <strong>{user.name}</strong>
             <span>
-              {user.role === "platform_admin"
-                ? "Platforma egasi"
-                : user.role === "company_owner"
-                  ? "Do‘kon boshlig‘i"
-                  : user.role === "manager"
-                    ? "Menejer"
-                    : "Hodim"}
+              {translateText(
+                user.role === "platform_admin"
+                  ? "Platforma egasi"
+                  : user.role === "company_owner"
+                    ? "Do‘kon boshlig‘i"
+                    : user.role === "manager"
+                      ? "Menejer"
+                      : "Hodim",
+                currentLanguage(),
+              )}
             </span>
           </div>
         </div>
@@ -5014,7 +4955,7 @@ function Shell({
             >
               <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
               <span>
-                <strong><span className="brand-name-storage">storages</span><span className="brand-name-domain">.uz</span></strong>
+                <strong>Yemzor</strong>
                 <small>
                   {platform ? "PLATFORMA BOSHQARUVI" : "SAVDO HISOBI"}
                 </small>
@@ -5022,13 +4963,16 @@ function Shell({
             </a>
           </div>
           <div className="topbar-context">
-            <span>{platform ? "storages.uz" : company?.name}</span>
+            <span>{platform ? "Yemzor" : company?.name}</span>
             <FiChevronRight />
             <strong>
-              {platform
-                ? "Boshqaruv"
-                : nav?.find(([id]) => id === activePage)?.[1] ||
-                  "Umumiy ko‘rinish"}
+              {translateText(
+                platform
+                  ? "Boshqaruv"
+                  : nav?.find(([id]) => id === activePage)?.[1] ||
+                    "Umumiy ko‘rinish",
+                currentLanguage(),
+              )}
             </strong>
           </div>
           <div className="topbar-right">
@@ -5112,9 +5056,9 @@ function PageHeading({ eyebrow, title, description, action }) {
   return (
     <div className="page-heading">
       <div>
-        <span className="eyebrow">{eyebrow}</span>
-        <h1>{title}</h1>
-        <p>{description}</p>
+        <span className="eyebrow">{translateText(eyebrow, currentLanguage())}</span>
+        <h1>{translateText(title, currentLanguage())}</h1>
+        <p>{translateText(description, currentLanguage())}</p>
       </div>
       {action}
     </div>
@@ -5127,9 +5071,9 @@ function Metric({ label, value, detail, icon: Icon, tone = "" }) {
       <span className={`metric-icon ${tone}`}>
         <Icon />
       </span>
-      <span className="metric-label">{label}</span>
+      <span className="metric-label">{translateText(label, currentLanguage())}</span>
       <strong>{value}</strong>
-      <small>{detail}</small>
+      <small>{translateText(detail, currentLanguage())}</small>
     </article>
   );
 }
@@ -5227,13 +5171,15 @@ function Overview({ user, data, onNavigate }) {
           icon={FiArrowUpRight}
           tone="green"
         />
-        <Metric
-          label="Bugungi foyda"
-          value={money(todayProfit)}
-          detail="Tan narx va sotuv narxi farqi"
-          icon={FiTrendingUp}
-          tone="green"
-        />
+        {user.role === "company_owner" && (
+          <Metric
+            label="Bugungi foyda"
+            value={money(todayProfit)}
+            detail="Tan narx va sotuv narxi farqi"
+            icon={FiTrendingUp}
+            tone="green"
+          />
+        )}
         <Metric
           label="Haftalik tushum"
           value={money(amountSum(weekly))}
@@ -5241,13 +5187,15 @@ function Overview({ user, data, onNavigate }) {
           icon={FiCalendar}
           tone="blue"
         />
-        <Metric
-          label="Haftalik foyda"
-          value={money(weeklyProfit)}
-          detail="Haftalik umumiy foyda"
-          icon={FiTrendingUp}
-          tone="blue"
-        />
+        {user.role === "company_owner" && (
+          <Metric
+            label="Haftalik foyda"
+            value={money(weeklyProfit)}
+            detail="Haftalik umumiy foyda"
+            icon={FiTrendingUp}
+            tone="blue"
+          />
+        )}
         <Metric
           label="Oylik tushum"
           value={money(amountSum(monthly))}
@@ -5255,13 +5203,15 @@ function Overview({ user, data, onNavigate }) {
           icon={FiDollarSign}
           tone="amber"
         />
-        <Metric
-          label="Oylik foyda"
-          value={money(monthlyProfit)}
-          detail="Bu oy umumiy foyda"
-          icon={FiTrendingUp}
-          tone="amber"
-        />
+        {user.role === "company_owner" && (
+          <Metric
+            label="Oylik foyda"
+            value={money(monthlyProfit)}
+            detail="Bu oy umumiy foyda"
+            icon={FiTrendingUp}
+            tone="amber"
+          />
+        )}
         <Metric
           label="Bugungi kelgan tovar"
           value={todayIncomingSummary.value}
@@ -6032,9 +5982,9 @@ function Receipt({ sale, autoPrint = false }) {
   useEffect(() => {
     let active = true;
     const receiptDetails = {
-      type: "storages.uz receipt",
+      type: "Yemzor receipt",
       id: sale.id,
-      brand: sale.companyName || "storages.uz",
+      brand: sale.companyName || "Yemzor",
       number: sale.receiptNumber,
       date: sale.createdAt,
       seller: sale.sellerName,
@@ -6045,8 +5995,6 @@ function Receipt({ sale, autoPrint = false }) {
         unit: item.unit,
         quantityUnit: item.quantityUnit,
         price: item.price,
-        costPrice: item.costPrice ?? item.price,
-        profit: item.profit ?? Math.max(0, (Number(item.lineTotal) || 0) - (Number(item.cost) || 0)),
         total: item.lineTotal,
       })),
     };
@@ -6078,13 +6026,12 @@ function Receipt({ sale, autoPrint = false }) {
   }, [autoPrint, sale.id]);
 
   const currentQr = qrResult?.saleId === sale.id ? qrResult : null;
-  const totalProfit = (sale.items || []).reduce((sum, item) => sum + (Number(item.profit) || Math.max(0, (Number(item.lineTotal) || 0) - (Number(item.cost) || 0))), 0);
 
   return (
     <div className="receipt">
       <div className="receipt-brand">
         <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
-        <strong>{sale.companyName || "storages.uz"}</strong>
+        <strong>{sale.companyName || "Yemzor"}</strong>
       </div>
       <p className="receipt-number">CHEK № {sale.receiptNumber}</p>
       <p className="receipt-date">{receiptDateTime(sale.createdAt)}</p>
@@ -6095,8 +6042,6 @@ function Receipt({ sale, autoPrint = false }) {
               {item.name}
               <small>
                 {saleQuantityLabel(item, item.quantity)} × {money(item.price)} / {unitName(item.unit)}
-                {item.costPrice != null && ` · Tan narx: ${money(item.costPrice)}`}
-                {Number(item.profit || 0) !== 0 && ` · Foyda: ${money(item.profit)}`}
               </small>
             </span>
             <b>{money(item.lineTotal)}</b>
@@ -6107,12 +6052,6 @@ function Receipt({ sale, autoPrint = false }) {
         <span>Jami</span>
         <strong>{money(sale.total)}</strong>
       </div>
-      {totalProfit !== 0 && (
-        <div className="total-line total-line-profit">
-          <span>Umumiy foyda</span>
-          <strong>{money(totalProfit)}</strong>
-        </div>
-      )}
       <div className="receipt-qr">
         <div className="receipt-qr-frame">
           {currentQr?.dataUrl ? (
@@ -6158,6 +6097,7 @@ function HistoryPage({
   products,
   companyName,
   owner,
+  canViewProfit,
   employees,
 }) {
   const now = useClock();
@@ -6359,13 +6299,15 @@ function HistoryPage({
             icon={FiDollarSign}
             tone="green"
           />
-          <Metric
-            label="Jami foyda"
-            value={money(filteredSales.reduce((sum, sale) => sum + saleProfit(sale), 0))}
-            detail="Tanlangan davrdagi barcha tovarlar"
-            icon={FiTrendingUp}
-            tone="green"
-          />
+          {canViewProfit && (
+            <Metric
+              label="Jami foyda"
+              value={money(filteredSales.reduce((sum, sale) => sum + saleProfit(sale), 0))}
+              detail="Tanlangan davrdagi barcha tovarlar"
+              icon={FiTrendingUp}
+              tone="green"
+            />
+          )}
           <Metric
             label="Tanlangan davr kirimi"
             value={movementQuantity(periodReceipts)}
@@ -6397,10 +6339,10 @@ function HistoryPage({
                 <tr>
                   <th>TOVAR</th>
                   <th>KELDI</th>
-                  <th>TAN NARXI (BIRLIK / JAMI)</th>
+                  {canViewProfit && <th>TAN NARXI (BIRLIK / JAMI)</th>}
                   <th>SOTILDI</th>
                   <th>SOTUV NARXI (BIRLIK / JAMI)</th>
-                  <th>JAMI FOYDA</th>
+                  {canViewProfit && <th>JAMI FOYDA</th>}
                 </tr>
               </thead>
               <tbody>
@@ -6420,17 +6362,19 @@ function HistoryPage({
                         {formatQuantity(row.incoming, row.unit)}{" "}
                         {unitName(row.unit)}
                       </td>
-                      <td>
-                        <strong>{money(unitCost)} / {unitName(row.unit)}</strong>
-                        <small>
-                          {row.soldCostMissing
-                            ? "Eski savdolarda tan narx yo‘q · "
-                            : row.soldCostQuantity > 0
-                              ? "Sotilganining jami: "
-                              : "Kirimning jami: "}
-                          {money(costTotal)}
-                        </small>
-                      </td>
+                      {canViewProfit && (
+                        <td>
+                          <strong>{money(unitCost)} / {unitName(row.unit)}</strong>
+                          <small>
+                            {row.soldCostMissing
+                              ? "Eski savdolarda tan narx yo‘q · "
+                              : row.soldCostQuantity > 0
+                                ? "Sotilganining jami: "
+                                : "Kirimning jami: "}
+                            {money(costTotal)}
+                          </small>
+                        </td>
+                      )}
                       <td>
                         {formatQuantity(row.sold, row.unit)}{" "}
                         {unitName(row.unit)}
@@ -6444,7 +6388,7 @@ function HistoryPage({
                           {money(row.soldValue)}
                         </small>
                       </td>
-                      <td><strong>{money(row.profit)}</strong></td>
+                      {canViewProfit && <td><strong>{money(row.profit)}</strong></td>}
                     </tr>
                   );
                 })}
@@ -8074,7 +8018,11 @@ function MovementForm({ kind, month, onSubmit }) {
 function Field({ label, children }) {
   return (
     <label className="field-label">
-      <span>{label}</span>
+      <span>
+        {typeof label === "string"
+          ? translateText(label, currentLanguage())
+          : label}
+      </span>
       {children}
     </label>
   );
@@ -8282,7 +8230,7 @@ function NotificationCenter({
                 )}
               </section>
               <footer>
-                <span>storages.uz · Yangiliklar va to‘lov eslatmalari</span>
+                <span>Yemzor · Yangiliklar va to‘lov eslatmalari</span>
                 <button
                   className="button button-secondary button-small"
                   type="button"
@@ -8322,7 +8270,7 @@ function Modal({
       >
         <header className="modal-heading">
           <div>
-            <span className="eyebrow">HISOBLI</span>
+            <span className="eyebrow">YEMZOR</span>
             <h2 id="dialog-title">{title}</h2>
             <p>{subtitle}</p>
           </div>
@@ -8441,7 +8389,7 @@ function BootScreen({ progress, error, networkOffline, onRetry }) {
       <header className="boot-brand">
         <img src="/yemzor-logo.png" alt="" />
         <div>
-          <strong>storages.uz</strong>
+          <strong>Yemzor</strong>
           <span>OMBOR TIZIMI BOSHQARUVI</span>
         </div>
       </header>

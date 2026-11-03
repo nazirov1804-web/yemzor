@@ -52,8 +52,6 @@ async function readCompany() {
             company: {
               id: company.id,
               name: company.name || "Do‘kon",
-              isDemo: Boolean(company.isDemo),
-              demoExpiresAt: company.demoExpiresAt || null,
               absentDeduction: 0,
               restDayWorkBonusEnabled: false,
               restDayWorkBonusAmount: 0,

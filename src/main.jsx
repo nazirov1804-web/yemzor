@@ -11,6 +11,6 @@ createRoot(document.getElementById('root')).render(
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch((error) => {
-    console.error('storages.uz ilovasini o‘rnatish xizmati ishga tushmadi.', error)
+    console.error('Yemzor ilovasini o‘rnatish xizmati ishga tushmadi.', error)
   })
 }
