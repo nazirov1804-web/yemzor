@@ -124,6 +124,7 @@ const entries = [
   ["Chek rasmi 3 MB dan kichik bo‘lishi kerak.", "Размер чека должен быть меньше 3 МБ.", "The receipt image must be smaller than 3 MB."],
   ["Chek rasmini o‘qib bo‘lmadi.", "Не удалось прочитать изображение чека.", "Could not read the receipt image."],
   ["Avval to‘lov cheki yoki screenshotini tanlang.", "Сначала выберите чек или снимок экрана оплаты.", "Select a payment receipt or screenshot first."],
+  ["Server yuborilayotgan ma’lumot hajmini qabul qilmadi (HTTP 413).", "Сервер отклонил запрос из-за слишком большого объёма данных (HTTP 413).", "The server rejected the request because the payload is too large (HTTP 413)."],
   ["Karta raqami 13–19 ta raqamdan iborat bo‘lishi kerak.", "Номер карты должен содержать 13–19 цифр.", "The card number must contain 13–19 digits."],
   ["Karta egasining ismini tekshiring.", "Проверьте имя владельца карты.", "Check the cardholder name."],
   ["To‘lovni tasdiqlash yoki rad etishni tanlang.", "Выберите подтверждение или отклонение платежа.", "Choose whether to approve or reject the payment."],

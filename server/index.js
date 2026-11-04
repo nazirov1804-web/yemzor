@@ -26,13 +26,15 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(cors({ origin: allowedOrigin, credentials: true }));
 app.use((request, response, next) => {
-  const limit =
+  const isImageUpdate =
     request.method === 'PATCH' &&
     ['/api/company/profile-picture', '/api/company/brand'].includes(
       request.path
-    )
-      ? '14mb'
-      : '5mb';
+    );
+  const isPaymentReceipt =
+    request.method === 'POST' &&
+    request.path === '/api/subscription/payment-requests';
+  const limit = isImageUpdate ? '14mb' : isPaymentReceipt ? '6mb' : '5mb';
   express.json({ limit })(request, response, next);
 });
 app.use(

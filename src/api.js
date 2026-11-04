@@ -60,7 +60,11 @@ export async function api(path, options = {}) {
   }
   const result = await response.json().catch(() => null)
   if (!response.ok) {
-    const error = new Error(result?.error || `So‘rov bajarilmadi (HTTP ${response.status}).`)
+    const message =
+      response.status === 413
+        ? "Server yuborilayotgan ma’lumot hajmini qabul qilmadi (HTTP 413)."
+        : result?.error || `So‘rov bajarilmadi (HTTP ${response.status}).`
+    const error = new Error(message)
     error.status = response.status
     error.details = result
     throw error
