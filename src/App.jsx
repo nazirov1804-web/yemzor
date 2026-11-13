@@ -44,8 +44,8 @@ import { Toaster, toast as sonnerToast } from "sonner";
 import QRCode from "qrcode";
 import { api, money, numberInput, readNumber } from "./api";
 import { translateText } from "./i18n";
-import salesReceiptImage from "./img/savdo.png";
-import employeeTeamImage from "./img/hodimlar.png";
+import salesReceiptImage from "./img/savdo.webp";
+import employeeTeamImage from "./img/hodimlar.webp";
 import ThemeToggle from "./components/ThemeToggle";
 import OfferPage from "./pages/OfferPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
@@ -614,7 +614,6 @@ function App() {
   useEffect(() => {
     let active = true;
     let finishTimer;
-    const bootStartedAt = Date.now();
     setBootProgress(5);
     Promise.all([api("/api/status"), api("/api/public/settings")])
       .then(async ([result, contact]) => {
@@ -646,7 +645,6 @@ function App() {
         setStatus(result);
         setData(storeData);
         setBootProgress(94);
-        const remainingTime = Math.max(0, 2800 - (Date.now() - bootStartedAt));
         finishTimer = window.setTimeout(() => {
           if (!active) return;
           setBootProgress(100);
@@ -656,7 +654,7 @@ function App() {
               setLoading(false);
             }
           }, 180);
-        }, remainingTime);
+        }, 0);
       })
       .catch((error) => {
         if (!active) return;
@@ -804,7 +802,8 @@ function App() {
   }
 
   const content =
-    loading || !status ? (
+    (loading || !status) &&
+    !(accessView === "landing" && !isInstalledApp && !bootError) ? (
       <BootScreen
         progress={bootProgress}
         error={bootError}
@@ -951,7 +950,7 @@ function App() {
       />
     ) : (
       <main className="boot-screen">
-        <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+        <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
         <strong>Yemzor</strong>
         <span>Do‘kon ma’lumotlari yuklanmadi. Qayta urining.</span>
         <button
@@ -1277,6 +1276,7 @@ function LandingPage({
     );
 
     revealTargets.forEach((target) => {
+      if (target.closest(".landing-hero")) return;
       target.classList.add("scroll-reveal");
       observer.observe(target);
     });
@@ -1328,7 +1328,7 @@ function LandingPage({
         "Minimal narx nazorati",
       ],
       visual: ["Kepak · 120 qop", "Yog‘ · 42 kg", "Qoldiq: 38 qop"],
-      image: "/images/ombor.png",
+      image: "/images/ombor.webp",
     },
     {
       id: "sales",
@@ -1390,7 +1390,7 @@ function LandingPage({
         "Hafta: 62 000 000 so‘m",
         "Kirim: 420 kg",
       ],
-      image: "/images/sales-report.jpg",
+      image: "/images/sales-report.webp",
     },
   ];
   const roleCards = [
@@ -1501,7 +1501,7 @@ function LandingPage({
         className={`landing-header ${selectedFeature ? "landing-header-modal-open" : ""}`}
       >
         <a href="#" className="brand">
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
           <span>
             <strong>Yemzor</strong>
             <small>SAVDO VA OMBOR BOSHQARUVI</small>
@@ -1581,7 +1581,7 @@ function LandingPage({
               aria-label="Sahifa bo‘limlari"
             >
               <div className="landing-drawer-brand">
-                <img src="/yemzor-logo.png" alt="" />
+                <img src="/yemzor-logo.webp" alt="" />
                 <span>
                   <strong>Yemzor</strong>
                   <small>SAVDO VA OMBOR BOSHQARUVI</small>
@@ -1685,7 +1685,7 @@ function LandingPage({
               <div className="preview-window">
                 <div className="preview-topbar">
                   <span className="preview-brand">
-                    <img src="/yemzor-logo.png" alt="" /> Yemzor
+                    <img src="/yemzor-logo.webp" alt="" /> Yemzor
                   </span>
                   <span className="preview-online">
                     <i /> Jonli ko‘rinish
@@ -2280,7 +2280,7 @@ function LandingPage({
         <div className="landing-footer-main">
           <div className="landing-footer-about">
             <a href="#" className="brand">
-              <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+              <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
               <span>
                 <strong>Yemzor</strong>
                 <small>SAVDO VA OMBOR BOSHQARUVI</small>
@@ -2397,6 +2397,8 @@ function Feature({ feature, onClick }) {
         className="feature-card-image"
         src={feature.image}
         alt={feature.title}
+        loading="lazy"
+        decoding="async"
       />
       <div className="feature-top">
         <span>
@@ -2466,7 +2468,7 @@ function AccessChoicePage({
       </div>
       <section className="access-aside">
         <a className="brand brand-light" href="#">
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
           <span>
             <strong>Yemzor</strong>
             <small>{translateText("SAVDO VA OMBOR BOSHQARUVI", currentLanguage())}</small>
@@ -2626,7 +2628,7 @@ function StoreRegistrationPage({
       </div>
       <section className="access-aside company-registration-aside">
         <a className="brand brand-light" href="#">
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
           <span>
             <strong>Yemzor</strong>
             <small>{translateText("1 OY BEPUL FOYDALANISH", currentLanguage())}</small>
@@ -2871,7 +2873,7 @@ function AccessPage({
         className={`access-aside ${!setupRequired ? `${loginRole}-role` : ""}`}
       >
         <a className="brand brand-light" href="#">
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
           <span>
             <strong>Yemzor</strong>
             <small>YEM SAVDOSI NAZORATI</small>
@@ -3064,7 +3066,7 @@ function SubscriptionGate({
         <ThemeToggle theme={theme} onToggle={onToggleTheme} />
       </div>
       <a className="brand" href="#">
-        <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+        <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
         <span>
           <strong>Yemzor</strong>
           <small>OBUNA HOLATI</small>
@@ -4831,7 +4833,7 @@ function Shell({
   const suppressTabClickRef = useRef(false);
   const now = useClock();
   const storeBrandName = platform ? "Yemzor" : company?.name || "Yemzor";
-  const storeBrandLogo = platform ? "/yemzor-logo.png" : company?.logo;
+  const storeBrandLogo = platform ? "/yemzor-logo.webp" : company?.logo;
   const supportTelegram =
     String(supportContacts?.telegram || "")
       .trim()
@@ -6402,7 +6404,7 @@ function Receipt({ sale, autoPrint = false }) {
   return (
     <div className="receipt">
       <div className="receipt-brand">
-        <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+        <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
         <strong>{sale.companyName || "Yemzor"}</strong>
       </div>
       <p className="receipt-number">CHEK № {sale.receiptNumber}</p>
@@ -8759,7 +8761,7 @@ function BootScreen({ progress, error, networkOffline, onRetry }) {
       className={`boot-screen boot-loader${lowFrameRate ? " boot-loader-low-fps" : ""}${slowNetwork ? " boot-loader-slow-network" : ""}`}
     >
       <header className="boot-brand">
-        <img src="/yemzor-logo.png" alt="" />
+        <img src="/yemzor-logo.webp" alt="" />
         <div>
           <strong>Yemzor</strong>
           <span>
@@ -8779,7 +8781,7 @@ function BootScreen({ progress, error, networkOffline, onRetry }) {
           <img
             key={imageStage}
             className={`boot-building-stage${visualStage === imageStage ? " is-visible" : ""}`}
-            src={`/loading/warehouse-stage-${imageStage}.png`}
+            src={`/loading/warehouse-stage-${imageStage}.webp`}
             alt=""
             decoding="async"
             fetchPriority={imageStage === 1 ? "high" : "auto"}

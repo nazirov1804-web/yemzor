@@ -24,7 +24,7 @@ export default function LegalPageLayout({
           <FiArrowLeft /> {translateText("Qaytish", language)}
         </button>
         <a href="#" className="brand">
-          <img className="brand-symbol" src="/yemzor-logo.png" alt="" />
+          <img className="brand-symbol" src="/yemzor-logo.webp" alt="" />
           <span>
             <strong>Yemzor</strong>
             <small>
