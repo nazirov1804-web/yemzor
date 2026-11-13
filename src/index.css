@@ -11595,14 +11595,11 @@ html[data-theme="dark"] .app-update-banner {
 }
 
 .boot-loader {
-  gap: 20px;
-  padding: max(24px, env(safe-area-inset-top)) 24px
+  gap: 18px;
+  padding: max(24px, env(safe-area-inset-top)) 20px
     max(24px, env(safe-area-inset-bottom));
-  overflow: hidden;
   color: #234331;
-  background:
-    radial-gradient(ellipse at 50% 46%, rgb(255 255 255 / 90%), transparent 57%),
-    linear-gradient(145deg, #f8f7f1, #edf2eb);
+  background: #f5f7f3;
 }
 
 .boot-brand {
@@ -11636,82 +11633,33 @@ html[data-theme="dark"] .app-update-banner {
   letter-spacing: 0.08em;
 }
 
-.boot-building {
-  position: relative;
-  width: min(850px, 100%, 78vh);
-  aspect-ratio: 1.5;
-  overflow: hidden;
-  isolation: isolate;
+.boot-loader-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgb(26 92 55 / 18%);
+  border-top-color: #168347;
+  border-radius: 50%;
+  animation: boot-loader-spin 800ms linear infinite;
 }
 
-.boot-building-stage {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  mix-blend-mode: screen;
-  opacity: 0;
-  transform: translateY(12px) scale(0.975);
-  transition:
-    opacity 520ms ease,
-    transform 700ms cubic-bezier(0.2, 0.7, 0.25, 1);
-}
-
-.boot-building-stage.is-visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+@keyframes boot-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .boot-progress {
   display: grid;
-  width: min(520px, 100%);
-  gap: 10px;
+  width: min(420px, 100%);
+  gap: 14px;
   text-align: center;
 }
 
 .boot-progress p {
-  min-height: 22px;
   margin: 0;
   color: #173c28;
-  font-size: 15px;
-  font-weight: 650;
+  font-size: 14px;
   line-height: 1.5;
-}
-
-.boot-progress-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 42px;
-  align-items: center;
-  gap: 12px;
-}
-
-.boot-progress-track {
-  height: 12px;
-  overflow: hidden;
-  border: 1px solid #c5cec5;
-  border-radius: 999px;
-  background: rgb(26 53 36 / 9%);
-}
-
-.boot-progress-track span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #087641, #19a456);
-  box-shadow: 0 0 12px rgb(25 164 86 / 20%);
-  transition: width 420ms ease;
-}
-
-.boot-progress-row strong {
-  color: #145538;
-  font-size: 15px;
-  text-align: right;
-}
-
-.boot-progress small {
-  color: #567365;
-  font-size: 11px;
 }
 
 .boot-progress .button {
@@ -11719,29 +11667,16 @@ html[data-theme="dark"] .app-update-banner {
   margin-top: 6px;
 }
 
-.boot-loader-low-fps .boot-building-stage,
-.boot-loader-low-fps .boot-progress-track span {
-  transition-duration: 140ms;
-}
-
-.boot-loader-slow-network .boot-building-stage {
-  transition-duration: 220ms;
-}
-
 html[data-theme="dark"] .boot-loader {
   color: #e3eee5;
-  background:
-    radial-gradient(ellipse at 50% 46%, rgb(35 61 43 / 76%), transparent 58%),
-    linear-gradient(145deg, #111b14, #18251b);
+  background: #111b14;
 }
 
-html[data-theme="dark"] .boot-brand strong,
-html[data-theme="dark"] .boot-progress-row strong {
+html[data-theme="dark"] .boot-brand strong {
   color: #c9ead1;
 }
 
-html[data-theme="dark"] .boot-brand span,
-html[data-theme="dark"] .boot-progress small {
+html[data-theme="dark"] .boot-brand span {
   color: #a4baa9;
 }
 
@@ -11749,14 +11684,14 @@ html[data-theme="dark"] .boot-progress p {
   color: #e0eee3;
 }
 
-html[data-theme="dark"] .boot-progress-track {
-  border-color: #526457;
-  background: rgb(0 0 0 / 28%);
+html[data-theme="dark"] .boot-loader-spinner {
+  border-color: rgb(190 223 198 / 22%);
+  border-top-color: #68c786;
 }
 
 @media (max-width: 600px) {
   .boot-loader {
-    gap: 12px;
+    gap: 14px;
     padding-inline: 16px;
   }
 
@@ -11768,20 +11703,66 @@ html[data-theme="dark"] .boot-progress-track {
   .boot-brand strong {
     font-size: 21px;
   }
+}
 
-  .boot-building {
-    width: min(100%, 500px);
-  }
+.advertisement-schedule {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--muted);
+  background: var(--glass-surface);
+  font-size: 13px;
+  line-height: 1.5;
+}
 
-  .boot-progress p {
-    font-size: 14px;
-  }
+.advertisement-toggle {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.advertisement-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #168347;
+}
+
+.advertisement-preview {
+  display: grid;
+  width: 100%;
+  min-height: 120px;
+  max-height: min(52vh, 420px);
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  background: #111;
+}
+
+.advertisement-preview img,
+.advertisement-preview video {
+  display: block;
+  width: 100%;
+  max-height: min(52vh, 420px);
+  object-fit: contain;
+}
+
+.advertisement-public-preview {
+  margin-top: 8px;
+}
+
+.modal-card.advertisement-modal {
+  width: min(560px, 100%);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .boot-building-stage,
-  .boot-progress-track span {
-    transition: none;
+  .boot-loader-spinner {
+    animation: none;
   }
 }
 

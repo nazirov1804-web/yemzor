@@ -109,7 +109,44 @@ export async function initializeDatabase() {
         changed = true
       }
     }
+    if (
+      !parsed.platformAdvertisement ||
+      typeof parsed.platformAdvertisement !== 'object' ||
+      Array.isArray(parsed.platformAdvertisement)
+    ) {
+      parsed.platformAdvertisement = {
+        enabled: false,
+        media: '',
+        mediaType: '',
+        updatedAt: null,
+      }
+      changed = true
+    } else {
+      if (typeof parsed.platformAdvertisement.enabled !== 'boolean') {
+        parsed.platformAdvertisement.enabled = false
+        changed = true
+      }
+      if (typeof parsed.platformAdvertisement.media !== 'string') {
+        parsed.platformAdvertisement.media = ''
+        changed = true
+      }
+      if (typeof parsed.platformAdvertisement.mediaType !== 'string') {
+        parsed.platformAdvertisement.mediaType = ''
+        changed = true
+      }
+      if (
+        parsed.platformAdvertisement.updatedAt !== null &&
+        typeof parsed.platformAdvertisement.updatedAt !== 'string'
+      ) {
+        parsed.platformAdvertisement.updatedAt = null
+        changed = true
+      }
+    }
     for (const company of parsed.companies) {
+      if (typeof company.demoAdsEligible !== 'boolean') {
+        company.demoAdsEligible = Boolean(company.trialExpiresAt || company.isDemo)
+        changed = true
+      }
       if (!Number.isSafeInteger(company.absentDeduction)) {
         company.absentDeduction = 0
         changed = true
@@ -196,6 +233,12 @@ export async function initializeDatabase() {
       telegramOutbox: [],
       demoRegistrations: [],
       customerReviews: [],
+      platformAdvertisement: {
+        enabled: false,
+        media: '',
+        mediaType: '',
+        updatedAt: null,
+      },
       platformSettings: {
         phone: '',
         telegram: 'naziroff1',

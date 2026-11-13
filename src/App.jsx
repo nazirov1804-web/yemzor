@@ -77,6 +77,17 @@ async function encodeProfileImage(file) {
     ? canvas.toDataURL(outputType)
     : canvas.toDataURL(outputType, 0.82);
 }
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") resolve(reader.result);
+      else reject(new Error("Faylni o‘qib bo‘lmadi."));
+    };
+    reader.onerror = () => reject(reader.error || new Error("Faylni o‘qib bo‘lmadi."));
+    reader.readAsDataURL(file);
+  });
+}
 const weekdays = [
   { value: 1, label: "Dushanba" },
   { value: 2, label: "Seshanba" },
@@ -355,10 +366,7 @@ function App() {
   const [latestAppVersion, setLatestAppVersion] = useState("");
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [bootProgress, setBootProgress] = useState(5);
   const [bootError, setBootError] = useState("");
-  const completedInitialBoot = useRef(false);
-  const resumeLoading = useRef(false);
   const [networkOffline, setNetworkOffline] = useState(
     () => !window.navigator.onLine,
   );
@@ -613,13 +621,12 @@ function App() {
 
   useEffect(() => {
     let active = true;
-    let finishTimer;
-    setBootProgress(5);
-    Promise.all([api("/api/status"), api("/api/public/settings")])
-      .then(async ([result, contact]) => {
-        if (!active) return;
-        setBootProgress(42);
-        await new Promise((resolve) => window.setTimeout(resolve, 180));
+    const initialize = async () => {
+      try {
+        const [result, contact] = await Promise.all([
+          api("/api/status"),
+          api("/api/public/settings"),
+        ]);
         if (!active) return;
         let storeData = null;
         const shouldLoadStore =
@@ -627,107 +634,29 @@ function App() {
           result.user &&
           ["company_owner", "manager", "employee"].includes(result.user.role);
         if (shouldLoadStore) {
-          setBootProgress(62);
           try {
             storeData = await api("/api/store");
           } catch (error) {
             toast.error(error.message);
             storeData = emptyStoreData(result.company);
           }
-          await new Promise((resolve) => window.setTimeout(resolve, 180));
-        } else {
-          setBootProgress(62);
-          await new Promise((resolve) => window.setTimeout(resolve, 240));
         }
         if (!active) return;
-        setBootProgress(80);
         setPublicSettings(contact);
         setStatus(result);
         setData(storeData);
-        setBootProgress(94);
-        finishTimer = window.setTimeout(() => {
-          if (!active) return;
-          setBootProgress(100);
-          finishTimer = window.setTimeout(() => {
-            if (active) {
-              completedInitialBoot.current = true;
-              setLoading(false);
-            }
-          }, 180);
-        }, 0);
-      })
-      .catch((error) => {
+        setLoading(false);
+      } catch (error) {
         if (!active) return;
         setBootError(error.message);
         setLoading(false);
-      });
+      }
+    };
+    void initialize();
     return () => {
       active = false;
-      window.clearTimeout(finishTimer);
     };
   }, [emptyStoreData]);
-
-  useEffect(() => {
-    if (!isInstalledApp) return undefined;
-    let wasHidden = false;
-    let lastResumeAt = 0;
-    const timers = new Set();
-    const playResumeLoading = () => {
-      if (
-        !completedInitialBoot.current ||
-        resumeLoading.current ||
-        Date.now() - lastResumeAt < 1000
-      ) {
-        return;
-      }
-      lastResumeAt = Date.now();
-      resumeLoading.current = true;
-      setBootError("");
-      setBootProgress(5);
-      setLoading(true);
-      for (let step = 1; step <= 10; step += 1) {
-        const timer = window.setTimeout(() => {
-          setBootProgress(step === 10 ? 100 : 5 + step * 10);
-          if (step === 10) {
-            const finishTimer = window.setTimeout(() => {
-              resumeLoading.current = false;
-              setLoading(false);
-              timers.delete(finishTimer);
-            }, 180);
-            timers.add(finishTimer);
-          }
-          timers.delete(timer);
-        }, step * 250);
-        timers.add(timer);
-      }
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        wasHidden = true;
-      } else if (wasHidden) {
-        wasHidden = false;
-        playResumeLoading();
-      }
-    };
-    const handlePageHide = () => {
-      wasHidden = true;
-    };
-    const handlePageShow = (event) => {
-      if (event.persisted && wasHidden) {
-        wasHidden = false;
-        playResumeLoading();
-      }
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("pagehide", handlePageHide);
-    window.addEventListener("pageshow", handlePageShow);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("pagehide", handlePageHide);
-      window.removeEventListener("pageshow", handlePageShow);
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
-  }, [isInstalledApp]);
 
   const refreshStore = useCallback(async () => {
     let storeData;
@@ -805,13 +734,11 @@ function App() {
     (loading || !status) &&
     !(accessView === "landing" && !isInstalledApp && !bootError) ? (
       <BootScreen
-        progress={bootProgress}
         error={bootError}
         networkOffline={networkOffline}
         onRetry={() => {
           setLoading(true);
           setBootError("");
-          setBootProgress(5);
           refreshStatus().catch((error) => {
             setBootError(error.message);
             setLoading(false);
@@ -992,6 +919,16 @@ function App() {
         </div>
       )}
       {content}
+      {!reviewPrompt && (
+        <DemoAdvertisement
+          eligible={Boolean(
+            status?.demoAdsEligible &&
+              status?.subscription?.active &&
+              status?.subscription?.trial &&
+              ["company_owner", "manager", "employee"].includes(user?.role),
+          )}
+        />
+      )}
       {reviewPrompt === "offer" &&
         user?.role === "company_owner" &&
         status?.subscription?.active && (
@@ -3172,17 +3109,34 @@ function PlatformPage({
     paymentCardHolder: "",
     monthlySubscriptionPrice: 0,
   });
+  const [advertisement, setAdvertisement] = useState({
+    enabled: false,
+    hasMedia: false,
+    mediaType: "",
+    updatedAt: null,
+  });
+  const [advertisementForm, setAdvertisementForm] = useState({
+    enabled: false,
+    media: "",
+    mediaType: "",
+    upload: "",
+    removeMedia: false,
+  });
+  const [loadingAdvertisementMedia, setLoadingAdvertisementMedia] = useState(false);
+  const [savingAdvertisement, setSavingAdvertisement] = useState(false);
   const [query, setQuery] = useState("");
   const todayMonth = monthKey(useClock());
 
   const load = useCallback(async () => {
     try {
-      const [result, settings] = await Promise.all([
+      const [result, settings, adSettings] = await Promise.all([
         api("/api/platform/companies"),
         api("/api/platform/settings"),
+        api("/api/platform/advertisement"),
       ]);
       setCompanies(result.companies);
       setPlatformSettings(settings);
+      setAdvertisement(adSettings);
     } catch (error) {
       toast.error(error.message);
     } finally {
@@ -3261,6 +3215,89 @@ function PlatformPage({
       toast.error(error.message);
     }
   }
+  async function openAdvertisementSettings() {
+    setAdvertisementForm({
+      enabled: advertisement.enabled,
+      media: "",
+      mediaType: advertisement.mediaType,
+      upload: "",
+      removeMedia: false,
+    });
+    setModal("advertisement");
+    if (!advertisement.hasMedia) return;
+    setLoadingAdvertisementMedia(true);
+    try {
+      const currentMedia = await api("/api/platform/advertisement/media");
+      setAdvertisementForm((current) => ({
+        ...current,
+        media: currentMedia.media,
+        mediaType: currentMedia.mediaType,
+      }));
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoadingAdvertisementMedia(false);
+    }
+  }
+  async function handleAdvertisementFileChange(event) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (
+      !["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"].includes(
+        file.type,
+      )
+    ) {
+      toast.error(
+        translateText(
+          "Reklama JPG, PNG, WebP, MP4 yoki WebM formatida bo‘lishi kerak.",
+          currentLanguage(),
+        ),
+      );
+      input.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(translateText("Rasm yoki video 5 MB dan oshmasligi kerak.", currentLanguage()));
+      input.value = "";
+      return;
+    }
+    try {
+      const media = await readFileAsDataUrl(file);
+      setAdvertisementForm((current) => ({
+        ...current,
+        media,
+        mediaType: file.type,
+        upload: media,
+        removeMedia: false,
+      }));
+    } catch (error) {
+      toast.error(error.message);
+      input.value = "";
+    }
+  }
+  async function saveAdvertisement(event) {
+    event.preventDefault();
+    setSavingAdvertisement(true);
+    try {
+      const payload = { enabled: advertisementForm.enabled };
+      if (advertisementForm.removeMedia) payload.media = null;
+      else if (advertisementForm.upload) payload.media = advertisementForm.upload;
+      const updated = await api("/api/platform/advertisement", {
+        method: "PATCH",
+        body: payload,
+      });
+      setAdvertisement(updated);
+      setModal("");
+      toast.success(
+        translateText("Reklama sozlamalari saqlandi.", currentLanguage()),
+      );
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSavingAdvertisement(false);
+    }
+  }
   async function clearContactPhone() {
     try {
       await saveContact({ phone: "", telegram: platformSettings.telegram });
@@ -3302,6 +3339,12 @@ function PlatformPage({
         description="Do‘konlarni, barcha do‘konlarga bir xil qo‘llanadigan oylik narxni va tushgan to‘lovlarni boshqaring."
         action={
           <div className="heading-actions">
+            <button
+              className="button button-secondary"
+              onClick={openAdvertisementSettings}
+            >
+              <FiUpload /> {translateText("Reklama", currentLanguage())}
+            </button>
             <button
               className="button button-secondary"
               onClick={() => setModal("price")}
@@ -3502,6 +3545,100 @@ function PlatformPage({
           onClose={() => setModal("")}
         >
           <CompanyForm onSubmit={createCompany} />
+        </Modal>
+      )}
+      {modal === "advertisement" && (
+        <Modal
+          title={translateText("Reklama", currentLanguage())}
+          subtitle={translateText(
+            "Reklama faqat faol demo sinovida bo‘lgan, saytda o‘zi ro‘yxatdan o‘tgan do‘konlarga ko‘rsatiladi.",
+            currentLanguage(),
+          )}
+          onClose={() => setModal("")}
+        >
+          <form className="modal-form" onSubmit={saveAdvertisement}>
+            <p className="advertisement-schedule">
+              {translateText(
+                "Har bir mos demo do‘konda reklama 2 soatda bir marta, ko‘pi bilan 15 soniya ko‘rsatiladi.",
+                currentLanguage(),
+              )}
+            </p>
+            <label className="advertisement-toggle">
+              <input
+                type="checkbox"
+                checked={advertisementForm.enabled}
+                onChange={(event) =>
+                  setAdvertisementForm((current) => ({
+                    ...current,
+                    enabled: event.target.checked,
+                  }))
+                }
+              />
+              <span>{translateText("Reklamani yoqish", currentLanguage())}</span>
+            </label>
+            <Field label={translateText("Rasm yoki video", currentLanguage())}>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+                onChange={handleAdvertisementFileChange}
+              />
+            </Field>
+            <p className="field-hint">
+              {translateText(
+                "JPG, PNG, WebP, MP4 yoki WebM. Fayl hajmi 5 MB dan oshmasin.",
+                currentLanguage(),
+              )}
+            </p>
+            {loadingAdvertisementMedia ? (
+              <Loading />
+            ) : advertisementForm.media && !advertisementForm.removeMedia ? (
+              <div className="advertisement-preview">
+                {advertisementForm.mediaType.startsWith("video/") ? (
+                  <video
+                    src={advertisementForm.media}
+                    controls
+                    playsInline
+                    aria-label={translateText("Reklama videosi", currentLanguage())}
+                  />
+                ) : (
+                  <img
+                    src={advertisementForm.media}
+                    alt={translateText("Reklama rasmi", currentLanguage())}
+                  />
+                )}
+              </div>
+            ) : null}
+            {advertisementForm.media && !advertisementForm.removeMedia && (
+              <button
+                className="button button-danger button-small"
+                type="button"
+                disabled={loadingAdvertisementMedia}
+                onClick={() =>
+                  setAdvertisementForm((current) => ({
+                    ...current,
+                    enabled: false,
+                    media: "",
+                    mediaType: "",
+                    upload: "",
+                    removeMedia: true,
+                  }))
+                }
+              >
+                <FiTrash2 /> {translateText("Reklamani o‘chirish", currentLanguage())}
+              </button>
+            )}
+            <div className="modal-actions">
+              <button
+                className="button button-primary"
+                type="submit"
+                disabled={savingAdvertisement || loadingAdvertisementMedia}
+              >
+                {savingAdvertisement
+                  ? translateText("Saqlanmoqda...", currentLanguage())
+                  : translateText("Sozlamalarni saqlash", currentLanguage())}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
       {modal === "price" && (
@@ -8676,149 +8813,30 @@ function Empty({ title, text }) {
   );
 }
 
-function BootScreen({ progress, error, networkOffline, onRetry }) {
-  const [visualStage, setVisualStage] = useState(1);
-  const [lowFrameRate, setLowFrameRate] = useState(false);
-  const [slowNetwork, setSlowNetwork] = useState(() => {
-    const connection = window.navigator.connection;
-    return Boolean(
-      connection?.saveData ||
-        /^(slow-2g|2g)$/.test(connection?.effectiveType || "") ||
-        (typeof connection?.downlink === "number" && connection.downlink < 1.2),
-    );
-  });
-  const stageThresholds = [5, 15, 25, 35, 45, 55, 65, 75, 85];
-  const targetStage = error
-    ? Math.min(
-        4,
-        Math.max(1, stageThresholds.filter((threshold) => progress >= threshold).length),
-      )
-    : Math.max(
-        1,
-        stageThresholds.filter((threshold) => progress >= threshold).length,
-      );
-  const loadingMessage =
-    progress >= 100
-      ? "Tizim tayyor!"
-      : progress >= 70
-        ? "Ma’lumotlar birlashtirilmoqda..."
-        : progress >= 45
-          ? "Tizim sozlanmoqda..."
-          : progress >= 20
-            ? "Ombor tayyorlanmoqda..."
-            : "Yuklanmoqda...";
+function BootScreen({ error, networkOffline, onRetry }) {
   const message = error
     ? networkOffline
       ? "Tarmoq bilan aloqa uzildi. Internetni tekshirib, qaytadan urinib ko‘ring."
       : translateText(error, currentLanguage())
-    : translateText(loadingMessage, currentLanguage());
-  useEffect(() => {
-    let frames = 0;
-    let frameId;
-    const startedAt = performance.now();
-    const measureFrameRate = (now) => {
-      frames += 1;
-      if (now - startedAt >= 700) {
-        setLowFrameRate(frames < 32);
-        return;
-      }
-      frameId = window.requestAnimationFrame(measureFrameRate);
-    };
-    frameId = window.requestAnimationFrame(measureFrameRate);
-    return () => window.cancelAnimationFrame(frameId);
-  }, []);
-  useEffect(() => {
-    const connection = window.navigator.connection;
-    if (!connection?.addEventListener) return undefined;
-    const updateNetworkQuality = () => {
-      setSlowNetwork(
-        Boolean(
-          connection.saveData ||
-            /^(slow-2g|2g)$/.test(connection.effectiveType || "") ||
-            (typeof connection.downlink === "number" &&
-              connection.downlink < 1.2),
-        ),
-      );
-    };
-    connection.addEventListener("change", updateNetworkQuality);
-    return () => connection.removeEventListener("change", updateNetworkQuality);
-  }, []);
-  useEffect(() => {
-    if (visualStage >= targetStage) return undefined;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisualStage(targetStage);
-      return undefined;
-    }
-    const timer = window.setTimeout(
-      () => setVisualStage((current) => Math.min(targetStage, current + 1)),
-      lowFrameRate ? 280 : slowNetwork ? 340 : 220,
-    );
-    return () => window.clearTimeout(timer);
-  }, [lowFrameRate, slowNetwork, targetStage, visualStage]);
-
+    : translateText("Ma’lumotlar yuklanmoqda...", currentLanguage());
   return (
-    <main
-      className={`boot-screen boot-loader${lowFrameRate ? " boot-loader-low-fps" : ""}${slowNetwork ? " boot-loader-slow-network" : ""}`}
-    >
+    <main className="boot-screen boot-loader" aria-busy={!error}>
       <header className="boot-brand">
         <img src="/yemzor-logo.webp" alt="" />
         <div>
           <strong>Yemzor</strong>
-          <span>
-            {translateText("OMBOR TIZIMI BOSHQARUVI", currentLanguage())}
-          </span>
+          <span>{translateText("OMBOR TIZIMI BOSHQARUVI", currentLanguage())}</span>
         </div>
       </header>
-      <div
-        className={`boot-building boot-building-stage-${visualStage}`}
-        role="img"
-        aria-label={translateText(
-          "Ombor binosi bosqichma-bosqich qurilmoqda",
-          currentLanguage(),
-        )}
-      >
-        {Array.from({ length: 9 }, (_, index) => index + 1).map((imageStage) => (
-          <img
-            key={imageStage}
-            className={`boot-building-stage${visualStage === imageStage ? " is-visible" : ""}`}
-            src={`/loading/warehouse-stage-${imageStage}.webp`}
-            alt=""
-            decoding="async"
-            fetchPriority={imageStage === 1 ? "high" : "auto"}
-          />
-        ))}
-      </div>
+      {!error && (
+        <span
+          className="boot-loader-spinner"
+          role="status"
+          aria-label={translateText("Ma’lumotlar yuklanmoqda...", currentLanguage())}
+        />
+      )}
       <section className="boot-progress">
-        <p aria-live="polite">
-          {error
-            ? message
-            : networkOffline
-              ? translateText(
-                  "Tarmoq bilan aloqa uzildi. Internetni tekshirib, qaytadan urinib ko‘ring.",
-                  currentLanguage(),
-                )
-              : message}
-        </p>
-        <div className="boot-progress-row">
-          <div
-            className="boot-progress-track"
-            role="progressbar"
-            aria-label={translateText("Yuklanish jarayoni", currentLanguage())}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress}
-          >
-            <span style={{ width: `${progress}%` }} />
-          </div>
-          <strong>{progress}%</strong>
-        </div>
-        <small>
-          {error
-            ? translateText("Internetni tekshirib qayta urinib ko‘ring.", currentLanguage())
-            : slowNetwork
-              ? translateText("Tarmoq tezligi past — ma’lumotlar yuklanmoqda...", currentLanguage())
-              : translateText("Omboringiz raqamli boshqaruv sari ilk qadam", currentLanguage())}
-        </small>
+        <p aria-live="polite">{message}</p>
         {error && (
           <button
             className="button button-primary"
@@ -8830,6 +8848,105 @@ function BootScreen({ progress, error, networkOffline, onRetry }) {
         )}
       </section>
     </main>
+  );
+}
+
+function DemoAdvertisement({ eligible }) {
+  const [campaign, setCampaign] = useState(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!eligible) return undefined;
+    let active = true;
+    let timer;
+    let hideTimer;
+    let lastShownAt = 0;
+
+    const scheduleNext = () => {
+      timer = window.setTimeout(
+        async () => {
+          try {
+            const result = await api("/api/public/advertisement/media");
+            if (!active) return;
+            setCampaign(result);
+            setVisible(true);
+            lastShownAt = Date.now();
+            try {
+              window.localStorage.setItem(
+                "yemzor:demo-ad-last-shown:v1",
+                String(lastShownAt),
+              );
+            } catch {
+              // Keep the in-memory cooldown if browser storage is unavailable.
+            }
+            hideTimer = window.setTimeout(() => {
+              if (!active) return;
+              setVisible(false);
+              setCampaign(null);
+              scheduleNext();
+            }, 15_000);
+          } catch (error) {
+            if (error.status !== 404) {
+              console.error("Demo reklamasini yuklab bo‘lmadi.", error);
+            }
+          }
+        },
+        Math.max(0, lastShownAt + 2 * 60 * 60 * 1000 - Date.now()),
+      );
+    };
+
+    const loadAdvertisement = async () => {
+      try {
+        const settings = await api("/api/public/advertisement");
+        if (!active || !settings.enabled || !settings.hasMedia) return;
+        try {
+          const storedTime = Number(
+            window.localStorage.getItem("yemzor:demo-ad-last-shown:v1"),
+          );
+          if (Number.isFinite(storedTime)) lastShownAt = storedTime;
+        } catch {
+          lastShownAt = 0;
+        }
+        scheduleNext();
+      } catch (error) {
+        console.error("Demo reklama sozlamasini yuklab bo‘lmadi.", error);
+      }
+    };
+
+    void loadAdvertisement();
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [eligible]);
+
+  if (!visible || !campaign) return null;
+  return (
+    <Modal
+      title={translateText("Reklama", currentLanguage())}
+      subtitle={translateText("Demo do‘kon foydalanuvchilari uchun", currentLanguage())}
+      onClose={() => setVisible(false)}
+      className="advertisement-modal"
+    >
+      <div className="advertisement-preview advertisement-public-preview">
+        {campaign.mediaType.startsWith("video/") ? (
+          <video
+            src={campaign.media}
+            autoPlay
+            muted
+            controls
+            playsInline
+            aria-label={translateText("Reklama videosi", currentLanguage())}
+          />
+        ) : (
+          <img
+            src={campaign.media}
+            alt={translateText("Reklama", currentLanguage())}
+          />
+        )}
+      </div>
+    </Modal>
   );
 }
 

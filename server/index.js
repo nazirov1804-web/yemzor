@@ -34,7 +34,16 @@ app.use((request, response, next) => {
   const isPaymentReceipt =
     request.method === 'POST' &&
     request.path === '/api/subscription/payment-requests';
-  const limit = isImageUpdate ? '14mb' : isPaymentReceipt ? '6mb' : '5mb';
+  const isAdvertisementUpdate =
+    request.method === 'PATCH' &&
+    request.path === '/api/platform/advertisement';
+  const limit = isImageUpdate
+    ? '14mb'
+    : isPaymentReceipt
+      ? '6mb'
+      : isAdvertisementUpdate
+        ? '9mb'
+        : '5mb';
   express.json({ limit })(request, response, next);
 });
 app.use(
@@ -90,6 +99,56 @@ function isResetConfirmation(value) {
 
 function fail(statusCode, message) {
   throw Object.assign(new Error(message), { statusCode });
+}
+
+function platformAdvertisementMetadata(advertisement) {
+  return {
+    enabled: advertisement.enabled,
+    hasMedia: Boolean(advertisement.media),
+    mediaType: advertisement.mediaType || '',
+    updatedAt: advertisement.updatedAt || null,
+  };
+}
+
+function parseAdvertisementMedia(dataUrl) {
+  const match =
+    typeof dataUrl === 'string' &&
+    /^data:(image\/(?:jpeg|png|webp)|video\/(?:mp4|webm));base64,([A-Za-z0-9+/]+={0,2})$/.exec(
+      dataUrl
+    );
+  if (!match) fail(400, 'Reklama uchun JPG, PNG, WebP, MP4 yoki WebM fayl tanlang.');
+
+  const [, mediaType, encoded] = match;
+  const buffer = Buffer.from(encoded, 'base64');
+  if (
+    buffer.length === 0 ||
+    buffer.length > 5 * 1024 * 1024 ||
+    buffer.toString('base64') !== encoded
+  ) {
+    fail(400, 'Reklama fayli yaroqsiz yoki 5 MB dan katta.');
+  }
+
+  const signatureMatches =
+    (mediaType === 'image/jpeg' &&
+      buffer.length >= 3 &&
+      buffer[0] === 0xff &&
+      buffer[1] === 0xd8 &&
+      buffer[2] === 0xff) ||
+    (mediaType === 'image/png' &&
+      buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) ||
+    (mediaType === 'image/webp' &&
+      buffer.length >= 12 &&
+      buffer.toString('ascii', 0, 4) === 'RIFF' &&
+      buffer.toString('ascii', 8, 12) === 'WEBP') ||
+    (mediaType === 'video/mp4' &&
+      buffer.length >= 12 &&
+      buffer.toString('ascii', 4, 8) === 'ftyp') ||
+    (mediaType === 'video/webm' &&
+      buffer.length >= 4 &&
+      buffer.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3])));
+  if (!signatureMatches) fail(400, 'Reklama faylining formati noto‘g‘ri.');
+
+  return { media: dataUrl, mediaType };
 }
 
 function paymentDecisionLocked(entry, now = Date.now()) {
@@ -409,6 +468,23 @@ function companyAccessStatus(database, company) {
   };
 }
 
+function requireDemoAdvertisementAccess(request, database) {
+  const user = request.user;
+  const company = database.companies.find(
+    (entry) => entry.id === user?.companyId
+  );
+  const subscription = company && companyAccessStatus(database, company);
+  if (
+    !['company_owner', 'manager', 'employee'].includes(user?.role) ||
+    !company?.demoAdsEligible ||
+    !subscription?.active ||
+    !subscription.trial
+  ) {
+    fail(403, 'Reklama faqat faol demo obunachilar uchun mavjud.');
+  }
+  return company;
+}
+
 function requirePaidSubscription(request, _response, next) {
   try {
     const database = readDatabase();
@@ -690,6 +766,7 @@ app.get('/api/status', (request, response) => {
       (user) => user.role === 'platform_admin'
     ),
     user: user ? safeUser(user) : null,
+    demoAdsEligible: Boolean(company?.demoAdsEligible),
     company: company
       ? {
           id: company.id,
@@ -705,6 +782,33 @@ app.get('/api/public/settings', (_request, response) => {
   const { phone, telegram } = readDatabase().platformSettings;
   response.json({ phone, telegram: telegram || 'naziroff1' });
 });
+
+app.get(
+  '/api/public/advertisement',
+  requireAuth,
+  (request, response) => {
+    const database = readDatabase();
+    requireDemoAdvertisementAccess(request, database);
+    response
+      .set('Cache-Control', 'private, no-store')
+      .json(platformAdvertisementMetadata(database.platformAdvertisement));
+  }
+);
+
+app.get(
+  '/api/public/advertisement/media',
+  requireAuth,
+  (request, response) => {
+    const database = readDatabase();
+    requireDemoAdvertisementAccess(request, database);
+    const advertisement = database.platformAdvertisement;
+    if (!advertisement.enabled || !advertisement.media)
+      fail(404, 'Hozircha faol reklama yo‘q.');
+    response
+      .set('Cache-Control', 'private, no-store')
+      .json({ media: advertisement.media, mediaType: advertisement.mediaType });
+  }
+);
 
 app.get('/api/public/landing', (_request, response) => {
   const database = readDatabase();
@@ -827,6 +931,65 @@ app.post(
   }
 );
 
+app.get(
+  '/api/platform/advertisement',
+  requireAuth,
+  requirePlatformAdmin,
+  (_request, response) => {
+    response.json(platformAdvertisementMetadata(readDatabase().platformAdvertisement));
+  }
+);
+
+app.get(
+  '/api/platform/advertisement/media',
+  requireAuth,
+  requirePlatformAdmin,
+  (_request, response) => {
+    const advertisement = readDatabase().platformAdvertisement;
+    if (!advertisement.media) fail(404, 'Reklama uchun rasm yoki video yuklanmagan.');
+    response
+      .set('Cache-Control', 'private, no-store')
+      .json({ media: advertisement.media, mediaType: advertisement.mediaType });
+  }
+);
+
+app.patch(
+  '/api/platform/advertisement',
+  requireAuth,
+  requirePlatformAdmin,
+  async (request, response) => {
+    if (typeof request.body?.enabled !== 'boolean')
+      fail(400, 'Reklamani yoqish yoki o‘chirish holatini tanlang.');
+    const hasMediaUpdate = Object.hasOwn(request.body, 'media');
+    const mediaUpdate =
+      request.body.media === null
+        ? null
+        : hasMediaUpdate
+          ? parseAdvertisementMedia(request.body.media)
+          : undefined;
+    const advertisement = await updateDatabase((database) => {
+      const current = database.platformAdvertisement;
+      const nextMedia =
+        mediaUpdate === null
+          ? ''
+          : mediaUpdate?.media ?? current.media;
+      if (request.body.enabled && !nextMedia)
+        fail(400, 'Avval reklama uchun rasm yoki video yuklang.');
+      database.platformAdvertisement = {
+        enabled: request.body.enabled,
+        media: nextMedia,
+        mediaType:
+          mediaUpdate === null
+            ? ''
+            : mediaUpdate?.mediaType ?? current.mediaType,
+        updatedAt: new Date().toISOString(),
+      };
+      return database.platformAdvertisement;
+    });
+    response.json(platformAdvertisementMetadata(advertisement));
+  }
+);
+
 app.post(
   '/api/company/register/verify',
   registrationLimiter,
@@ -893,6 +1056,7 @@ app.post('/api/company/register', registrationLimiter, async (request, response)
     const company = {
       id: companyId,
       name: storeName,
+      demoAdsEligible: true,
       ownerId,
       nextReceiptNumber: 0,
       absentDeduction: 0,
@@ -1857,6 +2021,7 @@ app.post(
       const company = {
         id: randomUUID(),
         name,
+        demoAdsEligible: false,
         ownerId: randomUUID(),
         nextReceiptNumber: 0,
         absentDeduction: 0,
